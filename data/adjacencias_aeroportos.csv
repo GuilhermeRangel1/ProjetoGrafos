@@ -1,0 +1,107 @@
+origem,destino,tipo_conexao,justificativa,peso
+REC,SSA,regional,mesma região,649
+REC,FOR,regional,mesma região,626
+REC,NAT,regional,mesma região,266
+REC,JPA,regional,mesma região,108
+REC,GRU,hub,conexão via hub nacional,2099
+REC,CGH,hub,conexão via hub nacional,2128
+REC,GIG,hub,conexão via hub nacional,1857
+REC,CNF,hub,conexão via hub nacional,1606
+REC,VIX,ponto a ponto,conexão ponto a ponto,1466
+REC,BSB,hub,conexão via hub nacional,1653
+REC,GYN,inter-regional,conexão média entre regiões,1815
+REC,FLN,inter-regional,conexão média entre regiões,2601
+REC,POA,inter-regional,conexão média entre regiões,2961
+REC,MAO,inter-regional,conexão média entre regiões,2834
+REC,BEL,inter-regional,conexão média entre regiões,1677
+REC,THE,regional,mesma região,935
+SSA,FOR,regional,mesma região,1014
+SSA,NAT,regional,mesma região,856
+SSA,JPA,regional,mesma região,739
+SSA,GRU,hub,conexão via hub nacional,1450
+SSA,CGH,hub,conexão via hub nacional,1479
+SSA,GIG,hub,conexão via hub nacional,1217
+SSA,CNF,hub,conexão via hub nacional,958
+SSA,VIX,ponto a ponto,conexão ponto a ponto,842
+SSA,BSB,inter-regional,conexão média entre regiões,1083
+SSA,GYN,inter-regional,conexão média entre regiões,1241
+SSA,CWB,inter-regional,conexão média entre regiões,1802
+SSA,POA,inter-regional,conexão média entre regiões,2313
+SSA,THE,regional,mesma região,1001
+FOR,NAT,regional,mesma região,414
+FOR,GRU,hub,conexão via hub nacional,2345
+FOR,CGH,hub,conexão via hub nacional,2372
+FOR,GIG,hub,conexão via hub nacional,2174
+FOR,CNF,hub,conexão via hub nacional,1857
+FOR,BSB,hub,conexão via hub nacional,1690
+FOR,MAO,inter-regional,conexão média entre regiões,2388
+FOR,BEL,inter-regional,conexão média entre regiões,1135
+FOR,THE,regional,mesma região,496
+NAT,BSB,hub,conexão via hub nacional,1769
+NAT,CNF,hub,conexão via hub nacional,1799
+NAT,GRU,hub,conexão via hub nacional,2293
+NAT,CGH,hub,conexão via hub nacional,2322
+NAT,GIG,hub,conexão via hub nacional,2073
+JPA,GRU,hub,conexão via hub nacional,2187
+JPA,CGH,hub,conexão via hub nacional,2216
+JPA,GIG,hub,conexão via hub nacional,1954
+JPA,CNF,hub,conexão via hub nacional,1695
+JPA,BSB,hub,conexão via hub nacional,1711
+GRU,GIG,hub,conexão via hub nacional,336
+GRU,CNF,hub,conexão via hub nacional,494
+GRU,VIX,regional,mesma região,727
+GRU,BSB,hub,conexão via hub nacional,853
+GRU,GYN,inter-regional,conexão média entre regiões,808
+GRU,CWB,inter-regional,conexão média entre regiões,359
+GRU,FLN,inter-regional,conexão média entre regiões,515
+ GRU,POA,inter-regional,conexão média entre regiões,864
+GRU,MAO,inter-regional,conexão média entre regiões,2696
+GRU,BEL,inter-regional,conexão média entre regiões,2459
+GRU,PVH,inter-regional,conexão média entre regiões,2472
+GRU,RBR,inter-regional,conexão média entre regiões,2726
+GRU,THE,inter-regional,conexão média entre regiões,2078
+CGH,GIG,hub,conexão via hub nacional,359
+CGH,CNF,hub,conexão via hub nacional,523
+CGH,VIX,regional,mesma região,755
+CGH,BSB,hub,conexão via hub nacional,871
+ CGH,GYN,inter-regional,conexão média entre regiões,821
+CGH,CWB,inter-regional,conexão média entre regiões,330
+CGH,FLN,inter-regional,conexão média entre regiões,488
+CGH,POA,inter-regional,conexão média entre regiões,837
+CGH,THE,inter-regional,conexão média entre regiões,2103
+GIG,CNF,hub,conexão via hub nacional,360
+GIG,VIX,regional,mesma região,417
+GIG,BSB,hub,conexão via hub nacional,912
+GIG,GYN,inter-regional,conexão média entre regiões,927
+GIG,CWB,inter-regional,conexão média entre regiões,671
+GIG,FLN,inter-regional,conexão média entre regiões,758
+GIG,POA,inter-regional,conexão média entre regiões,1120
+GIG,MAO,inter-regional,conexão média entre regiões,2845
+GIG,BEL,inter-regional,conexão média entre regiões,2448
+GIG,THE,inter-regional,conexão média entre regiões,1973
+CNF,VIX,regional,mesma região,389
+CNF,BSB,hub ,conexão via hub nacional,591
+CNF,GYN,inter_regional,conexão média entre regiões,647
+CNF,CWB,inter_regional,conexão média entre regiões,845
+CNF,FLN,inter_regional,conexão média entre regiões,1006
+CNF,POA,inter_regional,conexão média entre regiões,1360
+CNF,MAO,inter_regional,conexão média entre regiões,2538
+CNF,BEL,inter_regional,conexão média entre regiões,2086
+CNF,PVH,inter_regional,conexão média entre regiões,2462
+CNF,RBR,inter_regional,conexão média entre regiões,2786
+CNF,THE,inter_regional,conexão média entre regiões,1624
+VIX,BSB,hub ,conexão via hub nacional,941
+BSB,GYN,regional,mesma região,163
+BSB,CWB,inter_regional,conexão média entre regiões,1080
+BSB,FLN,inter_regional,conexão média entre regiões,1312
+BSB,POA,inter_regional,conexão média entre regiões,1603
+BSB,MAO,inter_regional,conexão média entre regiões,1947
+BSB,BEL,inter_regional,conexão média entre regiões,1611
+BSB,PVH,inter_regional,conexão média entre regiões,1907
+BSB,RBR,inter_regional,conexão média entre regiões,2263
+BSB,THE,inter_regional,conexão média entre regiões,1323
+CWB,POA,regional,mesma região,533
+FLN,POA,regional,mesma região,362
+MAO,BEL,regional,mesma região,1297
+MAO,PVH,regional,mesma região,760
+MAO,RBR,regional,mesma região,1151
