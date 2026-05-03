@@ -7,6 +7,7 @@ from collections import OrderedDict
 sys.path.append(os.path.join(os.path.dirname(__file__)))
 
 from graphs.algorithms import dijkstra
+from viz import exportar_arvore_percurso_html
 
 class GrafoAeroportos:
     def __init__(self):
@@ -73,7 +74,6 @@ def resolver_etapas_3_e_4(grafo, caminho_aeroportos_data, pasta_saida):
                 grau = len(vizinhos)
                 graus_dados.append({"aeroporto": no, "grau": grau})
                 
-                # Lógica simplificada de Ego-Rede (Igual à do colega)
                 ordem_ego = grau + 1
                 tamanho_ego = grau 
                 densidade_ego = calcular_densidade(ordem_ego, tamanho_ego)
@@ -134,6 +134,15 @@ def main():
         resolver_etapas_3_e_4(grafo, caminho_aeroportos_data, pasta_saida)
         resolver_etapa_6(grafo, caminho_rotas, pasta_saida)
         
+        print("\n--- Processando Etapa 7 (Arvore de Percurso) ---")
+        try:
+            _, caminho_rec_poa = dijkstra(grafo, 'REC', 'POA')
+            _, caminho_mao_gru = dijkstra(grafo, 'MAO', 'GRU')
+            
+            exportar_arvore_percurso_html(grafo, caminho_rec_poa, caminho_mao_gru, pasta_saida)
+        except Exception as e:
+            print(f"Erro na geracao da arvore: {e}")
+
         print("\n--- Processamento Finalizado com Sucesso ---")
     except Exception as e:
         print(f"Erro: {e}")
