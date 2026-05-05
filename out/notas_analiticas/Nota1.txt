@@ -1,0 +1,8 @@
+O gráfico mostra um ranking dos aeroportos que, com o maior número de arestas, possuem o maior número de voos de conexão.
+
+Com ele, pode-se extrair os maiores hubs do país, ficando claro que os principais aeroportos são do Sudeste
+e Centro-Oeste(como CNF, BSB, GRU e GIG), mas com outros polos importantes como o aeroporto de Recife(REC).
+
+Foi escolhido o gráfico de barras horizontais pois é a melhor escolha para dados categóricos nominais. Tira
+a necessidade de rotacionar o texto e a ordem decrescente cria uma hierarquia visual mais clara,
+dando maior facilidade de entender quais são os mais e menos conectados.

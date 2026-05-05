@@ -1,0 +1,11 @@
+O gráfico mostra um comparativo direto entre a quantidade de aeroportos (ordem) e a quantidade de conexões internas (tamanho)
+de cada região do Brasil.
+
+Com ele, pode-se extrair a autossuficiência de cada região. Por exemplo, regiões onde a barra laranja de voos é muito maior
+que a barra azul de aeroportos possuem uma malha interna altamente conectada/densa. Já regiões onde a barra azul
+é maior ou igual à laranja indicam que os aeroportos daquela área dependem mais de voos para outras regiões do que entre si mesmos.
+
+Foi escolhido o gráfico de barras agrupadas por ser a técnica recomendada para comparar duas variáveis quantitativas
+(neste caso, "ordem" e "tamanho") submetidas à mesma variável categórica (regiões). A escolha de cores complementares
+(azul e laranja) facilita a diferenciação das categorias, e os rótulos acima das barras dispensam a necessidade de olhar
+para o eixo Y o tempo todo, diminuindo a carga cognitiva.

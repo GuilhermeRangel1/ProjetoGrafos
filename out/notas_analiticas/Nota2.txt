@@ -1,0 +1,9 @@
+O gráfico mostra a frequência com que os diferentes números de conexões de cada aeroporto aparecem na malha aérea.
+O eixo X mostra a quantidade de rotas e o eixo Y mostra quantos aeroportos possuem essa quantidade.
+
+Com ele, pode-se extrair o comportamento de redes complexas. Há uma concentração maior de aeroportos com poucas conexões
+e uma menor parte com uma quantidade muito alta de conexões, que sustentam e conectam a malha inteira.
+
+Foi escolhido o gráfico de histograma por ser melhor a escolha para demonstrar a distribuição de frequência de uma variável
+contínua ou discreta agrupada. Ele permite ver imediatamente o formato dos dados (assimetria à direita), o que seria impossível
+de perceber batendo o olho apenas em uma tabela de números soltos.
