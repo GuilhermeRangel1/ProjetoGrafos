@@ -1,9 +1,11 @@
-O gráfico mostra a frequência com que os diferentes números de conexões de cada aeroporto aparecem na malha aérea.
-O eixo X mostra a quantidade de rotas e o eixo Y mostra quantos aeroportos possuem essa quantidade.
+O gráfico mostra uma representação topológica focada exclusivamente na espinha dorsal da rede. O filtro removeu aeroportos
+periféricos, mostrando apenas nós com 10 ou mais conexões e os voos que ocorrem estritamente entre eles. O tamanho de cada
+nó é proporcional à sua quantidade de conexões.
 
-Com ele, pode-se extrair o comportamento de redes complexas. Há uma concentração maior de aeroportos com poucas conexões
-e uma menor parte com uma quantidade muito alta de conexões, que sustentam e conectam a malha inteira.
+Com ele, pode-se extrair que os aeroportos mais conectados do Brasil são altamente conectados entre si mesmos, formando um
+grande núcleo de conexões. Isso significa que se um aeroporto periférico fechasse, a rede sofreria pouco, mas se um desses
+mais conectados falhar, o impacto nacional é maior, pois eles funcionam como pontes fundamentais de transporte.
 
-Foi escolhido o gráfico de histograma por ser melhor a escolha para demonstrar a distribuição de frequência de uma variável
-contínua ou discreta agrupada. Ele permite ver imediatamente o formato dos dados (assimetria à direita), o que seria impossível
-de perceber batendo o olho apenas em uma tabela de números soltos.
+Foi escolhido o grafo interativo em html porque mapas estáticos com muitas arestas cruzadas geram oposição visual.
+O subgrafo limpa mais a imagem. A codificação visual do tamanho do nó associada ao grau atende aos princípios de magnitude de AVD,
+permitindo que o leitor identifique instantaneamente os atores mais importantes sem precisar ler rótulos.
