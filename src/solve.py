@@ -7,6 +7,7 @@ from collections import OrderedDict
 sys.path.append(os.path.join(os.path.dirname(__file__)))
 
 from graphs.algorithms import dijkstra
+from viz import gerar_html_do_caminho
 
 class GrafoAeroportos:
     def __init__(self):
@@ -73,7 +74,6 @@ def resolver_etapas_3_e_4(grafo, caminho_aeroportos_data, pasta_saida):
                 grau = len(vizinhos)
                 graus_dados.append({"aeroporto": no, "grau": grau})
                 
-                # Lógica simplificada de Ego-Rede (Igual à do colega)
                 ordem_ego = grau + 1
                 tamanho_ego = grau 
                 densidade_ego = calcular_densidade(ordem_ego, tamanho_ego)
@@ -115,6 +115,25 @@ def resolver_etapa_6(grafo, caminho_rotas, pasta_saida):
     except Exception as e:
         print(f"Erro: {e}")
 
+def resolver_etapa_7(grafo, caminho_rotas, pasta_saida):
+    print("\nprocessando etapa 7")
+
+    try:
+        df_rotas = pd.read_csv(caminho_rotas, encoding='utf-8')
+        
+        for _, linha in df_rotas.iterrows():
+            origem = str(linha['origem']).strip()
+            destino = str(linha['destino']).strip()
+            
+            custo, trajeto = dijkstra(grafo, origem, destino)
+            
+            if trajeto and custo != float('inf'):
+                gerar_html_do_caminho(grafo, trajeto, origem, destino, pasta_saida)
+                
+        print("OK: Arquivos HTML individuais gerados para cada rota na pasta out/.")
+    except Exception as e:
+        print(f"Erro na Etapa 7: {e}")
+
 def main():
     base_path = os.path.dirname(os.path.dirname(__file__))
     caminho_adj = os.path.join(base_path, 'data', 'adjacencias_aeroportos.csv')
@@ -133,10 +152,11 @@ def main():
             
         resolver_etapas_3_e_4(grafo, caminho_aeroportos_data, pasta_saida)
         resolver_etapa_6(grafo, caminho_rotas, pasta_saida)
+        resolver_etapa_7(grafo, caminho_rotas, pasta_saida)
         
         print("\n--- Processamento Finalizado com Sucesso ---")
     except Exception as e:
-        print(f"Erro: {e}")
+        print(f"Erro no processamento principal: {e}")
 
 if __name__ == "__main__":
     main()
