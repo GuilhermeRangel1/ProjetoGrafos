@@ -1,3 +1,4 @@
+from __future__ import annotations
 import os
 from pyvis.network import Network
 
@@ -38,7 +39,6 @@ Usa Leaflet.js para exibir o mapa real do Brasil com os aeroportos
 posicionados nas coordenadas geográficas corretas.
 """
 
-from __future__ import annotations
 
 import csv
 import json
@@ -205,7 +205,13 @@ class Grafo:
 
     def dijkstra(self, src: str, dst: str) -> tuple:
         """Delega ao algoritmo implementado em graphs/algorithms.py."""
-        return _dijkstra(dict(self.adj), src, dst)
+        return _dijkstra(self, src, dst)
+    
+    def obter_todos_nos(self):
+        return list(self.adj.keys())
+
+    def obter_vizinhos_com_peso(self, u):
+        return self.adj.get(u, [])
 
 # ---------------------------------------------------------------------------
 # Cores por região
@@ -599,13 +605,13 @@ def main() -> None:
 
     _, path_rpo = g.dijkstra(recife, porto_alegre)
     _, path_msp = g.dijkstra(manaus, sao_paulo)
-    print(f"      REC → {porto_alegre}: {' → '.join(path_rpo) or 'sem caminho'}")
-    print(f"      {manaus} → {sao_paulo}: {' → '.join(path_msp) or 'sem caminho'}")
+    print(f"      REC -> {porto_alegre}: {' -> '.join(path_rpo) or 'sem caminho'}")
+    print(f"      {manaus} -> {sao_paulo}: {' -> '.join(path_msp) or 'sem caminho'}")
 
     html = build_html(airports, edges, ego, coords, path_rpo, path_msp)
     out_path = OUT / "grafo_interativo.html"
     out_path.write_text(html, encoding="utf-8")
-    print(f"\n✅  Gerado: {out_path.relative_to(ROOT)}")
+    print(f"\n[Ok]  Gerado: {out_path.relative_to(ROOT)}")
 
 
 if __name__ == "__main__":
