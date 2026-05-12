@@ -45,7 +45,10 @@ main{display:flex;flex:1;overflow:hidden}
 .pr{color:#ff7070} .pm{color:#70b8ff}
 #statusbar{padding:3px 14px;font-size:.62rem;color:var(--muted);
             background:var(--surf);border-top:1px solid var(--border);flex-shrink:0}
-/* tiles escuros */
+.rota-input{background:var(--bg);border:1px solid var(--border);color:var(--text);
+             font-family:inherit;font-size:.75rem;padding:5px 8px;border-radius:4px;
+             width:100%;outline:none;text-transform:uppercase;transition:border .2s}
+.rota-input:focus{border-color:var(--accent)}
 .leaflet-tile{filter:brightness(.42) saturate(.55) hue-rotate(195deg)}
 .leaflet-container{background:#0d0d14}
 /* marcadores */
@@ -76,6 +79,16 @@ main{display:flex;flex:1;overflow:hidden}
     <div>
       <div class="ptitle">Legenda — Regiões</div>
       <div id="legend"></div>
+    </div>
+    <div>
+      <div class="ptitle">Buscar Rota</div>
+      <div style="display:flex;flex-direction:column;gap:5px">
+        <input id="rota-origem"  class="rota-input" placeholder="Origem (ex: REC)" maxlength="3"/>
+        <input id="rota-destino" class="rota-input" placeholder="Destino (ex: POA)" maxlength="3"/>
+        <button onclick="buscarRota()" style="margin-top:2px;padding:5px;background:var(--accent);border:none;color:#fff;border-radius:4px;cursor:pointer;font-family:inherit;font-size:.72rem;font-weight:700">🔍 Calcular Rota</button>
+        <button onclick="limparRota()" style="padding:4px;background:var(--bg);border:1px solid var(--border);color:var(--muted);border-radius:4px;cursor:pointer;font-family:inherit;font-size:.68rem">✕ Limpar</button>
+      </div>
+      <div class="ibox" id="rota-result" style="margin-top:6px;min-height:60px">Digite origem e destino para calcular.</div>
     </div>
     <div>
       <div class="ptitle">Aeroporto selecionado</div>
@@ -268,6 +281,119 @@ function searchNode(){
   if(info){map.flyTo([info.lat,info.lon],7,{duration:.8});mkMap[q]?.openTooltip();}
 }
 
+// ── Dijkstra em JavaScript (para busca de rota no frontend) ──
+function dijkstraJS(origem, destino) {
+  const INF = Infinity;
+  const dist = {}, prev = {};
+  // montar adjacência a partir de EDGES
+  const adj = {};
+  Object.keys(AP).forEach(n => { adj[n] = []; });
+  EDGES.forEach(e => {
+    if(adj[e.from]) adj[e.from].push({node: e.to,   peso: parseFloat(e.peso)});
+    if(adj[e.to])   adj[e.to].push(  {node: e.from, peso: parseFloat(e.peso)});
+  });
+
+  Object.keys(AP).forEach(n => { dist[n] = INF; });
+  dist[origem] = 0;
+
+  const visited = new Set();
+  const queue   = Object.keys(AP).slice();
+
+  while(queue.length > 0) {
+    // pegar nó com menor distância
+    queue.sort((a,b) => dist[a] - dist[b]);
+    const u = queue.shift();
+    if(dist[u] === INF) break;
+    if(u === destino) break;
+    visited.add(u);
+    (adj[u] || []).forEach((nb) => { const v=nb.node, w=nb.peso;
+      if(visited.has(v)) return;
+      const nd = dist[u] + w;
+      if(nd < dist[v]) { dist[v] = nd; prev[v] = u; }
+    });
+  }
+
+  if(dist[destino] === INF) return {custo: INF, caminho: []};
+
+  const caminho = [];
+  let cur = destino;
+  while(cur !== undefined) { caminho.unshift(cur); cur = prev[cur]; }
+  return {custo: dist[destino], caminho};
+}
+
+// linha da rota buscada
+let rotaLine = null;
+
+function buscarRota() {
+  const origem  = document.getElementById('rota-origem').value.trim().toUpperCase();
+  const destino = document.getElementById('rota-destino').value.trim().toUpperCase();
+  const box     = document.getElementById('rota-result');
+
+  if(!origem || !destino) {
+    box.innerHTML = '<span style="color:#ff7070">Preencha origem e destino.</span>'; return;
+  }
+  if(!AP[origem]) {
+    box.innerHTML = `<span style="color:#ff7070">Aeroporto "${origem}" não encontrado.</span>`; return;
+  }
+  if(!AP[destino]) {
+    box.innerHTML = `<span style="color:#ff7070">Aeroporto "${destino}" não encontrado.</span>`; return;
+  }
+  if(origem === destino) {
+    box.innerHTML = '<span style="color:#ff7070">Origem e destino são iguais.</span>'; return;
+  }
+
+  const {custo, caminho} = dijkstraJS(origem, destino);
+
+  // remover linha anterior
+  if(rotaLine) { map.removeLayer(rotaLine); rotaLine = null; }
+
+  if(caminho.length === 0) {
+    box.innerHTML = `<span style="color:#ff7070">Sem caminho entre ${origem} e ${destino}.</span>`; return;
+  }
+
+  // verificar se é direto
+  const direto = EDGES.some(e =>
+    (e.from===origem && e.to===destino) || (e.from===destino && e.to===origem)
+  );
+  const escalas  = caminho.length - 2;
+  const tipo     = direto ? '✅ Voo direto' : `🔁 Com ${escalas} escala(s)`;
+  const custo_km = custo.toFixed(0);
+
+  // montar HTML do resultado
+  let html = `<b style="color:#e0e0f0">${origem} → ${destino}</b><br>`;
+  html += `${tipo}<br>`;
+  html += `Distância: <b style="color:#00c2a8">${custo_km} km</b><br>`;
+  html += `Percurso:<br><span style="color:#f5a623">${caminho.join(' → ')}</span>`;
+  box.innerHTML = html;
+
+  // desenhar rota no mapa
+  const latlngs = caminho.map(iata => [AP[iata].lat, AP[iata].lon]);
+  rotaLine = L.polyline(latlngs, {
+    color: '#00c2a8', weight: 4, opacity: 1, dashArray: null,
+    className: 'rota-buscada'
+  }).addTo(map);
+  rotaLine.bringToFront();
+
+  // zoom para o caminho
+  map.fitBounds(rotaLine.getBounds(), {padding: [40, 40], maxZoom: 7, animate: true, duration: 1});
+
+  document.getElementById('statusbar').textContent =
+    `Rota ${origem} → ${destino}: ${custo_km} km | ${caminho.length-1} trecho(s) | ${tipo}`;
+}
+
+function limparRota() {
+  if(rotaLine) { map.removeLayer(rotaLine); rotaLine = null; }
+  document.getElementById('rota-origem').value  = '';
+  document.getElementById('rota-destino').value = '';
+  document.getElementById('rota-result').innerHTML = 'Digite origem e destino para calcular.';
+  document.getElementById('statusbar').textContent =
+    `Grafo pronto — ${Object.keys(AP).length} aeroportos, ${EDGES.length} conexões.`;
+}
+
+// permitir Enter nos campos de rota
+document.getElementById('rota-origem') .addEventListener('keydown', e => { if(e.key==='Enter') buscarRota(); });
+document.getElementById('rota-destino').addEventListener('keydown', e => { if(e.key==='Enter') buscarRota(); });
+
 // reset
 function resetView(){
   map.flyTo([-15,-53],4,{duration:.8});
@@ -275,6 +401,7 @@ function resetView(){
   highlightPath('none');
   document.getElementById('btn-rpo').classList.remove('active');
   document.getElementById('btn-msp').classList.remove('active');
+  limparRota();
 }
 </script>
 </body>

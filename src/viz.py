@@ -1,44 +1,4 @@
 from __future__ import annotations
-import os
-from pyvis.network import Network
-
-def gerar_html_do_caminho(grafo, trajeto, origem, destino, pasta_saida):
-
-    rede = Network(height="600px", width="100%", bgcolor="#ffffff", font_color="black")
-    
-    for aeroporto in trajeto:
-        rede.add_node(aeroporto, label=aeroporto, title=f"aeroportoporto {aeroporto}", color="#FF4500", size=35)
-            
-    for i in range(len(trajeto) - 1):
-        passo_atual = trajeto[i]
-        proximo_passo = trajeto[i+1]
-        
-        distancia_do_voo = 0
-        vizinhos = grafo.obter_vizinhos_com_peso(passo_atual)
-        
-        for vizinho, peso in vizinhos:
-            if vizinho == proximo_passo:
-                distancia_do_voo = peso
-                break
-        rede.add_edge(passo_atual, proximo_passo, color="red", width=4, label=str(distancia_do_voo))
-                    
-    nome_arquivo = f"arvore_percurso_{origem}_para_{destino}.html"
-    caminho_salvar = os.path.join(pasta_saida, nome_arquivo)
-    
-    rede.save_graph(caminho_salvar)
-"""
-src/viz.py  –  Etapa 9: Grafo Interativo
-Gera: out/grafo_interativo.html
-
-Uso (a partir da raiz do projeto):
-    python src/viz.py
-
-Depende de:
-    src/graphs/algorithms.py → dijkstra()
-Usa Leaflet.js para exibir o mapa real do Brasil com os aeroportos
-posicionados nas coordenadas geográficas corretas.
-"""
-
 
 import csv
 import json
@@ -63,9 +23,6 @@ if str(SRC) not in sys.path:
 
 from graphs.algorithms import dijkstra as _dijkstra  # type: ignore
 
-# ---------------------------------------------------------------------------
-# Coordenadas embutidas — fallback para os 20 aeroportos do CSV
-# ---------------------------------------------------------------------------
 COORDS_FALLBACK: dict[str, tuple[float, float]] = {
     "REC": (-8.1264,  -34.9236),
     "SSA": (-12.9086, -38.3225),
@@ -89,9 +46,6 @@ COORDS_FALLBACK: dict[str, tuple[float, float]] = {
     "RBR": (-9.8688,  -67.8981),
 }
 
-# ---------------------------------------------------------------------------
-# Leitura dos CSVs
-# ---------------------------------------------------------------------------
 
 def load_airports(path: Path) -> dict:
     airports = {}
@@ -137,9 +91,6 @@ def load_ego(path: Path) -> dict:
                 }
     return metrics
 
-# ---------------------------------------------------------------------------
-# Coordenadas via Nominatim (com cache em data/coordenadas.json)
-# ---------------------------------------------------------------------------
 
 CACHE_FILE = DATA / "coordenadas.json"
 
@@ -189,9 +140,6 @@ def fetch_coords(airports: dict) -> dict[str, tuple[float, float]]:
 
     return {k: (v[0], v[1]) for k, v in cache.items()}
 
-# ---------------------------------------------------------------------------
-# Grafo — usa Dijkstra de graphs/algorithms.py
-# ---------------------------------------------------------------------------
 
 class Grafo:
     def __init__(self):
@@ -203,19 +151,16 @@ class Grafo:
         self.adj[v].append((u, w))
         self.nodes.update([u, v])
 
-    def dijkstra(self, src: str, dst: str) -> tuple:
-        """Delega ao algoritmo implementado em graphs/algorithms.py."""
-        return _dijkstra(self, src, dst)
-    
     def obter_todos_nos(self):
         return list(self.adj.keys())
 
     def obter_vizinhos_com_peso(self, u):
         return self.adj.get(u, [])
 
-# ---------------------------------------------------------------------------
-# Cores por região
-# ---------------------------------------------------------------------------
+    def dijkstra(self, src: str, dst: str) -> tuple:
+        """Delega ao algoritmo implementado em graphs/algorithms.py."""
+        return _dijkstra(self, src, dst)
+
 
 REGION_COLORS = {
     "Norte":        "#00c2a8",
@@ -231,9 +176,6 @@ def _rcolor(regiao: str) -> str:
             return v
     return "#aaaaaa"
 
-# ---------------------------------------------------------------------------
-# Build HTML  (Leaflet.js + marcadores + polylines)
-# ---------------------------------------------------------------------------
 
 def build_html(airports, edges, ego, coords, path_rpo, path_msp) -> str:
 
@@ -328,7 +270,10 @@ main{{display:flex;flex:1;overflow:hidden}}
 .pr{{color:#ff7070}} .pm{{color:#70b8ff}}
 #statusbar{{padding:3px 14px;font-size:.62rem;color:var(--muted);
             background:var(--surf);border-top:1px solid var(--border);flex-shrink:0}}
-/* tiles escuros */
+.rota-input{{background:var(--bg);border:1px solid var(--border);color:var(--text);
+             font-family:inherit;font-size:.75rem;padding:5px 8px;border-radius:4px;
+             width:100%;outline:none;text-transform:uppercase;transition:border .2s}}
+.rota-input:focus{{border-color:var(--accent)}}
 .leaflet-tile{{filter:brightness(.42) saturate(.55) hue-rotate(195deg)}}
 .leaflet-container{{background:#0d0d14}}
 /* marcadores */
@@ -359,6 +304,16 @@ main{{display:flex;flex:1;overflow:hidden}}
     <div>
       <div class="ptitle">Legenda — Regiões</div>
       <div id="legend"></div>
+    </div>
+    <div>
+      <div class="ptitle">Buscar Rota</div>
+      <div style="display:flex;flex-direction:column;gap:5px">
+        <input id="rota-origem"  class="rota-input" placeholder="Origem (ex: REC)" maxlength="3"/>
+        <input id="rota-destino" class="rota-input" placeholder="Destino (ex: POA)" maxlength="3"/>
+        <button onclick="buscarRota()" style="margin-top:2px;padding:5px;background:var(--accent);border:none;color:#fff;border-radius:4px;cursor:pointer;font-family:inherit;font-size:.72rem;font-weight:700">🔍 Calcular Rota</button>
+        <button onclick="limparRota()" style="padding:4px;background:var(--bg);border:1px solid var(--border);color:var(--muted);border-radius:4px;cursor:pointer;font-family:inherit;font-size:.68rem">✕ Limpar</button>
+      </div>
+      <div class="ibox" id="rota-result" style="margin-top:6px;min-height:60px">Digite origem e destino para calcular.</div>
     </div>
     <div>
       <div class="ptitle">Aeroporto selecionado</div>
@@ -551,6 +506,119 @@ function searchNode(){{
   if(info){{map.flyTo([info.lat,info.lon],7,{{duration:.8}});mkMap[q]?.openTooltip();}}
 }}
 
+// ── Dijkstra em JavaScript (para busca de rota no frontend) ──
+function dijkstraJS(origem, destino) {{
+  const INF = Infinity;
+  const dist = {{}}, prev = {{}};
+  // montar adjacência a partir de EDGES
+  const adj = {{}};
+  Object.keys(AP).forEach(n => {{ adj[n] = []; }});
+  EDGES.forEach(e => {{
+    if(adj[e.from]) adj[e.from].push({{node: e.to,   peso: parseFloat(e.peso)}});
+    if(adj[e.to])   adj[e.to].push(  {{node: e.from, peso: parseFloat(e.peso)}});
+  }});
+
+  Object.keys(AP).forEach(n => {{ dist[n] = INF; }});
+  dist[origem] = 0;
+
+  const visited = new Set();
+  const queue   = Object.keys(AP).slice();
+
+  while(queue.length > 0) {{
+    // pegar nó com menor distância
+    queue.sort((a,b) => dist[a] - dist[b]);
+    const u = queue.shift();
+    if(dist[u] === INF) break;
+    if(u === destino) break;
+    visited.add(u);
+    (adj[u] || []).forEach((nb) => {{ const v=nb.node, w=nb.peso;
+      if(visited.has(v)) return;
+      const nd = dist[u] + w;
+      if(nd < dist[v]) {{ dist[v] = nd; prev[v] = u; }}
+    }});
+  }}
+
+  if(dist[destino] === INF) return {{custo: INF, caminho: []}};
+
+  const caminho = [];
+  let cur = destino;
+  while(cur !== undefined) {{ caminho.unshift(cur); cur = prev[cur]; }}
+  return {{custo: dist[destino], caminho}};
+}}
+
+// linha da rota buscada
+let rotaLine = null;
+
+function buscarRota() {{
+  const origem  = document.getElementById('rota-origem').value.trim().toUpperCase();
+  const destino = document.getElementById('rota-destino').value.trim().toUpperCase();
+  const box     = document.getElementById('rota-result');
+
+  if(!origem || !destino) {{
+    box.innerHTML = '<span style="color:#ff7070">Preencha origem e destino.</span>'; return;
+  }}
+  if(!AP[origem]) {{
+    box.innerHTML = `<span style="color:#ff7070">Aeroporto "${{origem}}" não encontrado.</span>`; return;
+  }}
+  if(!AP[destino]) {{
+    box.innerHTML = `<span style="color:#ff7070">Aeroporto "${{destino}}" não encontrado.</span>`; return;
+  }}
+  if(origem === destino) {{
+    box.innerHTML = '<span style="color:#ff7070">Origem e destino são iguais.</span>'; return;
+  }}
+
+  const {{custo, caminho}} = dijkstraJS(origem, destino);
+
+  // remover linha anterior
+  if(rotaLine) {{ map.removeLayer(rotaLine); rotaLine = null; }}
+
+  if(caminho.length === 0) {{
+    box.innerHTML = `<span style="color:#ff7070">Sem caminho entre ${{origem}} e ${{destino}}.</span>`; return;
+  }}
+
+  // verificar se é direto
+  const direto = EDGES.some(e =>
+    (e.from===origem && e.to===destino) || (e.from===destino && e.to===origem)
+  );
+  const escalas  = caminho.length - 2;
+  const tipo     = direto ? '✅ Voo direto' : `🔁 Com ${{escalas}} escala(s)`;
+  const custo_km = custo.toFixed(0);
+
+  // montar HTML do resultado
+  let html = `<b style="color:#e0e0f0">${{origem}} → ${{destino}}</b><br>`;
+  html += `${{tipo}}<br>`;
+  html += `Distância: <b style="color:#00c2a8">${{custo_km}} km</b><br>`;
+  html += `Percurso:<br><span style="color:#f5a623">${{caminho.join(' → ')}}</span>`;
+  box.innerHTML = html;
+
+  // desenhar rota no mapa
+  const latlngs = caminho.map(iata => [AP[iata].lat, AP[iata].lon]);
+  rotaLine = L.polyline(latlngs, {{
+    color: '#00c2a8', weight: 4, opacity: 1, dashArray: null,
+    className: 'rota-buscada'
+  }}).addTo(map);
+  rotaLine.bringToFront();
+
+  // zoom para o caminho
+  map.fitBounds(rotaLine.getBounds(), {{padding: [40, 40], maxZoom: 7, animate: true, duration: 1}});
+
+  document.getElementById('statusbar').textContent =
+    `Rota ${{origem}} → ${{destino}}: ${{custo_km}} km | ${{caminho.length-1}} trecho(s) | ${{tipo}}`;
+}}
+
+function limparRota() {{
+  if(rotaLine) {{ map.removeLayer(rotaLine); rotaLine = null; }}
+  document.getElementById('rota-origem').value  = '';
+  document.getElementById('rota-destino').value = '';
+  document.getElementById('rota-result').innerHTML = 'Digite origem e destino para calcular.';
+  document.getElementById('statusbar').textContent =
+    `Grafo pronto — ${{Object.keys(AP).length}} aeroportos, ${{EDGES.length}} conexões.`;
+}}
+
+// permitir Enter nos campos de rota
+document.getElementById('rota-origem') .addEventListener('keydown', e => {{ if(e.key==='Enter') buscarRota(); }});
+document.getElementById('rota-destino').addEventListener('keydown', e => {{ if(e.key==='Enter') buscarRota(); }});
+
 // reset
 function resetView(){{
   map.flyTo([-15,-53],4,{{duration:.8}});
@@ -558,6 +626,7 @@ function resetView(){{
   highlightPath('none');
   document.getElementById('btn-rpo').classList.remove('active');
   document.getElementById('btn-msp').classList.remove('active');
+  limparRota();
 }}
 </script>
 </body>
@@ -605,13 +674,13 @@ def main() -> None:
 
     _, path_rpo = g.dijkstra(recife, porto_alegre)
     _, path_msp = g.dijkstra(manaus, sao_paulo)
-    print(f"      REC -> {porto_alegre}: {' -> '.join(path_rpo) or 'sem caminho'}")
-    print(f"      {manaus} -> {sao_paulo}: {' -> '.join(path_msp) or 'sem caminho'}")
+    print(f"      REC → {porto_alegre}: {' → '.join(path_rpo) or 'sem caminho'}")
+    print(f"      {manaus} → {sao_paulo}: {' → '.join(path_msp) or 'sem caminho'}")
 
     html = build_html(airports, edges, ego, coords, path_rpo, path_msp)
     out_path = OUT / "grafo_interativo.html"
     out_path.write_text(html, encoding="utf-8")
-    print(f"\n[Ok]  Gerado: {out_path.relative_to(ROOT)}")
+    print(f"\n✅  Gerado: {out_path.relative_to(ROOT)}")
 
 
 if __name__ == "__main__":
