@@ -1,7 +1,5 @@
 {
-    "grafo_completo": {
-        "ordem": 20,
-        "tamanho": 106,
-        "densidade": 0.557
-    }
+    "ordem": 20,
+    "tamanho": 106,
+    "densidade": 0.5579
 }
