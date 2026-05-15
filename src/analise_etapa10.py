@@ -86,18 +86,57 @@ def load_regioes() -> dict[str, dict]:
 
 
 def vis_exp1_dispersao(ego: dict):
-    fig, ax = _base_fig(11, 7)
-
+    fig, ax = _base_fig(13, 8)
+ 
+    # agrupar por posição para detectar sobreposições
+    from collections import defaultdict
+    grupos: dict[tuple, list] = defaultdict(list)
     for iata, m in ego.items():
-        regiao = REGIOES_AEROPORTO.get(iata, "")
-        color  = REGION_COLORS.get(regiao, "#aaaaaa")
-        ax.scatter(m["grau"], m["densidade_ego"],
-                   color=color, s=160, zorder=3, edgecolors="#ffffff", linewidths=0.6, alpha=0.92)
-        ax.annotate(iata,
-                    (m["grau"], m["densidade_ego"]),
+        key = (m["grau"], round(m["densidade_ego"], 4))
+        grupos[key].append(iata)
+ 
+    plotados = {}  # iata → (x_final, y_final)
+ 
+    for (grau, dens), iatas_grupo in grupos.items():
+        n = len(iatas_grupo)
+        if n == 1:
+            # sem sobreposição — posição exata
+            offsets = [(0.0, 0.0)]
+        else:
+            # distribuir em arco ao redor do ponto original
+            angulos = np.linspace(0, 2 * np.pi, n, endpoint=False)
+            raio_x  = 0.35
+            raio_y  = 0.012
+            offsets = [(raio_x * np.cos(a), raio_y * np.sin(a)) for a in angulos]
+ 
+        for iata, (ox, oy) in zip(iatas_grupo, offsets):
+            x = grau + ox
+            y = dens + oy
+            plotados[iata] = (x, y)
+            regiao = REGIOES_AEROPORTO.get(iata, "")
+            color  = REGION_COLORS.get(regiao, "#aaaaaa")
+ 
+            ax.scatter(x, y, color=color, s=180, zorder=3,
+                       edgecolors="#ffffff", linewidths=0.8, alpha=0.95)
+ 
+            # linha tracejada ligando ao ponto real se houve deslocamento
+            if ox != 0.0 or oy != 0.0:
+                ax.plot([grau, x], [dens, y],
+                        color=color, linewidth=0.7, linestyle=":", alpha=0.5, zorder=2)
+ 
+        # marcar ponto original com um 'x' discreto se houve sobreposição
+        if n > 1:
+            ax.scatter(grau, dens, marker="+", color="#ffffff",
+                       s=60, zorder=4, linewidths=1.0, alpha=0.4)
+ 
+    # rótulos com posições ajustadas
+    for iata, (x, y) in plotados.items():
+        ax.annotate(iata, (x, y),
                     textcoords="offset points", xytext=(6, 4),
-                    fontsize=8, color=TEXT, fontfamily="monospace")
-
+                    fontsize=8, color=TEXT, fontfamily="monospace",
+                    bbox=dict(boxstyle="round,pad=0.15",
+                              facecolor=SURFACE, edgecolor="none", alpha=0.6))
+ 
     # linha de tendência
     xs = np.array([m["grau"]          for m in ego.values()])
     ys = np.array([m["densidade_ego"] for m in ego.values()])
@@ -106,14 +145,14 @@ def vis_exp1_dispersao(ego: dict):
     xr = np.linspace(xs.min(), xs.max(), 200)
     ax.plot(xr, p(xr), color="#ff6b35", linewidth=1.5, linestyle="--",
             alpha=0.7, label="Tendência")
-
+ 
     # legenda de regiões
     handles = [mpatches.Patch(color=v, label=k) for k, v in REGION_COLORS.items()]
     handles.append(plt.Line2D([0],[0], color="#ff6b35", linestyle="--", label="Tendência"))
     ax.legend(handles=handles, loc="upper right", framealpha=0.2,
               facecolor=SURFACE, edgecolor="#252535",
               labelcolor=TEXT, fontsize=8)
-
+ 
     ax.set_xlabel("Grau (número de conexões diretas)", fontsize=10)
     ax.set_ylabel("Densidade da Ego-rede", fontsize=10)
     ax.set_title(
@@ -121,7 +160,7 @@ def vis_exp1_dispersao(ego: dict):
         "Aeroportos mais conectados tendem a ter menor densidade local",
         fontsize=11, pad=14, color=TEXT
     )
-
+ 
     fig.tight_layout()
     path = OUT / "vis_exp1_dispersao_grau_densidade.png"
     fig.savefig(path, dpi=150, bbox_inches="tight", facecolor=BG)
@@ -179,57 +218,85 @@ def vis_exp2_boxplot_regioes(graus: dict):
 
 
 
-def vis_expl1_ranking(graus: dict):
-    ordenado = sorted(graus.items(), key=lambda x: x[1], reverse=True)
-    iatas    = [x[0] for x in ordenado]
-    vals     = [x[1] for x in ordenado]
-    cores    = [REGION_COLORS.get(REGIOES_AEROPORTO.get(i, ""), "#aaaaaa") for i in iatas]
-
-    fig, ax = _base_fig(12, 8)
-
-    bars = ax.barh(iatas, vals, color=cores, edgecolor="#0d0d14",
-                   linewidth=0.5, height=0.7)
-
-    # rótulos nas barras
-    for bar, val in zip(bars, vals):
-        ax.text(val + 0.15, bar.get_y() + bar.get_height()/2,
-                str(val), va="center", ha="left",
-                fontsize=9, color=TEXT, fontfamily="monospace")
-
-    # destaque nos top 3
-    for i in range(3):
-        bars[i].set_edgecolor("#ffffff")
-        bars[i].set_linewidth(1.5)
-        ax.text(0.5, bars[i].get_y() + bars[i].get_height()/2,
-                "★", va="center", ha="left",
-                fontsize=10, color="#fff200")
-
-    # legenda de regiões
-    handles = [mpatches.Patch(color=v, label=k) for k, v in REGION_COLORS.items()]
-    ax.legend(handles=handles, loc="lower right", framealpha=0.2,
-              facecolor=SURFACE, edgecolor="#252535",
-              labelcolor=TEXT, fontsize=8)
-
-    ax.set_xlabel("Número de conexões diretas (grau)", fontsize=10)
-    ax.set_title(
-        "EXPLANATÓRIA 1 — Ranking de Conectividade dos Aeroportos Brasileiros\n"
-        "CNF e BSB lideram com 19 conexões; PVH e RBR são os menos conectados (4)",
-        fontsize=11, pad=14, color=TEXT
-    )
-    ax.invert_yaxis()
-    ax.set_xlim(0, max(vals) + 2.5)
-
-    # anotação explicativa
+def vis_expl1_bolhas(graus: dict, ego: dict, regioes: dict):
+    """
+    Cada bolha = uma região.
+    Eixo X  = grau médio dos aeroportos da região
+    Eixo Y  = densidade média das ego-redes da região
+    Tamanho = número de aeroportos (ordem)
+    Cor     = região
+    """
+    # agregar por região
+    por_regiao: dict[str, list] = {r: [] for r in REGION_COLORS}
+    for iata, m in ego.items():
+        r = REGIOES_AEROPORTO.get(iata, "")
+        if r in por_regiao:
+            por_regiao[r].append(m)
+ 
+    regioes_list = list(REGION_COLORS.keys())
+    grau_med  = [np.mean([m["grau"]          for m in por_regiao[r]]) for r in regioes_list]
+    dens_med  = [np.mean([m["densidade_ego"] for m in por_regiao[r]]) for r in regioes_list]
+    ordem     = [regioes[r]["ordem"] for r in regioes_list]
+    cores     = [REGION_COLORS[r]    for r in regioes_list]
+ 
+    # tamanho das bolhas proporcional à ordem
+    sizes = [o * 320 for o in ordem]
+ 
+    fig, ax = _base_fig(11, 7)
+ 
+    scatter = ax.scatter(grau_med, dens_med, s=sizes, c=cores,
+                         alpha=0.78, edgecolors="#ffffff", linewidths=1.2, zorder=3)
+ 
+    # rótulos dentro das bolhas
+    for x, y, r, o in zip(grau_med, dens_med, regioes_list, ordem):
+        ax.text(x, y, f"{r}\n({o} aerop.)",
+                ha="center", va="center",
+                fontsize=8, color="#ffffff", fontfamily="monospace",
+                fontweight="bold")
+ 
+    # anotações de insight
+    # Centro-Oeste: maior densidade, poucos aeroportos
     ax.annotate(
-        "Hubs nacionais concentram-se\nno Sudeste e Centro-Oeste",
-        xy=(19, 1.5), xytext=(14, 5),
-        arrowprops=dict(arrowstyle="->", color=MUTED),
+        "Alta densidade interna\nmas apenas 2 aeroportos",
+        xy=(grau_med[regioes_list.index("Centro-Oeste")],
+            dens_med[regioes_list.index("Centro-Oeste")]),
+        xytext=(grau_med[regioes_list.index("Centro-Oeste")] - 3.5,
+                dens_med[regioes_list.index("Centro-Oeste")] + 0.025),
+        arrowprops=dict(arrowstyle="->", color=MUTED, lw=1.2),
         fontsize=8, color=MUTED,
         bbox=dict(boxstyle="round,pad=0.3", facecolor=SURFACE, edgecolor="#252535")
     )
-
+    # Sudeste: maior grau médio
+    ax.annotate(
+        "Maior grau médio\n(hubs nacionais)",
+        xy=(grau_med[regioes_list.index("Sudeste")],
+            dens_med[regioes_list.index("Sudeste")]),
+        xytext=(grau_med[regioes_list.index("Sudeste")] + 0.5,
+                dens_med[regioes_list.index("Sudeste")] - 0.03),
+        arrowprops=dict(arrowstyle="->", color=MUTED, lw=1.2),
+        fontsize=8, color=MUTED,
+        bbox=dict(boxstyle="round,pad=0.3", facecolor=SURFACE, edgecolor="#252535")
+    )
+ 
+    # legenda de tamanho
+    for o_ref, label in [(2, "2 aeroportos"), (4, "4 aeroportos"), (6, "6 aeroportos")]:
+        ax.scatter([], [], s=o_ref*320, c="#555566",
+                   edgecolors="#ffffff", linewidths=0.8,
+                   label=label, alpha=0.7)
+    ax.legend(loc="lower left", framealpha=0.2, facecolor=SURFACE,
+              edgecolor="#252535", labelcolor=TEXT, fontsize=8,
+              title="Tamanho da bolha", title_fontsize=8)
+ 
+    ax.set_xlabel("Grau médio dos aeroportos da região", fontsize=10)
+    ax.set_ylabel("Densidade média das ego-redes", fontsize=10)
+    ax.set_title(
+        "EXPLANATÓRIA 1 — Perfil de Conectividade por Região\n"
+        "Sudeste tem os aeroportos mais conectados; Centro-Oeste tem a maior coesão interna",
+        fontsize=11, pad=14, color=TEXT
+    )
+ 
     fig.tight_layout()
-    path = OUT / "vis_expl1_ranking_conectividade.png"
+    path = OUT / "vis_expl1_bolhas_regioes.png"
     fig.savefig(path, dpi=150, bbox_inches="tight", facecolor=BG)
     plt.close(fig)
     print(f"  ✓ {path.name}")
@@ -310,13 +377,13 @@ def main():
     vis_exp2_boxplot_regioes(graus)
 
     print("[3/4] Gerando visualizações explanatórias…")
-    vis_expl1_ranking(graus)
+    vis_expl1_bolhas(graus, ego, regioes)
     vis_expl2_radar(regioes)
 
     print("\n✅  Etapa 10 concluída. Arquivos gerados em out/:")
     for f in ["vis_exp1_dispersao_grau_densidade.png",
               "vis_exp2_boxplot_graus_regiao.png",
-              "vis_expl1_ranking_conectividade.png",
+              "vis_expl1_bolhas_regioes.png",
               "vis_expl2_radar_regioes.png"]:
         print(f"     {f}")
 
