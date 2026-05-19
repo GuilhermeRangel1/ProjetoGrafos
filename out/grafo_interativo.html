@@ -70,7 +70,8 @@ main{display:flex;flex:1;overflow:hidden}
     <button onclick="resetView()">↺ Reset</button>
     <button id="btn-rpo" onclick="highlightPath('rpo')">REC → POA</button>
     <button id="btn-msp" onclick="highlightPath('msp')">MAO → GRU</button>
-    <button onclick="highlightPath('none');limparRota()">Limpar rotas</button>
+    <button id="btn-hubs" onclick="toggleHubs()">★ Subgrafo de Hubs</button>
+    <button onclick="highlightPath('none')">Limpar rotas</button>
   </div>
 </header>
 <main>
@@ -186,67 +187,11 @@ Object.entries(AP).forEach(([iata,info]) => {
 document.getElementById('statusbar').textContent=
   `Grafo pronto — ${Object.keys(AP).length} aeroportos, ${EDGES.length} conexões.`;
 
-// ── controla se os caminhos obrigatórios estão ocultos ──
-let mandatoryHidden = false;
-
-// Oculta as arestas e marcadores dos caminhos obrigatórios
-function hideMandatoryPaths() {
-  mandatoryHidden = true;
-  EDGES.forEach(e => {
-    const k = ekey(e.from, e.to);
-    const ln = lineMap[k]; if (!ln) return;
-    if (rpoEdges.has(k) || mspEdges.has(k)) {
-      ln.setStyle({ opacity: 0 });
-    }
-  });
-  // redefine borda dos marcadores que eram dos caminhos obrigatórios
-  Object.entries(AP).forEach(([iata, info]) => {
-    const inR = rpoNodes.has(iata), inM = mspNodes.has(iata);
-    if (!inR && !inM) return;
-    const sz = 28;
-    const icon = L.divIcon({
-      className: '',
-      html: `<div class="ap-dot" style="width:${sz}px;height:${sz}px;background:${info.color};border-color:#ffffff;font-size:8px">${iata}</div>`,
-      iconSize: [sz, sz], iconAnchor: [sz/2, sz/2]
-    });
-    mkMap[iata].setIcon(icon);
-  });
-}
-
-// Restaura as arestas e marcadores dos caminhos obrigatórios
-function showMandatoryPaths() {
-  mandatoryHidden = false;
-  EDGES.forEach(e => {
-    const k = ekey(e.from, e.to);
-    const ln = lineMap[k]; if (!ln) return;
-    const inR = rpoEdges.has(k), inM = mspEdges.has(k);
-    if (!inR && !inM) return;
-    let color = '#ffff00', weight = 5;
-    if (inR && !inM) { color = '#ff4444'; weight = 4; }
-    else if (!inR && inM) { color = '#44aaff'; weight = 4; }
-    ln.setStyle({ color, weight, opacity: 1, dashArray: null });
-  });
-  // restaura borda colorida dos marcadores
-  Object.entries(AP).forEach(([iata, info]) => {
-    const inR = rpoNodes.has(iata), inM = mspNodes.has(iata);
-    if (!inR && !inM) return;
-    let border = '#ffffff', sz = 28;
-    if (inR && inM) { border = '#ffff00'; sz = 36; }
-    else if (inR)   { border = '#ff4444'; sz = 34; }
-    else if (inM)   { border = '#44aaff'; sz = 34; }
-    const icon = L.divIcon({
-      className: '',
-      html: `<div class="ap-dot" style="width:${sz}px;height:${sz}px;background:${info.color};border-color:${border};font-size:${sz>30?'9px':'8px'}">${iata}</div>`,
-      iconSize: [sz, sz], iconAnchor: [sz/2, sz/2]
-    });
-    mkMap[iata].setIcon(icon);
-  });
-}
-
 // ── Highlight de arestas ao clicar num vértice ──
 let selectedVertex = null;
 
 function highlightVertex(iata) {
+  // se clicar no mesmo, deseleciona
   if (selectedVertex === iata) {
     selectedVertex = null;
     restoreEdges();
@@ -256,12 +201,14 @@ function highlightVertex(iata) {
   }
   selectedVertex = iata;
 
+  // vizinhos diretos
   const neighbors = new Set();
   EDGES.forEach(e => {
     if (e.from === iata) neighbors.add(e.to);
     if (e.to   === iata) neighbors.add(e.from);
   });
 
+  // escurecer todas as arestas; acender as do vértice selecionado
   EDGES.forEach(e => {
     const k = ekey(e.from, e.to);
     const ln = lineMap[k]; if (!ln) return;
@@ -284,11 +231,6 @@ function restoreEdges() {
   EDGES.forEach(e => {
     const k=ekey(e.from,e.to), ln=lineMap[k]; if(!ln) return;
     const inR=rpoEdges.has(k), inM=mspEdges.has(k);
-    // se os obrigatórios estão ocultos, mantém-os invisíveis
-    if (mandatoryHidden && (inR || inM)) {
-      ln.setStyle({ opacity: 0 });
-      return;
-    }
     let color='#3a3a55',weight=1.5,opacity=.5,dash='5,7';
     if(inR&&inM){color='#ffff00';weight=5;opacity=1;dash=null;}
     else if(inR){color='#ff4444';weight=4;opacity=1;dash=null;}
@@ -340,10 +282,11 @@ function searchNode(){
   if(info){map.flyTo([info.lat,info.lon],7,{duration:.8});mkMap[q]?.openTooltip();}
 }
 
-// ── Dijkstra ──
+// ── Dijkstra em JavaScript (para busca de rota no frontend) ──
 function dijkstraJS(origem, destino) {
   const INF = Infinity;
   const dist = {}, prev = {};
+  // montar adjacência a partir de EDGES
   const adj = {};
   Object.keys(AP).forEach(n => { adj[n] = []; });
   EDGES.forEach(e => {
@@ -358,6 +301,7 @@ function dijkstraJS(origem, destino) {
   const queue   = Object.keys(AP).slice();
 
   while(queue.length > 0) {
+    // pegar nó com menor distância
     queue.sort((a,b) => dist[a] - dist[b]);
     const u = queue.shift();
     if(dist[u] === INF) break;
@@ -408,9 +352,7 @@ function buscarRota() {
     box.innerHTML = `<span style="color:#ff7070">Sem caminho entre ${origem} e ${destino}.</span>`; return;
   }
 
-  // ── ocultar caminhos obrigatórios para não poluir a visualização ──
-  hideMandatoryPaths();
-
+  // verificar se é direto
   const direto = EDGES.some(e =>
     (e.from===origem && e.to===destino) || (e.from===destino && e.to===origem)
   );
@@ -418,12 +360,14 @@ function buscarRota() {
   const tipo     = direto ? '✅ Voo direto' : `🔁 Com ${escalas} escala(s)`;
   const custo_km = custo.toFixed(0);
 
+  // montar HTML do resultado
   let html = `<b style="color:#e0e0f0">${origem} → ${destino}</b><br>`;
   html += `${tipo}<br>`;
   html += `Distância: <b style="color:#00c2a8">${custo_km} km</b><br>`;
   html += `Percurso:<br><span style="color:#f5a623">${caminho.join(' → ')}</span>`;
   box.innerHTML = html;
 
+  // desenhar rota no mapa
   const latlngs = caminho.map(iata => [AP[iata].lat, AP[iata].lon]);
   rotaLine = L.polyline(latlngs, {
     color: '#00c2a8', weight: 4, opacity: 1, dashArray: null,
@@ -431,10 +375,11 @@ function buscarRota() {
   }).addTo(map);
   rotaLine.bringToFront();
 
+  // zoom para o caminho
   map.fitBounds(rotaLine.getBounds(), {padding: [40, 40], maxZoom: 7, animate: true, duration: 1});
 
   document.getElementById('statusbar').textContent =
-    `Rota ${origem} → ${destino}: ${custo_km} km | ${caminho.length-1} trecho(s) | ${tipo} — limpe a rota para restaurar os caminhos obrigatórios`;
+    `Rota ${origem} → ${destino}: ${custo_km} km | ${caminho.length-1} trecho(s) | ${tipo}`;
 }
 
 function limparRota() {
@@ -442,10 +387,6 @@ function limparRota() {
   document.getElementById('rota-origem').value  = '';
   document.getElementById('rota-destino').value = '';
   document.getElementById('rota-result').innerHTML = 'Digite origem e destino para calcular.';
-
-  // ── restaurar caminhos obrigatórios ──
-  showMandatoryPaths();
-
   document.getElementById('statusbar').textContent =
     `Grafo pronto — ${Object.keys(AP).length} aeroportos, ${EDGES.length} conexões.`;
 }
@@ -459,9 +400,57 @@ function resetView(){
   map.flyTo([-15,-53],4,{duration:.8});
   document.getElementById('search-box').value='';
   highlightPath('none');
+  if(showingHubs) toggleHubs();
   document.getElementById('btn-rpo').classList.remove('active');
   document.getElementById('btn-msp').classList.remove('active');
   limparRota();
+}
+
+// subgrafo de hubs
+let showingHubs = false;
+function toggleHubs() {
+  showingHubs = !showingHubs;
+  document.getElementById('btn-hubs').classList.toggle('active', showingHubs);
+  
+  if (showingHubs) {
+    const hubNodes = new Set();
+    Object.entries(AP).forEach(([iata, info]) => {
+      const grau = parseInt(info.grau) || 0;
+      if (grau >= 10) {
+        hubNodes.add(iata);
+        if (mkMap[iata]) {
+          mkMap[iata].setOpacity(1);
+          mkMap[iata].getElement().querySelector('.ap-dot').style.transform = 'scale(1.2)';
+        }
+      } else {
+        if (mkMap[iata]) mkMap[iata].setOpacity(0.15);
+      }
+    });
+
+    EDGES.forEach(e => {
+      const k = ekey(e.from, e.to);
+      const ln = lineMap[k];
+      if (!ln) return;
+      if (hubNodes.has(e.from) && hubNodes.has(e.to)) {
+        ln.setStyle({color: '#e84393', weight: 3, opacity: 0.9, dashArray: null});
+        ln.bringToFront();
+      } else {
+        ln.setStyle({opacity: 0.05, weight: 1, dashArray: '4,8'});
+      }
+    });
+    
+    document.getElementById('statusbar').textContent =
+      `Subgrafo de Hubs ativado — ${hubNodes.size} aeroportos com grau ≥ 10.`;
+      
+  } else {
+    Object.values(mkMap).forEach(mk => {
+      mk.setOpacity(1);
+      mk.getElement().querySelector('.ap-dot').style.transform = '';
+    });
+    restoreEdges();
+    document.getElementById('statusbar').textContent =
+      `Grafo pronto — ${Object.keys(AP).length} aeroportos, ${EDGES.length} conexões.`;
+  }
 }
 </script>
 </body>

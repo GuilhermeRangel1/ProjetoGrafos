@@ -295,6 +295,7 @@ main{{display:flex;flex:1;overflow:hidden}}
     <button onclick="resetView()">↺ Reset</button>
     <button id="btn-rpo" onclick="highlightPath('rpo')">REC → POA</button>
     <button id="btn-msp" onclick="highlightPath('msp')">MAO → GRU</button>
+    <button id="btn-hubs" onclick="toggleHubs()">★ Subgrafo de Hubs</button>
     <button onclick="highlightPath('none')">Limpar rotas</button>
   </div>
 </header>
@@ -624,9 +625,57 @@ function resetView(){{
   map.flyTo([-15,-53],4,{{duration:.8}});
   document.getElementById('search-box').value='';
   highlightPath('none');
+  if(showingHubs) toggleHubs();
   document.getElementById('btn-rpo').classList.remove('active');
   document.getElementById('btn-msp').classList.remove('active');
   limparRota();
+}}
+
+// subgrafo de hubs
+let showingHubs = false;
+function toggleHubs() {{
+  showingHubs = !showingHubs;
+  document.getElementById('btn-hubs').classList.toggle('active', showingHubs);
+  
+  if (showingHubs) {{
+    const hubNodes = new Set();
+    Object.entries(AP).forEach(([iata, info]) => {{
+      const grau = parseInt(info.grau) || 0;
+      if (grau >= 10) {{
+        hubNodes.add(iata);
+        if (mkMap[iata]) {{
+          mkMap[iata].setOpacity(1);
+          mkMap[iata].getElement().querySelector('.ap-dot').style.transform = 'scale(1.2)';
+        }}
+      }} else {{
+        if (mkMap[iata]) mkMap[iata].setOpacity(0.15);
+      }}
+    }});
+
+    EDGES.forEach(e => {{
+      const k = ekey(e.from, e.to);
+      const ln = lineMap[k];
+      if (!ln) return;
+      if (hubNodes.has(e.from) && hubNodes.has(e.to)) {{
+        ln.setStyle({{color: '#e84393', weight: 3, opacity: 0.9, dashArray: null}});
+        ln.bringToFront();
+      }} else {{
+        ln.setStyle({{opacity: 0.05, weight: 1, dashArray: '4,8'}});
+      }}
+    }});
+    
+    document.getElementById('statusbar').textContent =
+      `Subgrafo de Hubs ativado — ${{hubNodes.size}} aeroportos com grau ≥ 10.`;
+      
+  }} else {{
+    Object.values(mkMap).forEach(mk => {{
+      mk.setOpacity(1);
+      mk.getElement().querySelector('.ap-dot').style.transform = '';
+    }});
+    restoreEdges();
+    document.getElementById('statusbar').textContent =
+      `Grafo pronto — ${{Object.keys(AP).length}} aeroportos, ${{EDGES.length}} conexões.`;
+  }}
 }}
 </script>
 </body>

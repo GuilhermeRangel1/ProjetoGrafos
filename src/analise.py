@@ -1,172 +1,169 @@
 import pandas as pd
 import matplotlib.pyplot as plt
+import matplotlib.patches as mpatches
 import os
 import json
 from pyvis.network import Network
 
-def gerar_vis1_ranking_hubs(caminho_graus, pasta_saida):
+COR_FUNDO = "#0d0d14"
+COR_PLANO = "#13131f"
+COR_TEXTO = "#e0e0f0"
+COR_GRADE = "#252535"
+COR_DESTAQUE = "#f5a623" 
+
+def aplicar_estilo_escuro(fig, ax):
+    fig.patch.set_facecolor(COR_FUNDO)
+    ax.set_facecolor(COR_PLANO)
+    ax.tick_params(colors=COR_TEXTO, labelsize=9)
     
-    tabela_graus = pd.read_csv(caminho_graus, encoding='utf-8')
-    
-    top_10 = tabela_graus.nlargest(10, 'grau')
-    
-    top_10 = top_10.sort_values(by='grau', ascending=True)
-    
-    lista_aeroportos = top_10['aeroporto'].tolist()
-    lista_graus = top_10['grau'].tolist()
-    
-    plt.figure(figsize=(10, 6))
-    
-    plt.barh(lista_aeroportos, lista_graus, color='#4682B4', edgecolor='black')
-    
-    plt.title('Top 10 aeroportos mais conectados', fontsize=14, fontweight='bold')
-    plt.xlabel('Número de conexões diretas(grau)', fontsize=12)
-    plt.ylabel('Aeroporto(código IATA)', fontsize=12)
-    
-    for i in range(len(lista_aeroportos)):
-        valor = lista_graus[i]
-        plt.text(valor + 0.2, i, str(valor), va='center', fontsize=10)
+    for borda in ax.spines.values():
+        borda.set_edgecolor(COR_GRADE)
         
-    plt.xlim(0, max(lista_graus) + 2)
+    ax.spines['top'].set_visible(False)
+    ax.spines['right'].set_visible(False)
     
-    plt.gca().spines['top'].set_visible(False)
-    plt.gca().spines['right'].set_visible(False)
+    ax.xaxis.label.set_color(COR_TEXTO)
+    ax.yaxis.label.set_color(COR_TEXTO)
+    ax.title.set_color(COR_TEXTO)
+    ax.grid(color=COR_GRADE, linewidth=0.6, linestyle="--", alpha=0.5)
+
+
+def gerar_vis1_ranking_hubs(caminho_graus, pasta_saida):
+    tabela = pd.read_csv(caminho_graus, encoding='utf-8')
+    top_10 = tabela.nlargest(10, 'grau').sort_values(by='grau', ascending=True)
     
-    plt.tight_layout()
+    aeroportos = top_10['aeroporto'].tolist()
+    graus = top_10['grau'].tolist()
     
-    nome_arquivo = 'vis1_ranking_hubs.png'
-    caminho_salvar = os.path.join(pasta_saida, nome_arquivo)
-    plt.savefig(caminho_salvar, format='png', dpi=300)
-    plt.close()
+    cores_barras = []
+    maior_grau = max(graus)
     
-    print(f"Imagem salva em {caminho_salvar}")
+    for grau in graus:
+        if grau == maior_grau:
+            cores_barras.append(COR_DESTAQUE) 
+        else:
+            cores_barras.append('#6c63ff') 
+            
+    fig, ax = plt.subplots(figsize=(10, 6))
+    aplicar_estilo_escuro(fig, ax)
+    
+    ax.barh(aeroportos, graus, color=cores_barras, edgecolor=COR_FUNDO)
+    
+    ax.set_title('Top 10 Aeroportos Mais Conectados', fontsize=12, fontweight='bold')
+    ax.set_xlabel('Número de conexões diretas (grau)', fontsize=10)
+    ax.set_ylabel('Aeroporto (código IATA)', fontsize=10)
+    
+    for i in range(len(aeroportos)):
+        cor_num = COR_DESTAQUE if graus[i] == maior_grau else COR_TEXTO
+        ax.text(graus[i] + 0.3, i, str(graus[i]), va='center', color=cor_num, fontsize=9, fontweight='bold')
+        
+    # Adiciona a legenda organizada no canto da tela
+    legenda_destaque = mpatches.Patch(color=COR_DESTAQUE, label='Maior hub da malha aérea')
+    ax.legend(handles=[legenda_destaque], loc='lower right', facecolor=COR_PLANO, edgecolor=COR_GRADE, labelcolor=COR_TEXTO)
+        
+    ax.set_xlim(0, max(graus) + 2)
+    fig.tight_layout()
+    
+    caminho_salvar = os.path.join(pasta_saida, 'vis1_ranking_hubs.png')
+    fig.savefig(caminho_salvar, format='png', dpi=150, facecolor=COR_FUNDO)
+    plt.close(fig)
+
 
 def gerar_vis2_distribuicao_graus(caminho_graus, pasta_saida):
+    tabela = pd.read_csv(caminho_graus, encoding='utf-8')
+    graus = tabela['grau'].tolist()
     
-    tabela_graus = pd.read_csv(caminho_graus, encoding='utf-8')
+    fig, ax = plt.subplots(figsize=(10, 6))
+    aplicar_estilo_escuro(fig, ax)
     
-    lista_graus = tabela_graus['grau'].tolist()
+    contagem, bordas, barras = ax.hist(graus, bins=10, edgecolor=COR_FUNDO)
     
-    plt.figure(figsize=(10, 6))
+    maior_frequencia = max(contagem)
     
-    plt.hist(lista_graus, bins=10, color='#2E8B57', edgecolor='black', alpha=0.8)
+    for barra in barras:
+        if barra.get_height() == maior_frequencia:
+            barra.set_facecolor(COR_DESTAQUE)
+            barra.set_alpha(1.0)
+        else:
+            barra.set_facecolor('#00c2a8')
+            barra.set_alpha(0.6) 
+            
+    ax.set_title('Distribuição do Número de Conexões', fontsize=12, fontweight='bold')
+    ax.set_xlabel('Número de conexões diretas (grau)', fontsize=10)
+    ax.set_ylabel('Quantidade de aeroportos', fontsize=10)
     
-    plt.title('Distribuição do número de conexões(graus)', fontsize=14, fontweight='bold')
-    plt.xlabel('Número de conexões diretas(grau)', fontsize=12)
-    plt.ylabel('quantidade de aeroportos', fontsize=12)
+    # Adiciona a legenda organizada
+    legenda_destaque = mpatches.Patch(color=COR_DESTAQUE, label='Maior concentração da rede')
+    ax.legend(handles=[legenda_destaque], loc='upper right', facecolor=COR_PLANO, edgecolor=COR_GRADE, labelcolor=COR_TEXTO)
     
-    plt.gca().spines['top'].set_visible(False)
-    plt.gca().spines['right'].set_visible(False)
+    fig.tight_layout()
     
-    plt.tight_layout()
-    
-    nome_arquivo = 'vis2_distribuicao_graus.png'
-    caminho_salvar = os.path.join(pasta_saida, nome_arquivo)
-    plt.savefig(caminho_salvar, format='png', dpi=300)
-    plt.close()
-    
-    print(f"Imagem salva em {caminho_salvar}")
+    caminho_salvar = os.path.join(pasta_saida, 'vis2_distribuicao_graus.png')
+    fig.savefig(caminho_salvar, format='png', dpi=150, facecolor=COR_FUNDO)
+    plt.close(fig)
 
 
 def gerar_vis3_comparacao_regioes(caminho_regioes, pasta_saida):
-    
     with open(caminho_regioes, 'r', encoding='utf-8') as arquivo:
-        dados_regioes = json.load(arquivo)
+        dados = json.load(arquivo)
         
-    lista_nomes_regioes = []
-    lista_ordem = []
-    lista_tamanho = []
+    regioes = []
+    ordem = []
+    tamanho = []
     
-    for regiao, valores in dados_regioes.items():
-        lista_nomes_regioes.append(regiao)
-        lista_ordem.append(valores['ordem'])
-        lista_tamanho.append(valores['tamanho'])
+    for regiao, valores in dados.items():
+        regioes.append(regiao)
+        ordem.append(valores['ordem'])
+        tamanho.append(valores['tamanho'])
         
-    posicoes_x = list(range(len(lista_nomes_regioes)))
+    posicoes_x = list(range(len(regioes)))
+    pos_azul = [x - 0.2 for x in posicoes_x]
+    pos_laranja = [x + 0.2 for x in posicoes_x]
     
-    posicoes_barra_azul = []
-    posicoes_barra_laranja = []
+    maior_tamanho = max(tamanho)
+    cores_tamanho = []
     
-    for x in posicoes_x:
-        posicoes_barra_azul.append(x - 0.2)
-        posicoes_barra_laranja.append(x + 0.2)
+    for val in tamanho:
+        if val == maior_tamanho:
+            cores_tamanho.append(COR_DESTAQUE)
+        else:
+            cores_tamanho.append('#00c2a8')
+    
+    fig, ax = plt.subplots(figsize=(10, 6))
+    aplicar_estilo_escuro(fig, ax)
+    
+    ax.bar(pos_azul, ordem, width=0.4, label='Aeroportos (ordem)', color='#e84393', edgecolor=COR_FUNDO)
+    ax.bar(pos_laranja, tamanho, width=0.4, label='Voos internos (tamanho)', color=cores_tamanho, edgecolor=COR_FUNDO)
+    
+    ax.set_title('Infraestrutura Aérea por Região', fontsize=12, fontweight='bold')
+    ax.set_xlabel('Região do Brasil', fontsize=10)
+    ax.set_ylabel('Quantidade', fontsize=10)
+    
+    ax.set_xticks(posicoes_x)
+    ax.set_xticklabels(regioes)
+    
+    for i in range(len(regioes)):
+        ax.text(pos_azul[i], ordem[i] + 0.5, str(ordem[i]), ha='center', color=COR_TEXTO, fontsize=9)
         
-    plt.figure(figsize=(10, 6))
-    
-    plt.bar(posicoes_barra_azul, lista_ordem, width=0.4, label='Quantidade de aeroportos(ordem)', color='#4682B4', edgecolor='black')
-    plt.bar(posicoes_barra_laranja, lista_tamanho, width=0.4, label='Quantidade de voos internos(tamanho)', color='#FF8C00', edgecolor='black')
-    
-    plt.title('Infraestrutura aérea por região: aeroportos vs voos internos', fontsize=14, fontweight='bold')
-    plt.xlabel('Região do Brasil', fontsize=12)
-    plt.ylabel('Quantidade', fontsize=12)
-    
-    plt.xticks(posicoes_x, lista_nomes_regioes)
-    plt.legend()
-    
-    for i in range(len(lista_nomes_regioes)):
-        plt.text(posicoes_barra_azul[i], lista_ordem[i] + 0.2, str(lista_ordem[i]), ha='center', fontsize=10)
-        plt.text(posicoes_barra_laranja[i], lista_tamanho[i] + 0.2, str(lista_tamanho[i]), ha='center', fontsize=10)
+        cor_num = COR_DESTAQUE if tamanho[i] == maior_tamanho else COR_TEXTO
+        peso_fonte = 'bold' if tamanho[i] == maior_tamanho else 'normal'
+        ax.text(pos_laranja[i], tamanho[i] + 0.5, str(tamanho[i]), ha='center', color=cor_num, fontsize=9, fontweight=peso_fonte)
         
-    valor_maximo = max(max(lista_ordem), max(lista_tamanho))
-    plt.ylim(0, valor_maximo + 2)
+    # Organiza a legenda existente e adiciona a nossa customizada de destaque
+    handles, labels = ax.get_legend_handles_labels()
+    legenda_destaque = mpatches.Patch(color=COR_DESTAQUE, label='Maior malha interna')
+    handles.append(legenda_destaque)
     
-    plt.gca().spines['top'].set_visible(False)
-    plt.gca().spines['right'].set_visible(False)
+    ax.legend(handles=handles, loc='upper center', bbox_to_anchor=(0.5, 1.0), ncol=3, facecolor=COR_PLANO, edgecolor=COR_GRADE, labelcolor=COR_TEXTO)
+        
+    ax.set_ylim(0, max(max(ordem), max(tamanho)) + 5)
+    fig.tight_layout()
     
-    plt.tight_layout()
-    
-    nome_arquivo = 'vis3_comparacao_regioes.png'
-    caminho_salvar = os.path.join(pasta_saida, nome_arquivo)
-    plt.savefig(caminho_salvar, format='png', dpi=300)
-    plt.close()
-    
-    print(f"Imagem salva em {caminho_salvar}")
+    caminho_salvar = os.path.join(pasta_saida, 'vis3_comparacao_regioes.png')
+    fig.savefig(caminho_salvar, format='png', dpi=150, facecolor=COR_FUNDO)
+    plt.close(fig)
 
-def gerar_vis4_subgrafo_hubs(caminho_adj, caminho_graus, pasta_saida):
-    
-    tabela_graus = pd.read_csv(caminho_graus, encoding='utf-8')
-    
-    lista_hubs = []
-    dicionario_graus = {}
-    
-    for _, linha in tabela_graus.iterrows():
-        aeroporto = str(linha['aeroporto']).strip()
-        grau = int(linha['grau'])
-        
-        if grau >= 10:
-            lista_hubs.append(aeroporto)
-            dicionario_graus[aeroporto] = grau
-            
-    tabela_adj = pd.read_csv(caminho_adj, encoding='utf-8')
-    conexoes_dos_hubs = []
-    
-    for _, linha in tabela_adj.iterrows():
-        origem = str(linha['origem']).strip()
-        destino = str(linha['destino']).strip()
-        peso = float(linha['peso'])
-        
-        if origem in lista_hubs and destino in lista_hubs:
-            conexoes_dos_hubs.append((origem, destino, peso))
-            
-    rede = Network(height="700px", width="100%", bgcolor="#ffffff", font_color="black", directed=False)
-    
-    for hub in lista_hubs:
-        tamanho_no = dicionario_graus[hub] * 2  
-        texto_mouse = f"Aeroporto {hub} (Grau: {dicionario_graus[hub]})"
-        
-        rede.add_node(hub, label=hub, title=texto_mouse, color="#FF6347", size=tamanho_no)
 
-    for origem, destino, peso in conexoes_dos_hubs:
-        texto_linha = f"Distância: {peso} km"
-        rede.add_edge(origem, destino, value=1, title=texto_linha, color="#A9A9A9")
-
-    rede.repulsion(node_distance=200, spring_length=150)
-    
-    nome_arquivo = 'vis4_subgrafo_hubs.html'
-    caminho_salvar = os.path.join(pasta_saida, nome_arquivo)
-    rede.save_graph(caminho_salvar)
-    
-    print(f"HTML salvo em {caminho_salvar}")
 
 if __name__ == "__main__":
     base_path = os.path.dirname(os.path.dirname(__file__))
@@ -174,11 +171,8 @@ if __name__ == "__main__":
     caminho_graus = os.path.join(base_path, 'out', 'graus.csv')
     caminho_regioes = os.path.join(base_path, 'out', 'regioes.json')
     caminho_adj = os.path.join(base_path, 'data', 'adjacencias_aeroportos.csv')
-    
     pasta_saida = os.path.join(base_path, 'out')
     
     gerar_vis1_ranking_hubs(caminho_graus, pasta_saida)
     gerar_vis2_distribuicao_graus(caminho_graus, pasta_saida)
     gerar_vis3_comparacao_regioes(caminho_regioes, pasta_saida)
-    gerar_vis4_subgrafo_hubs(caminho_adj, caminho_graus, pasta_saida)
-    
