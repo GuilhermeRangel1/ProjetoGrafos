@@ -483,9 +483,6 @@ function highlightPath(which){{
     const inR=rpoEdges.has(k), inM=mspEdges.has(k);
     if(which==='none'){{
       let color='#3a3a55',weight=1.5,opacity=.5,dash='5,7';
-      if(inR&&inM){{color='#ffff00';weight=5;opacity=1;dash=null;}}
-      else if(inR){{color='#ff4444';weight=4;opacity=1;dash=null;}}
-      else if(inM){{color='#44aaff';weight=4;opacity=1;dash=null;}}
       ln.setStyle({{color,weight,opacity,dashArray:dash}});
     }} else {{
       const active=(which==='rpo'&&inR)||(which==='msp'&&inM);
