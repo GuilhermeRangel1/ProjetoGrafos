@@ -432,7 +432,8 @@ function toggleHubs() {
       const ln = lineMap[k];
       if (!ln) return;
       if (hubNodes.has(e.from) && hubNodes.has(e.to)) {
-        ln.setStyle({color: '#e84393', weight: 3, opacity: 0.9, dashArray: null});
+        const destColor = AP[e.to]?.color || '#e84393';
+        ln.setStyle({color: destColor, weight: 3, opacity: 0.9, dashArray: null});
         ln.bringToFront();
       } else {
         ln.setStyle({opacity: 0.05, weight: 1, dashArray: '4,8'});
