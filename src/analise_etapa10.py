@@ -220,7 +220,7 @@ def vis_exp2_boxplot_regioes(graus: dict):
 
 def vis_expl1_bolhas(graus: dict, ego: dict, regioes: dict):
     """
-    Cada bolha = uma região.
+    Cada bolha = uma região.    
     Eixo X  = grau médio dos aeroportos da região
     Eixo Y  = densidade média das ego-redes da região
     Tamanho = número de aeroportos (ordem)
@@ -303,64 +303,177 @@ def vis_expl1_bolhas(graus: dict, ego: dict, regioes: dict):
 
 
 
-def vis_expl2_radar(regioes: dict):
-    categorias = ["Aeroportos\n(ordem)", "Conexões\ninternas", "Densidade\ninterna (×10)"]
-    regioes_list = list(regioes.keys())
-    N = len(categorias)
+def vis_expl2_mini_heatmap(regioes: dict):
+    """
+    Heatmap simplificado por região.
+    Apenas 5 regiões × 3 métricas agregadas.
+    """
 
-    # normalizar para o radar
-    def get_vals(r):
-        d = regioes[r]
-        return [
-            d["ordem"],
-            d["tamanho"],
-            d["densidade"] * 10,   # × 10 para ficar na mesma escala
-        ]
+    ordem_regioes = [
+        "Norte",
+        "Nordeste",
+        "Centro-Oeste",
+        "Sul",
+        "Sudeste"
+    ]
 
-    angulos = np.linspace(0, 2 * np.pi, N, endpoint=False).tolist()
-    angulos += angulos[:1]  # fechar o polígono
+    metricas = [
+        "Ordem",
+        "Tamanho",
+        "Densidade"
+    ]
 
-    fig, ax = plt.subplots(figsize=(9, 8), subplot_kw=dict(polar=True))
+    # matriz de dados
+    dados_raw = []
+
+    for r in ordem_regioes:
+
+        dados_raw.append([
+            regioes[r]["ordem"],
+            regioes[r]["tamanho"],
+            regioes[r]["densidade"]
+        ])
+
+    dados_raw = np.array(dados_raw, dtype=float)
+
+    # normalização coluna a coluna
+    dados_norm = np.zeros_like(dados_raw)
+
+    for col in range(dados_raw.shape[1]):
+
+        mn = dados_raw[:, col].min()
+        mx = dados_raw[:, col].max()
+
+        if mx > mn:
+            dados_norm[:, col] = (
+                dados_raw[:, col] - mn
+            ) / (mx - mn)
+        else:
+            dados_norm[:, col] = 0.5
+
+    # figura
+    fig, ax = plt.subplots(figsize=(7, 5.5))
+
     fig.patch.set_facecolor(BG)
     ax.set_facecolor(SURFACE)
-    ax.set_theta_offset(np.pi / 2)
-    ax.set_theta_direction(-1)
-    ax.set_xticks(angulos[:-1])
-    ax.set_xticklabels(categorias, size=9, color=TEXT)
-    ax.tick_params(colors=MUTED)
-    ax.yaxis.set_tick_params(labelcolor=MUTED, labelsize=7)
-    ax.spines["polar"].set_color("#252535")
-    ax.grid(color="#252535", linewidth=0.7)
 
-    for regiao in regioes_list:
-        vals = get_vals(regiao)
-        vals += vals[:1]
-        cor  = REGION_COLORS.get(regiao, "#aaaaaa")
-        ax.plot(angulos, vals, color=cor, linewidth=2, linestyle="solid")
-        ax.fill(angulos, vals, color=cor, alpha=0.12)
-        # rótulo no ponto máximo
-        idx_max = np.argmax(vals[:-1])
-        ax.annotate(regiao,
-                    xy=(angulos[idx_max], vals[idx_max]),
-                    xytext=(angulos[idx_max], vals[idx_max] + 0.8),
-                    fontsize=8, color=cor, ha="center",
-                    fontfamily="monospace")
-
-    ax.set_title(
-        "EXPLANATÓRIA 2 — Perfil Comparativo das Regiões Brasileiras\n"
-        "Centro-Oeste lidera em densidade interna; Nordeste em quantidade de aeroportos",
-        fontsize=10, pad=20, color=TEXT
+    im = ax.imshow(
+        dados_norm,
+        cmap="YlOrRd",
+        aspect="auto",
+        vmin=0,
+        vmax=1
     )
 
-    # legenda
-    handles = [mpatches.Patch(color=REGION_COLORS[r], label=r) for r in regioes_list]
-    ax.legend(handles=handles, loc="upper right", bbox_to_anchor=(1.35, 1.1),
-              framealpha=0.2, facecolor=SURFACE, edgecolor="#252535",
-              labelcolor=TEXT, fontsize=8)
+    # ticks
+    ax.set_xticks(range(len(metricas)))
+    ax.set_xticklabels(
+        metricas,
+        fontsize=10,
+        color=TEXT
+    )
+
+    ax.set_yticks(range(len(ordem_regioes)))
+    ax.set_yticklabels(
+        ordem_regioes,
+        fontsize=10,
+        fontweight="bold"
+    )
+
+    # colorir nomes das regiões
+    for tick, regiao in zip(ax.get_yticklabels(), ordem_regioes):
+
+        tick.set_color(
+            REGION_COLORS.get(regiao, TEXT)
+        )
+
+    # valores dentro das células
+    for i in range(len(ordem_regioes)):
+        for j in range(len(metricas)):
+
+            valor = dados_raw[i, j]
+
+            if j == 2:
+                texto = f"{valor:.3f}"
+            else:
+                texto = f"{valor:.1f}"
+
+            brilho = dados_norm[i, j]
+
+            cor_txt = "#000000" if brilho > 0.45 else "#000000"
+
+            ax.text(
+                j,
+                i,
+                texto,
+                ha="center",
+                va="center",
+                fontsize=11,
+                color=cor_txt,
+                fontfamily="monospace"
+            )
+
+    # bordas das células
+    ax.set_xticks(
+        np.arange(-0.5, len(metricas), 1),
+        minor=True
+    )
+
+    ax.set_yticks(
+        np.arange(-0.5, len(ordem_regioes), 1),
+        minor=True
+    )
+
+    ax.grid(
+        which="minor",
+        color="#252535",
+        linestyle="-",
+        linewidth=1.2
+    )
+
+    ax.tick_params(which="minor", bottom=False, left=False)
+
+    # colorbar
+    cbar = fig.colorbar(
+        im,
+        ax=ax,
+        fraction=0.045,
+        pad=0.04
+    )
+
+    cbar.ax.tick_params(colors=MUTED)
+    cbar.outline.set_edgecolor("#252535")
+
+    cbar.ax.set_ylabel(
+        "Valor normalizado",
+        color=MUTED,
+        fontsize=8
+    )
+
+    # título
+    ax.set_title(
+        "EXPLANATÓRIA 2 — Perfil Regional da Rede Aérea\n"
+        "Sudeste lidera em conectividade; Centro-Oeste apresenta maior coesão local",
+        fontsize=11,
+        pad=14,
+        color=TEXT
+    )
+
+    # bordas
+    for spine in ax.spines.values():
+        spine.set_edgecolor("#252535")
 
     fig.tight_layout()
-    path = OUT / "vis_expl2_radar_regioes.png"
-    fig.savefig(path, dpi=150, bbox_inches="tight", facecolor=BG)
+
+    path = OUT / "vis_expl2_mini_heatmap_regioes.png"
+
+    fig.savefig(
+        path,
+        dpi=150,
+        bbox_inches="tight",
+        facecolor=BG
+    )
+
     plt.close(fig)
     print(f"  ✓ {path.name}")
 
@@ -378,13 +491,13 @@ def main():
 
     print("[3/4] Gerando visualizações explanatórias…")
     vis_expl1_bolhas(graus, ego, regioes)
-    vis_expl2_radar(regioes)
+    vis_expl2_mini_heatmap(regioes)
 
     print("\n✅  Etapa 10 concluída. Arquivos gerados em out/:")
     for f in ["vis_exp1_dispersao_grau_densidade.png",
               "vis_exp2_boxplot_graus_regiao.png",
               "vis_expl1_bolhas_regioes.png",
-              "vis_expl2_radar_regioes.png"]:
+              "vis_expl2_mini_heatmap_regioes.png"]:
         print(f"     {f}")
 
 
