@@ -1,48 +1,40 @@
 import heapq
 
-def dijkstra(grafo, origem, destino):
-    custos = {}
-    anterior = {}
-    listaAeroportos = grafo.listaAeroportos()
+def dijkstra(grafo, inicio, fim):
+    distancias = {no: float('inf') for no in grafo.obter_todos_nos()}
+    distancias[inicio] = 0
     
-    for vertice in listaAeroportos:
-        custos[vertice] = float('inf') 
-        anterior[vertice] = None      
+    predecessores = {no: None for no in grafo.obter_todos_nos()}
     
-    if origem not in custos or destino not in custos:
-        return float('inf'), []
-
-    custos[origem] = 0
-    fila = [(0, origem)]
-
+    fila = [(0, inicio)]
+    
     while fila:
-        distAtual, vertice1 = heapq.heappop(fila)
-        if distAtual > custos[vertice1]:
+        custo_atual, u = heapq.heappop(fila)
+        
+        if custo_atual > distancias[u]:
             continue
-        if vertice1 == destino:
-            break
-
-        for vertice2, peso in grafo.listaVizinhoPesos(vertice1):
-            if peso < 0:
-                raise ValueError("Peso negativo")
-
-            novoCusto = distAtual + peso
             
-            if novoCusto < custos[vertice2]:
-                custos[vertice2] = novoCusto
-                anterior[vertice2] = vertice1
-                heapq.heappush(fila, (novoCusto, vertice2))
+        if u == fim:
+            break
+            
+        for v, peso in grafo.obter_vizinhos_com_peso(u):
+            if peso < 0:
+                raise ValueError("Dijkstra não suporta pesos negativos!")
+            
+            novo_custo = custo_atual + peso
+            if novo_custo < distancias[v]:
+                distancias[v] = novo_custo
+                predecessores[v] = u
+                heapq.heappush(fila, (novo_custo, v))
 
     caminho = []
-    passo = destino
-    
-    while passo is not None:
-        caminho.append(passo)
-        passo = anterior[passo]
-        
-    caminho.reverse() 
+    atual = fim
+    while atual is not None:
+        caminho.append(atual)
+        atual = predecessores[atual]
+    caminho.reverse()
 
-    if len(caminho) == 0 or caminho[0] != origem:
+    if not caminho or caminho[0] != inicio:
         return float('inf'), []
-
-    return custos[destino], caminho
+        
+    return distancias[fim], caminho
