@@ -10,13 +10,11 @@ import urllib.request
 from collections import defaultdict
 from pathlib import Path
 
-# ── raiz do projeto ──
 ROOT = Path(__file__).resolve().parent.parent
 DATA = ROOT / "data"
 OUT  = ROOT / "out"
 OUT.mkdir(exist_ok=True)
 
-# ── importar Dijkstra de graphs/algorithms.py ──
 SRC = ROOT / "src"
 if str(SRC) not in sys.path:
     sys.path.insert(0, str(SRC))
@@ -110,7 +108,7 @@ def fetch_coords(airports: dict) -> dict[str, tuple[float, float]]:
             cache[iata] = list(COORDS_FALLBACK[iata])
             updated = True
             continue
-        # tentar Nominatim para aeroportos fora do fallback
+            
         cidade = airports[iata].get("cidade", iata)
         query  = f"aeroporto {cidade} Brazil"
         url    = (
@@ -158,7 +156,6 @@ class Grafo:
         return self.adj.get(u, [])
 
     def dijkstra(self, src: str, dst: str) -> tuple:
-        """Delega ao algoritmo implementado em graphs/algorithms.py."""
         return _dijkstra(self, src, dst)
 
 
@@ -182,12 +179,8 @@ def build_html(airports, edges, ego, coords, path_rpo, path_msp) -> str:
     def ekey(a, b):
         return "|".join(sorted([a, b]))
 
-    rpo_nodes = set(path_rpo)
-    msp_nodes = set(path_msp)
-    rpo_edges = {ekey(path_rpo[i], path_rpo[i+1]) for i in range(len(path_rpo)-1)}
-    msp_edges = {ekey(path_msp[i], path_msp[i+1]) for i in range(len(path_msp)-1)}
 
-    # dados de aeroportos para JS
+
     ap_data = {}
     for iata, info in airports.items():
         lat, lon = coords.get(iata, (-15.0, -50.0))
@@ -203,7 +196,6 @@ def build_html(airports, edges, ego, coords, path_rpo, path_msp) -> str:
             "densidade_ego": ego.get(iata, {}).get("densidade_ego", "?"),
         }
 
-    # deduplica arestas
     seen: set = set()
     edges_clean = []
     for e in edges:
@@ -276,7 +268,6 @@ main{{display:flex;flex:1;overflow:hidden}}
 .rota-input:focus{{border-color:var(--accent)}}
 .leaflet-tile{{filter:brightness(.42) saturate(.55) hue-rotate(195deg)}}
 .leaflet-container{{background:#0d0d14}}
-/* marcadores */
 .ap-dot{{border-radius:50%;border:2px solid #fff;display:flex;align-items:center;
          justify-content:center;font-family:'Space Mono',monospace;font-weight:700;
          color:#fff;cursor:pointer;box-shadow:0 0 10px rgba(0,0,0,.8);
@@ -296,7 +287,7 @@ main{{display:flex;flex:1;overflow:hidden}}
     <button id="btn-rpo" onclick="highlightPath('rpo')">REC → POA</button>
     <button id="btn-msp" onclick="highlightPath('msp')">MAO → GRU</button>
     <button id="btn-hubs" onclick="toggleHubs()">★ Subgrafo de Hubs</button>
-    <button onclick="highlightPath('none')">Limpar rotas</button>
+    <button onclick="limparRota()">Limpar tudo</button>
   </div>
 </header>
 <main>
@@ -312,7 +303,7 @@ main{{display:flex;flex:1;overflow:hidden}}
         <input id="rota-origem"  class="rota-input" placeholder="Origem (ex: REC)" maxlength="3"/>
         <input id="rota-destino" class="rota-input" placeholder="Destino (ex: POA)" maxlength="3"/>
         <button onclick="buscarRota()" style="margin-top:2px;padding:5px;background:var(--accent);border:none;color:#fff;border-radius:4px;cursor:pointer;font-family:inherit;font-size:.72rem;font-weight:700">🔍 Calcular Rota</button>
-        <button onclick="limparRota()" style="padding:4px;background:var(--bg);border:1px solid var(--border);color:var(--muted);border-radius:4px;cursor:pointer;font-family:inherit;font-size:.68rem">✕ Limpar</button>
+        <button onclick="limparRota()" style="padding:4px;background:var(--bg);border:1px solid var(--border);color:var(--muted);border-radius:4px;cursor:pointer;font-family:inherit;font-size:.68rem">✕ Limpar tudo</button>
       </div>
       <div class="ibox" id="rota-result" style="margin-top:6px;min-height:60px">Digite origem e destino para calcular.</div>
     </div>
@@ -343,269 +334,207 @@ const LEGEND   = {legend_json};
 const PATH_RPO = {rpo_json};
 const PATH_MSP = {msp_json};
 
-// sidebar
 document.getElementById('txt-rpo').textContent = PATH_RPO.join(' → ') || '(sem caminho)';
 document.getElementById('txt-msp').textContent = PATH_MSP.join(' → ') || '(sem caminho)';
 document.getElementById('stats').innerHTML =
   `Aeroportos: <b style="color:#e0e0f0">${{Object.keys(AP).length}}</b><br>`+
   `Conexões: <b style="color:#e0e0f0">${{EDGES.length}}</b><br>`+
-  `REC→POA: <b style="color:#ff7070">${{PATH_RPO.length-1}} saltos</b><br>`+
-  `MAO→GRU: <b style="color:#70b8ff">${{PATH_MSP.length-1}} saltos</b>`;
+  `REC→POA: <b style="color:#ff7070">${{PATH_RPO.length-1}} salto(s)</b><br>`+
+  `MAO→GRU: <b style="color:#70b8ff">${{PATH_MSP.length-1}} salto(s)</b>`;
+
 const lc = document.getElementById('legend');
 LEGEND.forEach(it => {{
   lc.innerHTML += `<div class="leg-item"><div class="leg-dot" style="background:${{it.color}}"></div><span>${{it.label}}</span></div>`;
 }});
 
-// mapa
-const map = L.map('map',{{center:[-15,-53],zoom:4,zoomControl:true}});
-L.tileLayer('https://{{s}}.tile.openstreetmap.org/{{z}}/{{x}}/{{y}}.png',{{
+const map = L.map('map', {{center:[-15,-53], zoom:4, zoomControl:true}});
+L.tileLayer('https://{{s}}.tile.openstreetmap.org/{{z}}/{{x}}/{{y}}.png', {{
   attribution:'© OpenStreetMap contributors', maxZoom:12
 }}).addTo(map);
 
-// helpers
-function ekey(a,b){{ return [a,b].sort().join('|'); }}
-const rpoEdges = new Set(), mspEdges = new Set();
-const rpoNodes = new Set(PATH_RPO), mspNodes = new Set(PATH_MSP);
-for(let i=0;i<PATH_RPO.length-1;i++) rpoEdges.add(ekey(PATH_RPO[i],PATH_RPO[i+1]));
-for(let i=0;i<PATH_MSP.length-1;i++) mspEdges.add(ekey(PATH_MSP[i],PATH_MSP[i+1]));
+function ekey(a, b) {{ return [a, b].sort().join('|'); }}
 
-// arestas
+const rpoEdgeSet = new Set();
+const mspEdgeSet = new Set();
+for (let i = 0; i < PATH_RPO.length - 1; i++) rpoEdgeSet.add(ekey(PATH_RPO[i], PATH_RPO[i+1]));
+for (let i = 0; i < PATH_MSP.length - 1; i++) mspEdgeSet.add(ekey(PATH_MSP[i], PATH_MSP[i+1]));
+
 const lineMap = {{}};
 EDGES.forEach(e => {{
-  const a=AP[e.from], b=AP[e.to]; if(!a||!b) return;
-  const k=ekey(e.from,e.to);
-  const inR=rpoEdges.has(k), inM=mspEdges.has(k);
-  let color='#3a3a55',weight=1.5,opacity=.5,dash='5,7';
-  if(inR&&inM){{color='#ffff00';weight=5;opacity=1;dash=null;}}
-  else if(inR){{color='#ff4444';weight=4;opacity=1;dash=null;}}
-  else if(inM){{color='#44aaff';weight=4;opacity=1;dash=null;}}
-  const ln=L.polyline([[a.lat,a.lon],[b.lat,b.lon]],{{color,weight,opacity,dashArray:dash}}).addTo(map);
-  ln.bindTooltip(`${{e.from}} ↔ ${{e.to}} | ${{e.tipo}} | peso ${{parseFloat(e.peso).toFixed(2)}}`,{{sticky:true}});
-  lineMap[k]=ln;
+  const a = AP[e.from], b = AP[e.to]; if (!a || !b) return;
+  const ln = L.polyline(
+    [[a.lat, a.lon], [b.lat, b.lon]],
+    {{color:'#3a3a55', weight:1.5, opacity:0.5, dashArray:'5,7'}}
+  ).addTo(map);
+  ln.bindTooltip(
+    `${{e.from}} ↔ ${{e.to}} | ${{e.tipo}} | peso ${{parseFloat(e.peso).toFixed(2)}}`,
+    {{sticky:true}}
+  );
+  lineMap[ekey(e.from, e.to)] = ln;
 }});
 
-// marcadores
 const mkMap = {{}};
-Object.entries(AP).forEach(([iata,info]) => {{
-  const inR=rpoNodes.has(iata), inM=mspNodes.has(iata);
-  let border='#ffffff', sz=28;
-  if(inR&&inM){{border='#ffff00';sz=36;}}
-  else if(inR){{border='#ff4444';sz=34;}}
-  else if(inM){{border='#44aaff';sz=34;}}
-  const icon=L.divIcon({{
-    className:'',
-    html:`<div class="ap-dot" style="width:${{sz}}px;height:${{sz}}px;background:${{info.color}};border-color:${{border}};font-size:${{sz>30?'9px':'8px'}}">${{iata}}</div>`,
-    iconSize:[sz,sz], iconAnchor:[sz/2,sz/2]
+Object.entries(AP).forEach(([iata, info]) => {{
+  const sz = 28;
+  const icon = L.divIcon({{
+    className: '',
+    html: `<div class="ap-dot" style="width:${{sz}}px;height:${{sz}}px;background:${{info.color}};border-color:#ffffff;font-size:8px">${{iata}}</div>`,
+    iconSize: [sz, sz], iconAnchor: [sz/2, sz/2]
   }});
-  const mk=L.marker([info.lat,info.lon],{{icon}}).addTo(map);
-  mk.bindTooltip(`<b>${{iata}}</b> — ${{info.cidade}}<br>Região: ${{info.regiao}}<br>Grau: ${{info.grau}}`,{{direction:'top'}});
-  mk.on('click',()=>{{
-    document.getElementById('node-info').innerHTML=
+  const mk = L.marker([info.lat, info.lon], {{icon}}).addTo(map);
+  mk.bindTooltip(
+    `<b>${{iata}}</b> — ${{info.cidade}}<br>Região: ${{info.regiao}}<br>Grau: ${{info.grau}}`,
+    {{direction:'top'}}
+  );
+  mk.on('click', () => {{
+    document.getElementById('node-info').innerHTML =
       `<b>${{iata}}</b> — ${{info.cidade}}<br>Região: ${{info.regiao}}<br>`+
       `Grau: ${{info.grau}}<br>Ordem ego: ${{info.ordem_ego}}<br>`+
       `Tam. ego: ${{info.tamanho_ego}}<br>Dens. ego: ${{info.densidade_ego}}`;
     highlightVertex(iata);
   }});
-  mkMap[iata]=mk;
+  mkMap[iata] = mk;
 }});
 
-document.getElementById('statusbar').textContent=
+document.getElementById('statusbar').textContent =
   `Grafo pronto — ${{Object.keys(AP).length}} aeroportos, ${{EDGES.length}} conexões.`;
 
-// ── Highlight de arestas ao clicar num vértice ──
 let selectedVertex = null;
 
 function highlightVertex(iata) {{
-  // se clicar no mesmo, deseleciona
   if (selectedVertex === iata) {{
     selectedVertex = null;
     restoreEdges();
+    Object.values(mkMap).forEach(mk => mk.setOpacity(1));
     document.getElementById('statusbar').textContent =
       `Grafo pronto — ${{Object.keys(AP).length}} aeroportos, ${{EDGES.length}} conexões.`;
     return;
   }}
   selectedVertex = iata;
 
-  // vizinhos diretos
-  const neighbors = new Set();
   EDGES.forEach(e => {{
-    if (e.from === iata) neighbors.add(e.to);
-    if (e.to   === iata) neighbors.add(e.from);
-  }});
-
-  // escurecer todas as arestas; acender as do vértice selecionado
-  EDGES.forEach(e => {{
-    const k = ekey(e.from, e.to);
+    const k  = ekey(e.from, e.to);
     const ln = lineMap[k]; if (!ln) return;
     const connected = (e.from === iata || e.to === iata);
     if (connected) {{
       const neighbor = e.from === iata ? e.to : e.from;
       const nColor   = AP[neighbor]?.color || '#ffffff';
-      ln.setStyle({{ color: nColor, weight: 4, opacity: 1, dashArray: null }});
+      ln.setStyle({{color:nColor, weight:4, opacity:1, dashArray:null}});
       ln.bringToFront();
     }} else {{
-      ln.setStyle({{ color: '#1e1e2e', weight: 1, opacity: 0.15, dashArray: '4,8' }});
+      ln.setStyle({{color:'#1e1e2e', weight:1, opacity:0.12, dashArray:'4,8'}});
     }}
   }});
 
+  const neighbors = new Set([iata]);
+  EDGES.forEach(e => {{
+    if (e.from === iata) neighbors.add(e.to);
+    if (e.to   === iata) neighbors.add(e.from);
+  }});
+  Object.entries(mkMap).forEach(([id, mk]) => mk.setOpacity(neighbors.has(id) ? 1 : 0.2));
+
   document.getElementById('statusbar').textContent =
-    `${{iata}} — ${{neighbors.size}} conexão(ões) destacada(s). Clique novamente para desfazer.`;
+    `${{iata}} (${{AP[iata]?.cidade}}) — ${{neighbors.size - 1}} conexão(ões) destacada(s). Clique novamente para desfazer.`;
 }}
 
 function restoreEdges() {{
   EDGES.forEach(e => {{
-    const k=ekey(e.from,e.to), ln=lineMap[k]; if(!ln) return;
-    const inR=rpoEdges.has(k), inM=mspEdges.has(k);
-    let color='#3a3a55',weight=1.5,opacity=.5,dash='5,7';
-    if(inR&&inM){{color='#ffff00';weight=5;opacity=1;dash=null;}}
-    else if(inR){{color='#ff4444';weight=4;opacity=1;dash=null;}}
-    else if(inM){{color='#44aaff';weight=4;opacity=1;dash=null;}}
-    ln.setStyle({{color,weight,opacity,dashArray:dash}});
+    const k  = ekey(e.from, e.to);
+    const ln = lineMap[k]; if (!ln) return;
+    ln.setStyle({{color:'#3a3a55', weight:1.5, opacity:0.5, dashArray:'5,7'}});
   }});
 }}
 
-// clicar no mapa (fora de marcadores) desfaz seleção
 map.on('click', () => {{
   if (selectedVertex) {{
     selectedVertex = null;
     restoreEdges();
+    Object.values(mkMap).forEach(mk => mk.setOpacity(1));
     document.getElementById('statusbar').textContent =
       `Grafo pronto — ${{Object.keys(AP).length}} aeroportos, ${{EDGES.length}} conexões.`;
   }}
 }});
 
-// highlight
-function highlightPath(which){{
-  document.getElementById('btn-rpo').classList.toggle('active',which==='rpo');
-  document.getElementById('btn-msp').classList.toggle('active',which==='msp');
-  EDGES.forEach(e=>{{
-    const k=ekey(e.from,e.to), ln=lineMap[k]; if(!ln) return;
-    const inR=rpoEdges.has(k), inM=mspEdges.has(k);
-    if(which==='none'){{
-      let color='#3a3a55',weight=1.5,opacity=.5,dash='5,7';
-      ln.setStyle({{color,weight,opacity,dashArray:dash}});
-    }} else {{
-      const active=(which==='rpo'&&inR)||(which==='msp'&&inM);
-      ln.setStyle(active
-        ?{{color:which==='rpo'?'#ff4444':'#44aaff',weight:5,opacity:1,dashArray:null}}
-        :{{color:'#1e1e2e',weight:1,opacity:.2,dashArray:'4,8'}});
-    }}
-  }});
-  if(which==='none') return;
-  const path=which==='rpo'?PATH_RPO:PATH_MSP;
-  if(path.length){{const f=AP[path[0]]; if(f) map.flyTo([f.lat,f.lon],5,{{duration:1.2}});}}
-}}
+let rpoLine = null;   // polyline do caminho REC→POA no mapa
+let mspLine = null;   // polyline do caminho MAO→GRU no mapa
 
-// busca
-function searchNode(){{
-  const q=document.getElementById('search-box').value.trim().toUpperCase();
-  if(!q) return;
-  const info=AP[q];
-  if(info){{map.flyTo([info.lat,info.lon],7,{{duration:.8}});mkMap[q]?.openTooltip();}}
-}}
+function highlightPath(which) {{
+  document.getElementById('btn-rpo').classList.toggle('active', which === 'rpo');
+  document.getElementById('btn-msp').classList.toggle('active', which === 'msp');
 
-// ── Dijkstra em JavaScript (para busca de rota no frontend) ──
-function dijkstraJS(origem, destino) {{
-  const INF = Infinity;
-  const dist = {{}}, prev = {{}};
-  // montar adjacência a partir de EDGES
-  const adj = {{}};
-  Object.keys(AP).forEach(n => {{ adj[n] = []; }});
+  if (rpoLine) {{ map.removeLayer(rpoLine); rpoLine = null; }}
+  if (mspLine) {{ map.removeLayer(mspLine); mspLine = null; }}
+
+  if (which === 'none') {{
+    // restaura grafo ao estado neutro
+    restoreEdges();
+    Object.values(mkMap).forEach(mk => mk.setOpacity(1));
+    return;
+  }}
+
+
   EDGES.forEach(e => {{
-    if(adj[e.from]) adj[e.from].push({{node: e.to,   peso: parseFloat(e.peso)}});
-    if(adj[e.to])   adj[e.to].push(  {{node: e.from, peso: parseFloat(e.peso)}});
+    const ln = lineMap[ekey(e.from, e.to)]; if (!ln) return;
+    ln.setStyle({{color:'#1e1e2e', weight:1, opacity:0.15, dashArray:'4,8'}});
   }});
 
-  Object.keys(AP).forEach(n => {{ dist[n] = INF; }});
-  dist[origem] = 0;
+  const path  = which === 'rpo' ? PATH_RPO : PATH_MSP;
+  const color = which === 'rpo' ? '#ff4444' : '#44aaff';
+  const label = which === 'rpo' ? 'Recife → Porto Alegre' : 'Manaus → São Paulo';
 
-  const visited = new Set();
-  const queue   = Object.keys(AP).slice();
-
-  while(queue.length > 0) {{
-    // pegar nó com menor distância
-    queue.sort((a,b) => dist[a] - dist[b]);
-    const u = queue.shift();
-    if(dist[u] === INF) break;
-    if(u === destino) break;
-    visited.add(u);
-    (adj[u] || []).forEach((nb) => {{ const v=nb.node, w=nb.peso;
-      if(visited.has(v)) return;
-      const nd = dist[u] + w;
-      if(nd < dist[v]) {{ dist[v] = nd; prev[v] = u; }}
-    }});
+  if (path.length < 2) {{
+    document.getElementById('statusbar').textContent = 'Caminho não encontrado.';
+    return;
   }}
 
-  if(dist[destino] === INF) return {{custo: INF, caminho: []}};
-
-  const caminho = [];
-  let cur = destino;
-  while(cur !== undefined) {{ caminho.unshift(cur); cur = prev[cur]; }}
-  return {{custo: dist[destino], caminho}};
-}}
-
-// linha da rota buscada
-let rotaLine = null;
-
-function buscarRota() {{
-  const origem  = document.getElementById('rota-origem').value.trim().toUpperCase();
-  const destino = document.getElementById('rota-destino').value.trim().toUpperCase();
-  const box     = document.getElementById('rota-result');
-
-  if(!origem || !destino) {{
-    box.innerHTML = '<span style="color:#ff7070">Preencha origem e destino.</span>'; return;
-  }}
-  if(!AP[origem]) {{
-    box.innerHTML = `<span style="color:#ff7070">Aeroporto "${{origem}}" não encontrado.</span>`; return;
-  }}
-  if(!AP[destino]) {{
-    box.innerHTML = `<span style="color:#ff7070">Aeroporto "${{destino}}" não encontrado.</span>`; return;
-  }}
-  if(origem === destino) {{
-    box.innerHTML = '<span style="color:#ff7070">Origem e destino são iguais.</span>'; return;
-  }}
-
-  const {{custo, caminho}} = dijkstraJS(origem, destino);
-
-  // remover linha anterior
-  if(rotaLine) {{ map.removeLayer(rotaLine); rotaLine = null; }}
-
-  if(caminho.length === 0) {{
-    box.innerHTML = `<span style="color:#ff7070">Sem caminho entre ${{origem}} e ${{destino}}.</span>`; return;
-  }}
-
-  // verificar se é direto
-  const direto = EDGES.some(e =>
-    (e.from===origem && e.to===destino) || (e.from===destino && e.to===origem)
-  );
-  const escalas  = caminho.length - 2;
-  const tipo     = direto ? '✅ Voo direto' : `🔁 Com ${{escalas}} escala(s)`;
-  const custo_km = custo.toFixed(0);
-
-  // montar HTML do resultado
-  let html = `<b style="color:#e0e0f0">${{origem}} → ${{destino}}</b><br>`;
-  html += `${{tipo}}<br>`;
-  html += `Distância: <b style="color:#00c2a8">${{custo_km}} km</b><br>`;
-  html += `Percurso:<br><span style="color:#f5a623">${{caminho.join(' → ')}}</span>`;
-  box.innerHTML = html;
-
-  // desenhar rota no mapa
-  const latlngs = caminho.map(iata => [AP[iata].lat, AP[iata].lon]);
-  rotaLine = L.polyline(latlngs, {{
-    color: '#00c2a8', weight: 4, opacity: 1, dashArray: null,
-    className: 'rota-buscada'
+  // ── desenha polyline do caminho sobre o mapa ──
+  const latlngs = path.map(iata => [AP[iata].lat, AP[iata].lon]);
+  const pathLine = L.polyline(latlngs, {{
+    color:     color,
+    weight:    5,
+    opacity:   1,
+    dashArray: null,
   }}).addTo(map);
-  rotaLine.bringToFront();
+  pathLine.bringToFront();
+  pathLine.bindTooltip(
+    `${{path.join(' → ')}} | ${{label}}`,
+    {{sticky:true, direction:'top'}}
+  );
+
+  if (which === 'rpo') rpoLine = pathLine;
+  else                 mspLine = pathLine;
+
+  // realça marcadores do caminho, esmaece os demais
+  const pathSet = new Set(path);
+  Object.entries(mkMap).forEach(([iata, mk]) => {{
+    mk.setOpacity(pathSet.has(iata) ? 1 : 0.2);
+  }});
 
   // zoom para o caminho
-  map.fitBounds(rotaLine.getBounds(), {{padding: [40, 40], maxZoom: 7, animate: true, duration: 1}});
+  map.fitBounds(pathLine.getBounds(), {{
+    padding:  [50, 50],
+    maxZoom:  7,
+    animate:  true,
+    duration: 1.2,
+  }});
 
   document.getElementById('statusbar').textContent =
-    `Rota ${{origem}} → ${{destino}}: ${{custo_km}} km | ${{caminho.length-1}} trecho(s) | ${{tipo}}`;
+    `${{which === 'rpo' ? 'REC → POA' : 'MAO → GRU'}}: ${{path.join(' → ')}} (${{path.length - 1}} trecho(s))`;
 }}
 
+
+let rotaLine = null;
+
 function limparRota() {{
-  if(rotaLine) {{ map.removeLayer(rotaLine); rotaLine = null; }}
+  if (rotaLine) {{ map.removeLayer(rotaLine); rotaLine = null; }}
+
+  highlightPath('none');
+
+  document.getElementById('btn-rpo').classList.remove('active');
+  document.getElementById('btn-msp').classList.remove('active');
+
+  Object.values(mkMap).forEach(mk => mk.setOpacity(1));
+
   document.getElementById('rota-origem').value  = '';
   document.getElementById('rota-destino').value = '';
   document.getElementById('rota-result').innerHTML = 'Digite origem e destino para calcular.';
@@ -613,64 +542,118 @@ function limparRota() {{
     `Grafo pronto — ${{Object.keys(AP).length}} aeroportos, ${{EDGES.length}} conexões.`;
 }}
 
-// permitir Enter nos campos de rota
+function dijkstraJS(origem, destino) {{
+  const INF  = Infinity;
+  const dist = {{}}, prev = {{}};
+  const adj  = {{}};
+  Object.keys(AP).forEach(n => {{ adj[n] = []; }});
+  EDGES.forEach(e => {{
+    if (adj[e.from]) adj[e.from].push({{node:e.to,   peso:parseFloat(e.peso)}});
+    if (adj[e.to])   adj[e.to].push(  {{node:e.from, peso:parseFloat(e.peso)}});
+  }});
+  Object.keys(AP).forEach(n => {{ dist[n] = INF; }});
+  dist[origem] = 0;
+  const visited = new Set();
+  const queue   = Object.keys(AP).slice();
+  while (queue.length > 0) {{
+    queue.sort((a, b) => dist[a] - dist[b]);
+    const u = queue.shift();
+    if (dist[u] === INF || u === destino) break;
+    visited.add(u);
+    (adj[u] || []).forEach(nb => {{
+      if (visited.has(nb.node)) return;
+      const nd = dist[u] + nb.peso;
+      if (nd < dist[nb.node]) {{ dist[nb.node] = nd; prev[nb.node] = u; }}
+    }});
+  }}
+  if (dist[destino] === INF) return {{custo:INF, caminho:[]}};
+  const caminho = []; let cur = destino;
+  while (cur !== undefined) {{ caminho.unshift(cur); cur = prev[cur]; }}
+  return {{custo:dist[destino], caminho}};
+}}
+
+function buscarRota() {{
+  const origem  = document.getElementById('rota-origem').value.trim().toUpperCase();
+  const destino = document.getElementById('rota-destino').value.trim().toUpperCase();
+  const box     = document.getElementById('rota-result');
+
+  if (!origem || !destino) {{
+    box.innerHTML = '<span style="color:#ff7070">Preencha origem e destino.</span>'; return;
+  }}
+  if (!AP[origem])  {{ box.innerHTML = `<span style="color:#ff7070">Aeroporto "${{origem}}" não encontrado.</span>`;  return; }}
+  if (!AP[destino]) {{ box.innerHTML = `<span style="color:#ff7070">Aeroporto "${{destino}}" não encontrado.</span>`; return; }}
+  if (origem === destino) {{ box.innerHTML = '<span style="color:#ff7070">Origem e destino são iguais.</span>'; return; }}
+
+  const {{custo, caminho}} = dijkstraJS(origem, destino);
+  if (rotaLine) {{ map.removeLayer(rotaLine); rotaLine = null; }}
+
+  if (caminho.length === 0) {{
+    box.innerHTML = `<span style="color:#ff7070">Sem caminho entre ${{origem}} e ${{destino}}.</span>`; return;
+  }}
+
+  const direto  = EDGES.some(e => (e.from===origem&&e.to===destino)||(e.from===destino&&e.to===origem));
+  const escalas = caminho.length - 2;
+  const tipo    = direto ? '✅ Voo direto' : `🔁 Com ${{escalas}} escala(s)`;
+
+  box.innerHTML =
+    `<b style="color:#e0e0f0">${{origem}} → ${{destino}}</b><br>${{tipo}}<br>`+
+    `Distância: <b style="color:#00c2a8">${{custo.toFixed(0)}} km</b><br>`+
+    `Percurso:<br><span style="color:#f5a623">${{caminho.join(' → ')}}</span>`;
+
+  const latlngs = caminho.map(iata => [AP[iata].lat, AP[iata].lon]);
+  rotaLine = L.polyline(latlngs, {{color:'#00c2a8', weight:4, opacity:1, dashArray:null}}).addTo(map);
+  rotaLine.bringToFront();
+  map.fitBounds(rotaLine.getBounds(), {{padding:[40,40], maxZoom:7, animate:true, duration:1}});
+
+  document.getElementById('statusbar').textContent =
+    `Rota ${{origem}} → ${{destino}}: ${{custo.toFixed(0)}} km | ${{caminho.length-1}} trecho(s) | ${{tipo}}`;
+}}
+
 document.getElementById('rota-origem') .addEventListener('keydown', e => {{ if(e.key==='Enter') buscarRota(); }});
 document.getElementById('rota-destino').addEventListener('keydown', e => {{ if(e.key==='Enter') buscarRota(); }});
 
-// reset
-function resetView(){{
-  map.flyTo([-15,-53],4,{{duration:.8}});
-  document.getElementById('search-box').value='';
-  highlightPath('none');
-  if(showingHubs) toggleHubs();
-  document.getElementById('btn-rpo').classList.remove('active');
-  document.getElementById('btn-msp').classList.remove('active');
+
+function searchNode() {{
+  const q = document.getElementById('search-box').value.trim().toUpperCase();
+  if (!q) return;
+  const info = AP[q];
+  if (info) {{ map.flyTo([info.lat, info.lon], 7, {{duration:.8}}); mkMap[q]?.openTooltip(); }}
+}}
+
+
+function resetView() {{
+  map.flyTo([-15, -53], 4, {{duration:.8}});
+  document.getElementById('search-box').value = '';
+  if (showingHubs) toggleHubs();
   limparRota();
 }}
 
-// subgrafo de hubs
 let showingHubs = false;
 function toggleHubs() {{
   showingHubs = !showingHubs;
   document.getElementById('btn-hubs').classList.toggle('active', showingHubs);
-  
+
   if (showingHubs) {{
     const hubNodes = new Set();
     Object.entries(AP).forEach(([iata, info]) => {{
-      const grau = parseInt(info.grau) || 0;
-      if (grau >= 10) {{
-        hubNodes.add(iata);
-        if (mkMap[iata]) {{
-          mkMap[iata].setOpacity(1);
-          mkMap[iata].getElement().querySelector('.ap-dot').style.transform = 'scale(1.2)';
-        }}
-      }} else {{
-        if (mkMap[iata]) mkMap[iata].setOpacity(0.15);
-      }}
+      if ((parseInt(info.grau) || 0) >= 10) {{ hubNodes.add(iata); mk:mkMap[iata]?.setOpacity(1); }}
+      else mkMap[iata]?.setOpacity(0.15);
     }});
-
     EDGES.forEach(e => {{
-      const k = ekey(e.from, e.to);
-      const ln = lineMap[k];
-      if (!ln) return;
+      const k  = ekey(e.from, e.to);
+      const ln = lineMap[k]; if (!ln) return;
       if (hubNodes.has(e.from) && hubNodes.has(e.to)) {{
-        const destColor = AP[e.to]?.color || '#e84393';
-        ln.setStyle({{color: destColor, weight: 3, opacity: 0.9, dashArray: null}});
+        ln.setStyle({{color:AP[e.to]?.color||'#e84393', weight:3, opacity:0.9, dashArray:null}});
         ln.bringToFront();
       }} else {{
-        ln.setStyle({{opacity: 0.05, weight: 1, dashArray: '4,8'}});
+        ln.setStyle({{opacity:0.05, weight:1, dashArray:'4,8'}});
       }}
     }});
-    
     document.getElementById('statusbar').textContent =
-      `Subgrafo de Hubs ativado — ${{hubNodes.size}} aeroportos com grau ≥ 10.`;
-      
+      `Subgrafo de Hubs — ${{hubNodes.size}} aeroportos com grau ≥ 10.`;
   }} else {{
-    Object.values(mkMap).forEach(mk => {{
-      mk.setOpacity(1);
-      mk.getElement().querySelector('.ap-dot').style.transform = '';
-    }});
     restoreEdges();
+    Object.values(mkMap).forEach(mk => mk.setOpacity(1));
     document.getElementById('statusbar').textContent =
       `Grafo pronto — ${{Object.keys(AP).length}} aeroportos, ${{EDGES.length}} conexões.`;
   }}
@@ -679,10 +662,6 @@ function toggleHubs() {{
 </body>
 </html>"""
 
-
-# ---------------------------------------------------------------------------
-# Main
-# ---------------------------------------------------------------------------
 
 def _find_iata(airports: dict, cidade: str) -> str | None:
     for iata, info in airports.items():
@@ -715,9 +694,11 @@ def main() -> None:
     recife       = "REC"
     porto_alegre = _find_iata(airports, "porto alegre") or "POA"
     manaus       = _find_iata(airports, "manaus")       or "MAO"
-    sao_paulo    = (_find_iata(airports, "guarulhos")
-                    or _find_iata(airports, "são paulo")
-                    or "GRU")
+    sao_paulo    = (
+        _find_iata(airports, "guarulhos")
+        or _find_iata(airports, "são paulo")
+        or "GRU"
+    )
 
     _, path_rpo = g.dijkstra(recife, porto_alegre)
     _, path_msp = g.dijkstra(manaus, sao_paulo)
