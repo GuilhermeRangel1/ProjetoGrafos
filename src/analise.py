@@ -57,7 +57,6 @@ def gerar_vis1_ranking_hubs(caminho_graus, pasta_saida):
         cor_num = COR_DESTAQUE if graus[i] == maior_grau else COR_TEXTO
         ax.text(graus[i] + 0.3, i, str(graus[i]), va='center', color=cor_num, fontsize=9, fontweight='bold')
         
-    # Adiciona a legenda organizada no canto da tela
     legenda_destaque = mpatches.Patch(color=COR_DESTAQUE, label='Maior hub da malha aérea')
     ax.legend(handles=[legenda_destaque], loc='lower right', facecolor=COR_PLANO, edgecolor=COR_GRADE, labelcolor=COR_TEXTO)
         
@@ -92,7 +91,6 @@ def gerar_vis2_distribuicao_graus(caminho_graus, pasta_saida):
     ax.set_xlabel('Número de conexões diretas (grau)', fontsize=10)
     ax.set_ylabel('Quantidade de aeroportos', fontsize=10)
     
-    # Adiciona a legenda organizada
     legenda_destaque = mpatches.Patch(color=COR_DESTAQUE, label='Maior concentração da rede')
     ax.legend(handles=[legenda_destaque], loc='upper right', facecolor=COR_PLANO, edgecolor=COR_GRADE, labelcolor=COR_TEXTO)
     
@@ -120,19 +118,26 @@ def gerar_vis3_comparacao_regioes(caminho_regioes, pasta_saida):
     pos_azul = [x - 0.2 for x in posicoes_x]
     pos_laranja = [x + 0.2 for x in posicoes_x]
     
-    maior_tamanho = max(tamanho)
+    REGION_COLORS = {
+        "Norte":        "#00c2a8",
+        "Nordeste":     "#f5a623",
+        "Sudeste":      "#e84393",
+        "Sul":          "#6c63ff",
+        "Centro-Oeste": "#ff6b35",
+    }
+    
+    cores_ordem = []
     cores_tamanho = []
     
-    for val in tamanho:
-        if val == maior_tamanho:
-            cores_tamanho.append(COR_DESTAQUE)
-        else:
-            cores_tamanho.append('#00c2a8')
-    
+    for reg in regioes:
+        col = REGION_COLORS.get(reg, "#aaaaaa")
+        cores_ordem.append(col + "80")
+        cores_tamanho.append(col)
+            
     fig, ax = plt.subplots(figsize=(10, 6))
     aplicar_estilo_escuro(fig, ax)
     
-    ax.bar(pos_azul, ordem, width=0.4, label='Aeroportos (ordem)', color='#e84393', edgecolor=COR_FUNDO)
+    ax.bar(pos_azul, ordem, width=0.4, label='Aeroportos (ordem)', color=cores_ordem, edgecolor=COR_FUNDO)
     ax.bar(pos_laranja, tamanho, width=0.4, label='Voos internos (tamanho)', color=cores_tamanho, edgecolor=COR_FUNDO)
     
     ax.set_title('Infraestrutura Aérea por Região', fontsize=12, fontweight='bold')
@@ -144,19 +149,19 @@ def gerar_vis3_comparacao_regioes(caminho_regioes, pasta_saida):
     
     for i in range(len(regioes)):
         ax.text(pos_azul[i], ordem[i] + 0.5, str(ordem[i]), ha='center', color=COR_TEXTO, fontsize=9)
+        ax.text(pos_laranja[i], tamanho[i] + 0.5, str(tamanho[i]), ha='center', color=COR_TEXTO, fontsize=9)
         
-        cor_num = COR_DESTAQUE if tamanho[i] == maior_tamanho else COR_TEXTO
-        peso_fonte = 'bold' if tamanho[i] == maior_tamanho else 'normal'
-        ax.text(pos_laranja[i], tamanho[i] + 0.5, str(tamanho[i]), ha='center', color=cor_num, fontsize=9, fontweight=peso_fonte)
+    ax.text(0.02, 0.95, "Barra esquerda = Aeroportos (ordem)\nBarra direita = Voos internos (tamanho)", 
+            transform=ax.transAxes, ha='left', va='top', color=COR_TEXTO, fontsize=8.5,
+            bbox=dict(facecolor=COR_PLANO, edgecolor=COR_GRADE, boxstyle='round,pad=0.4'))
+
+    legend_handles = []
+    for reg, col in REGION_COLORS.items():
+        legend_handles.append(mpatches.Patch(color=col, label=f'Região {reg}'))
         
-    # Organiza a legenda existente e adiciona a nossa customizada de destaque
-    handles, labels = ax.get_legend_handles_labels()
-    legenda_destaque = mpatches.Patch(color=COR_DESTAQUE, label='Maior malha interna')
-    handles.append(legenda_destaque)
-    
-    ax.legend(handles=handles, loc='upper center', bbox_to_anchor=(0.5, 1.0), ncol=3, facecolor=COR_PLANO, edgecolor=COR_GRADE, labelcolor=COR_TEXTO)
+    ax.legend(handles=legend_handles, loc='upper center', bbox_to_anchor=(0.5, -0.18), ncol=5, facecolor=COR_PLANO, edgecolor=COR_GRADE, labelcolor=COR_TEXTO, fontsize=8.5)
         
-    ax.set_ylim(0, max(max(ordem), max(tamanho)) + 5)
+    ax.set_ylim(0, max(max(ordem), max(tamanho)) + 8)
     fig.tight_layout()
     
     caminho_salvar = os.path.join(pasta_saida, 'vis3_comparacao_regioes.png')
