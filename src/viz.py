@@ -220,7 +220,7 @@ def build_html(airports, edges, ego, coords, path_rpo, path_msp) -> str:
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1"/>
-<title>Grafo Interativo — Aeroportos do Brasil</title>
+<title>Aeroportos do Brasil</title>
 <link  rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@800&display=swap" rel="stylesheet"/>
@@ -230,11 +230,11 @@ def build_html(airports, edges, ego, coords, path_rpo, path_msp) -> str:
 body{{background:var(--bg);color:var(--text);font-family:'Space Mono',monospace;
       display:flex;flex-direction:column;height:100vh;overflow:hidden}}
 header{{display:flex;align-items:center;justify-content:space-between;
-        padding:8px 18px;background:var(--surf);border-bottom:1px solid var(--border);flex-shrink:0}}
+        padding:12px 18px;background:var(--surf);border-bottom:1px solid var(--border);flex-shrink:0}}
 .logo{{font-family:'Syne',sans-serif;font-size:1.1rem;
        background:linear-gradient(90deg,#6c63ff,#00c2a8);
        -webkit-background-clip:text;-webkit-text-fill-color:transparent}}
-.sub{{font-size:.65rem;color:var(--muted);margin-top:1px}}
+.sub{{font-size:.65rem;color:var(--muted);margin-top:2px;transition: color 0.2s;}}
 .toolbar{{display:flex;gap:6px;align-items:center;flex-wrap:wrap}}
 .toolbar input{{background:var(--bg);border:1px solid var(--border);color:var(--text);
                 font-family:inherit;font-size:.75rem;padding:4px 9px;border-radius:4px;
@@ -242,10 +242,12 @@ header{{display:flex;align-items:center;justify-content:space-between;
 .toolbar input:focus{{border-color:var(--accent)}}
 .toolbar button{{background:var(--bg);border:1px solid var(--border);color:var(--text);
                  font-family:inherit;font-size:.7rem;padding:4px 10px;border-radius:4px;
-                 cursor:pointer;transition:background .2s}}
+                 cursor:pointer;transition: all .2s}}
 .toolbar button:hover{{background:var(--border)}}
 .toolbar button.active{{background:var(--accent);border-color:var(--accent);color:#fff}}
-main{{display:flex;flex:1;overflow:hidden}}
+main{{display:flex;flex:1;overflow:hidden; width: 100%;}}
+
+#map-container {{display:flex;flex:1; width:100%;}}
 #map{{flex:1}}
 #sidebar{{width:228px;background:var(--surf);border-left:1px solid var(--border);
           overflow-y:auto;flex-shrink:0;padding:12px 10px;
@@ -273,61 +275,156 @@ main{{display:flex;flex:1;overflow:hidden}}
          color:#fff;cursor:pointer;box-shadow:0 0 10px rgba(0,0,0,.8);
          transition:transform .15s, box-shadow .15s;}}
 .ap-dot:hover{{transform:scale(1.3);box-shadow:0 0 16px rgba(255,255,255,.3)}}
+
+#charts-container {{
+    display: none; flex: 1; width: 100%; overflow-y: auto; padding: 40px; background: #09090f;
+}}
+.charts-grid {{
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(580px, 1fr)); gap: 35px; max-width: 1600px; margin: 0 auto;
+}}
+.chart-card {{
+    background: var(--surf); border: 1px solid var(--border); border-radius: 12px; padding: 25px; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.4);
+}}
+.chart-card h3 {{ font-family: 'Syne', sans-serif; font-size: 1rem; margin-bottom: 14px; color: #00c2a8; text-transform: uppercase; letter-spacing: 1px; }}
+.chart-card img {{ max-width: 100%; width: 100%; height: auto; border-radius: 6px; border: 1px solid var(--border); background: #fff;}}
+.chart-card p {{ font-size: 0.78rem; color: var(--muted); margin-top: 14px; line-height: 1.6; }}
 </style>
 </head>
 <body>
 <header>
   <div>
     <div class="logo">✈ AeroBrasil Graph</div>
-    <div class="sub">Rede de Aeroportos — Grafo Interativo (Etapa 9)</div>
+    <div id="app-subtitle" class="sub">Rede de Aeroportos — Grafo Interativo</div>
   </div>
   <div class="toolbar">
-    <input id="search-box" placeholder="Buscar IATA…" oninput="searchNode()"/>
-    <button onclick="resetView()">↺ Reset</button>
-    <button id="btn-rpo" onclick="highlightPath('rpo')">REC → POA</button>
-    <button id="btn-msp" onclick="highlightPath('msp')">MAO → GRU</button>
-    <button id="btn-hubs" onclick="toggleHubs()">★ Subgrafo de Hubs</button>
-    <button onclick="limparRota()">Limpar tudo</button>
+    <button id="btn-tab" onclick="toggleView()" style="border-color:#00c2a8; color:#00c2a8; font-weight:bold; padding: 5px 12px;">📊 Ver Gráficos</button>
+    <div class="map-ui" style="width: 1px; height: 16px; background: var(--border); margin: 0 4px;"></div>
+    
+    <input id="search-box" class="map-ui" placeholder="Buscar IATA…" oninput="searchNode()"/>
+    <button class="map-ui" onclick="resetView()">↺ Reset</button>
+    <button id="btn-rpo" class="map-ui" onclick="highlightPath('rpo')">REC → POA</button>
+    <button id="btn-msp" class="map-ui" onclick="highlightPath('msp')">MAO → GRU</button>
+    <button id="btn-hubs" class="map-ui" onclick="toggleHubs()">★ Subgrafo de Hubs</button>
+    <button class="map-ui" onclick="limparRota()">Limpar tudo</button>
   </div>
 </header>
 <main>
-  <div id="map"></div>
-  <div id="sidebar">
-    <div>
-      <div class="ptitle">Legenda — Regiões</div>
-      <div id="legend"></div>
-    </div>
-    <div>
-      <div class="ptitle">Buscar Rota</div>
-      <div style="display:flex;flex-direction:column;gap:5px">
-        <input id="rota-origem"  class="rota-input" placeholder="Origem (ex: REC)" maxlength="3"/>
-        <input id="rota-destino" class="rota-input" placeholder="Destino (ex: POA)" maxlength="3"/>
-        <button onclick="buscarRota()" style="margin-top:2px;padding:5px;background:var(--accent);border:none;color:#fff;border-radius:4px;cursor:pointer;font-family:inherit;font-size:.72rem;font-weight:700">🔍 Calcular Rota</button>
-        <button onclick="limparRota()" style="padding:4px;background:var(--bg);border:1px solid var(--border);color:var(--muted);border-radius:4px;cursor:pointer;font-family:inherit;font-size:.68rem">✕ Limpar tudo</button>
+  <div id="map-container">
+    <div id="map"></div>
+    <div id="sidebar">
+      <div>
+        <div class="ptitle">Legenda — Regiões</div>
+        <div id="legend"></div>
       </div>
-      <div class="ibox" id="rota-result" style="margin-top:6px;min-height:60px">Digite origem e destino para calcular.</div>
-    </div>
-    <div>
-      <div class="ptitle">Aeroporto selecionado</div>
-      <div class="ibox" id="node-info">Clique em um aeroporto para ver detalhes.</div>
-    </div>
-    <div>
-      <div class="ptitle">Caminhos obrigatórios</div>
-      <div class="pbox">
-        <span class="pr">▶ REC → POA</span><br/>
-        <span id="txt-rpo" style="color:#888">—</span><br/><br/>
-        <span class="pm">▶ MAO → GRU</span><br/>
-        <span id="txt-msp" style="color:#888">—</span>
+      <div>
+        <div class="ptitle">Buscar Rota</div>
+        <div style="display:flex;flex-direction:column;gap:5px">
+          <input id="rota-origem"  class="rota-input" placeholder="Origem (ex: REC)" maxlength="3"/>
+          <input id="rota-destino" class="rota-input" placeholder="Destino (ex: POA)" maxlength="3"/>
+          <button onclick="buscarRota()" style="margin-top:2px;padding:5px;background:var(--accent);border:none;color:#fff;border-radius:4px;cursor:pointer;font-family:inherit;font-size:.72rem;font-weight:700">🔍 Calcular Rota</button>
+          <button onclick="limparRota()" style="padding:4px;background:var(--bg);border:1px solid var(--border);color:var(--muted);border-radius:4px;cursor:pointer;font-family:inherit;font-size:.68rem">✕ Limpar tudo</button>
+        </div>
+        <div class="ibox" id="rota-result" style="margin-top:6px;min-height:60px">Digite origem e destino para calcular.</div>
+      </div>
+      <div>
+        <div class="ptitle">Aeroporto selecionado</div>
+        <div class="ibox" id="node-info">Clique em um aeroporto para ver detalhes.</div>
+      </div>
+      <div>
+        <div class="ptitle">Caminhos obrigatórios</div>
+        <div class="pbox">
+          <span class="pr">▶ REC → POA</span><br/>
+          <span id="txt-rpo" style="color:#888">—</span><br/><br/>
+          <span class="pm">▶ MAO → GRU</span><br/>
+          <span id="txt-msp" style="color:#888">—</span>
+        </div>
+      </div>
+      <div>
+        <div class="ptitle">Estatísticas</div>
+        <div class="pbox" id="stats" style="color:#aaa">…</div>
       </div>
     </div>
-    <div>
-      <div class="ptitle">Estatísticas</div>
-      <div class="pbox" id="stats" style="color:#aaa">…</div>
+  </div>
+
+  <div id="charts-container">
+    <div class="charts-grid">
+      <div style="grid-column: 1 / -1; margin-bottom: 15px; border-bottom: 1px solid var(--border); padding-bottom: 20px;">
+         <h2 style="font-family: 'Syne', sans-serif; color: var(--text); font-size: 1.4rem;">Análise Topológica Estrutural</h2>
+         <p style="color: var(--muted); font-size: 0.8rem; margin-top: 6px;">Métricas estatísticas consolidadas e distribuições estruturais geradas do grafo.</p>
+      </div>
+
+      <div class="chart-card">
+          <h3>Ranking de Hubs</h3>
+          <img src="vis1_ranking_hubs.png" alt="Ranking de Hubs" onerror="this.parentNode.style.display='none'">
+          <p>Aeroportos com maior número de conexões diretas na malha aérea nacional.</p>
+      </div>
+      <div class="chart-card">
+          <h3>Distribuição de Graus</h3>
+          <img src="vis2_distribuicao_graus.png" alt="Distribuição de Graus" onerror="this.parentNode.style.display='none'">
+          <p>Análise de frequência dos graus dos vértices, mapeando a densidade topológica da malha.</p>
+      </div>
+      <div class="chart-card">
+          <h3>Comparação por Regiões</h3>
+          <img src="vis3_comparacao_regioes.png" alt="Comparação Regiões" onerror="this.parentNode.style.display='none'">
+          <p>Métricas de conectividade agregadas e normalizadas divididas pelas cinco regiões básicas.</p>
+      </div>
+      <div class="chart-card">
+          <h3>Boxplot de Graus</h3>
+          <img src="vis_exp2_boxplot_graus_regiao.png" alt="Boxplot" onerror="this.parentNode.style.display='none'">
+          <p>Variabilidade estatística interna e identificação de outliers de tráfego regional.</p>
+      </div>
+      <div class="chart-card">
+          <h3>Grau vs Densidade</h3>
+          <img src="vis_exp1_dispersao_grau_densidade.png" alt="Dispersão" onerror="this.parentNode.style.display='none'">
+          <p>Relação de correlação entre a conectividade individual do aeroporto e a densidade local.</p>
+      </div>
+      <div class="chart-card">
+          <h3>Subgrafos Regionais</h3>
+          <img src="vis_expl1_bolhas_regioes.png" alt="Bolhas Regiões" onerror="this.parentNode.style.display='none'">
+          <p>Mapeamento multidimensional relacionando diretamente o tamanho e a ordem dos subgrupos.</p>
+      </div>
+      <div class="chart-card" style="grid-column: 1 / -1; max-width: 900px; justify-self: center; width: 100%;">
+          <h3>Heatmap de Conexões Inter-regionais</h3>
+          <img src="vis_expl2_mini_heatmap_regioes.png" alt="Heatmap Regiões" onerror="this.parentNode.style.display='none'">
+          <p>Matriz cruzada de intensidade exibindo a densidade de tráfego inter e intra-regional.</p>
+      </div>
     </div>
   </div>
 </main>
 <div id="statusbar">Carregando mapa…</div>
+
 <script>
+let showingCharts = false;
+function toggleView() {{
+  showingCharts = !showingCharts;
+  
+  document.getElementById('map-container').style.display = showingCharts ? 'none' : 'flex';
+  document.getElementById('charts-container').style.display = showingCharts ? 'block' : 'none';
+  
+  const mapUiElements = document.querySelectorAll('.map-ui');
+  mapUiElements.forEach(el => el.style.display = showingCharts ? 'none' : 'inline-block');
+  
+  const btn = document.getElementById('btn-tab');
+  const subtitle = document.getElementById('app-subtitle');
+  
+  if (showingCharts) {{
+      btn.innerHTML = '← Voltar ao Mapa';
+      btn.style.borderColor = 'var(--border)';
+      btn.style.color = 'var(--text)';
+      subtitle.innerHTML = 'Análise Estatística & Distribuição Estatística do Grafo';
+      subtitle.style.color = '#00c2a8';
+  }} else {{
+      btn.innerHTML = '📊 Ver Gráficos';
+      btn.style.borderColor = '#00c2a8';
+      btn.style.color = '#00c2a8';
+      subtitle.innerHTML = 'Rede de Aeroportos — Grafo Interativo (Etapa 9)';
+      subtitle.style.color = 'var(--muted)';
+      
+      // Ajusta o tamanho da viewport do Leaflet ao retornar
+      setTimeout(() => map.invalidateSize(), 50);
+  }}
+}}
+
 const AP       = {ap_json};
 const EDGES    = {edges_json};
 const LEGEND   = {legend_json};
@@ -353,11 +450,6 @@ L.tileLayer('https://{{s}}.tile.openstreetmap.org/{{z}}/{{x}}/{{y}}.png', {{
 }}).addTo(map);
 
 function ekey(a, b) {{ return [a, b].sort().join('|'); }}
-
-const rpoEdgeSet = new Set();
-const mspEdgeSet = new Set();
-for (let i = 0; i < PATH_RPO.length - 1; i++) rpoEdgeSet.add(ekey(PATH_RPO[i], PATH_RPO[i+1]));
-for (let i = 0; i < PATH_MSP.length - 1; i++) mspEdgeSet.add(ekey(PATH_MSP[i], PATH_MSP[i+1]));
 
 const lineMap = {{}};
 EDGES.forEach(e => {{
@@ -395,9 +487,6 @@ Object.entries(AP).forEach(([iata, info]) => {{
   }});
   mkMap[iata] = mk;
 }});
-
-document.getElementById('statusbar').textContent =
-  `Grafo pronto — ${{Object.keys(AP).length}} aeroportos, ${{EDGES.length}} conexões.`;
 
 let selectedVertex = null;
 
@@ -455,8 +544,8 @@ map.on('click', () => {{
   }}
 }});
 
-let rpoLine = null;   // polyline do caminho REC→POA no mapa
-let mspLine = null;   // polyline do caminho MAO→GRU no mapa
+let rpoLine = null;
+let mspLine = null;
 
 function highlightPath(which) {{
   document.getElementById('btn-rpo').classList.toggle('active', which === 'rpo');
@@ -466,12 +555,10 @@ function highlightPath(which) {{
   if (mspLine) {{ map.removeLayer(mspLine); mspLine = null; }}
 
   if (which === 'none') {{
-    // restaura grafo ao estado neutro
     restoreEdges();
     Object.values(mkMap).forEach(mk => mk.setOpacity(1));
     return;
   }}
-
 
   EDGES.forEach(e => {{
     const ln = lineMap[ekey(e.from, e.to)]; if (!ln) return;
@@ -487,7 +574,6 @@ function highlightPath(which) {{
     return;
   }}
 
-  // ── desenha polyline do caminho sobre o mapa ──
   const latlngs = path.map(iata => [AP[iata].lat, AP[iata].lon]);
   const pathLine = L.polyline(latlngs, {{
     color:     color,
@@ -504,13 +590,11 @@ function highlightPath(which) {{
   if (which === 'rpo') rpoLine = pathLine;
   else                 mspLine = pathLine;
 
-  // realça marcadores do caminho, esmaece os demais
   const pathSet = new Set(path);
   Object.entries(mkMap).forEach(([iata, mk]) => {{
     mk.setOpacity(pathSet.has(iata) ? 1 : 0.2);
   }});
 
-  // zoom para o caminho
   map.fitBounds(pathLine.getBounds(), {{
     padding:  [50, 50],
     maxZoom:  7,
@@ -521,7 +605,6 @@ function highlightPath(which) {{
   document.getElementById('statusbar').textContent =
     `${{which === 'rpo' ? 'REC → POA' : 'MAO → GRU'}}: ${{path.join(' → ')}} (${{path.length - 1}} trecho(s))`;
 }}
-
 
 let rotaLine = null;
 
@@ -612,14 +695,12 @@ function buscarRota() {{
 document.getElementById('rota-origem') .addEventListener('keydown', e => {{ if(e.key==='Enter') buscarRota(); }});
 document.getElementById('rota-destino').addEventListener('keydown', e => {{ if(e.key==='Enter') buscarRota(); }});
 
-
 function searchNode() {{
   const q = document.getElementById('search-box').value.trim().toUpperCase();
   if (!q) return;
   const info = AP[q];
   if (info) {{ map.flyTo([info.lat, info.lon], 7, {{duration:.8}}); mkMap[q]?.openTooltip(); }}
 }}
-
 
 function resetView() {{
   map.flyTo([-15, -53], 4, {{duration:.8}});
@@ -636,7 +717,7 @@ function toggleHubs() {{
   if (showingHubs) {{
     const hubNodes = new Set();
     Object.entries(AP).forEach(([iata, info]) => {{
-      if ((parseInt(info.grau) || 0) >= 10) {{ hubNodes.add(iata); mk:mkMap[iata]?.setOpacity(1); }}
+      if ((parseInt(info.grau) || 0) >= 10) {{ hubNodes.add(iata); mkMap[iata]?.setOpacity(1); }}
       else mkMap[iata]?.setOpacity(0.15);
     }});
     EDGES.forEach(e => {{
