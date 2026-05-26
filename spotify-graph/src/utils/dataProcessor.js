@@ -94,6 +94,7 @@ export const buildGraphData = (
     minPopularity = 0,
     minGenreCount = 1,
     activeGenres = null, // Set of genre names, null = all
+    showTracks = false,
   } = {}
 ) => {
   // Filter and rank artists
@@ -163,8 +164,36 @@ export const buildGraphData = (
     }
   }
 
+  // Build track nodes and links if requested
+  const nodes = [...genres, ...artists]
+  if (showTracks) {
+    for (const artist of artists) {
+      if (artist.topTracks) {
+        for (const track of artist.topTracks) {
+          const trackNodeId = `track:${artist.id}:${track.id}`
+          nodes.push({
+            id: trackNodeId,
+            rawId: track.id,
+            type: 'track',
+            label: track.name,
+            popularity: track.popularity,
+            spotifyUrl: `https://open.spotify.com/track/${track.id}`,
+            artistId: artist.id,
+            artistLabel: artist.label,
+            genre: artist.genres?.[0] || '',
+          })
+          links.push({
+            source: artist.id,
+            target: trackNodeId,
+            type: 'track-link',
+          })
+        }
+      }
+    }
+  }
+
   return {
-    nodes: [...genres, ...artists],
+    nodes,
     links,
   }
 }

@@ -11,6 +11,8 @@ export default function Controls({
   setMinGenreCount,
   maxArtists,
   setMaxArtists,
+  showTracks,
+  setShowTracks,
   searchQuery,
   setSearchQuery,
   showLabels,
@@ -124,6 +126,21 @@ export default function Controls({
                 }`}
               >
                 Labels {showLabels ? 'On' : 'Off'}
+              </button>
+            </div>
+
+            {/* Show Songs Toggle */}
+            <div className="px-3 py-2 flex items-center justify-between border-b border-slate-700/50">
+              <span className="text-slate-400 text-xs font-medium">Exibir Músicas</span>
+              <button
+                onClick={() => setShowTracks((v) => !v)}
+                className={`px-3 py-1 text-xs font-semibold rounded-lg transition-colors border ${
+                  showTracks
+                    ? 'bg-[#1DB954]/20 border-[#1DB954]/50 text-[#1DB954]'
+                    : 'bg-slate-800 border-slate-700 text-slate-400 hover:text-white'
+                }`}
+              >
+                {showTracks ? 'Sim' : 'Não'}
               </button>
             </div>
 

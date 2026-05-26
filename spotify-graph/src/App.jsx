@@ -21,6 +21,8 @@ export default function App() {
     setActiveGenres,
     maxArtists,
     setMaxArtists,
+    showTracks,
+    setShowTracks,
   } = useGraphData()
 
   const [selectedNode, setSelectedNode] = useState(null)
@@ -72,6 +74,8 @@ export default function App() {
             setMinGenreCount={setMinGenreCount}
             maxArtists={maxArtists}
             setMaxArtists={setMaxArtists}
+            showTracks={showTracks}
+            setShowTracks={setShowTracks}
             searchQuery={searchQuery}
             setSearchQuery={setSearchQuery}
             showLabels={showLabels}

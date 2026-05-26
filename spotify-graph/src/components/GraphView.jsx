@@ -27,6 +27,11 @@ export default function GraphView({
     return GENRE_NODE_RADIUS.min
   }, [])
 
+  const getTrackRadius = useCallback((node) => {
+    const t = Math.max(0, Math.min(1, (node.popularity - MIN_POP) / (MAX_POP - MIN_POP)))
+    return 2.5 + t * 4 // 2.5px to 6.5px based on popularity
+  }, [])
+
   // Memoize data shape — ForceGraph re-runs simulation when this changes
   const stableData = useMemo(() => ({
     nodes: graphData.nodes.map((n) => ({ ...n })),
@@ -38,11 +43,18 @@ export default function GraphView({
   const nodeCanvasObject = useCallback(
     (node, ctx, globalScale) => {
       const isGenre = node.type === 'genre'
-      const color = isGenre
-        ? genreColorMap.get(node.label) || '#888'
-        : genreColorMap.get(node.genres?.[0]) || '#6b7280'
+      const isTrack = node.type === 'track'
 
-      const radius = isGenre ? getGenreRadius(node) : getArtistRadius(node)
+      let color
+      if (isGenre) {
+        color = genreColorMap.get(node.label) || '#888'
+      } else if (isTrack) {
+        color = genreColorMap.get(node.genre) || '#1DB954'
+      } else {
+        color = genreColorMap.get(node.genres?.[0]) || '#6b7280'
+      }
+
+      const radius = isGenre ? getGenreRadius(node) : (isTrack ? getTrackRadius(node) : getArtistRadius(node))
 
       // Highlight logic
       const isSelected = selectedNode?.id === node.id
@@ -66,6 +78,14 @@ export default function GraphView({
       ctx.fillStyle = dimmed ? `${color}33` : color
       ctx.fill()
 
+      if (isTrack) {
+        // Draw the inner dot for vinyl disc look
+        ctx.beginPath()
+        ctx.arc(node.x, node.y, radius * 0.4, 0, 2 * Math.PI)
+        ctx.fillStyle = dimmed ? 'rgba(255, 255, 255, 0.2)' : '#fff'
+        ctx.fill()
+      }
+
       if (isSelected || isSearchMatch) {
         ctx.strokeStyle = '#fff'
         ctx.lineWidth = 1.5 / globalScale
@@ -76,13 +96,15 @@ export default function GraphView({
 
       // Labels
       const showLabel = showLabels
-        ? isGenre || isSearchMatch || isSelected
+        ? isGenre || isSearchMatch || isSelected || (isTrack && globalScale > 2.5)
         : isSelected || isSearchMatch || (isGenre && globalScale > 1.5)
 
       if (showLabel) {
         const fontSize = isGenre
           ? Math.max(3, 10 / globalScale)
-          : Math.max(2.5, 8 / globalScale)
+          : isTrack
+            ? Math.max(2, 7.5 / globalScale)
+            : Math.max(2.5, 8 / globalScale)
 
         ctx.save()
         ctx.font = `${isGenre ? 'bold ' : ''}${fontSize}px Inter, system-ui`
@@ -99,19 +121,20 @@ export default function GraphView({
         ctx.restore()
       }
     },
-    [genreColorMap, selectedNode, searchLower, showLabels, getArtistRadius, getGenreRadius]
+    [genreColorMap, selectedNode, searchLower, showLabels, getArtistRadius, getGenreRadius, getTrackRadius]
   )
 
   const nodePointerAreaPaint = useCallback(
     (node, color, ctx) => {
       const isGenre = node.type === 'genre'
-      const radius = isGenre ? getGenreRadius(node) : getArtistRadius(node)
+      const isTrack = node.type === 'track'
+      const radius = isGenre ? getGenreRadius(node) : (isTrack ? getTrackRadius(node) : getArtistRadius(node))
       ctx.beginPath()
       ctx.arc(node.x, node.y, radius + 2, 0, 2 * Math.PI)
       ctx.fillStyle = color
       ctx.fill()
     },
-    [getArtistRadius, getGenreRadius]
+    [getArtistRadius, getGenreRadius, getTrackRadius]
   )
 
   const handleNodeClick = useCallback(
@@ -127,19 +150,34 @@ export default function GraphView({
 
   const nodeVal = useCallback((node) => {
     if (node.type === 'genre') return 6
+    if (node.type === 'track') {
+      const t = Math.max(0, Math.min(1, (node.popularity - MIN_POP) / (MAX_POP - MIN_POP)))
+      return 0.5 + t * 1.5
+    }
     const t = Math.max(0, Math.min(1, (node.popularityAvg - MIN_POP) / (MAX_POP - MIN_POP)))
     return 1 + t * 3
   }, [])
 
-  // Link color: match source genre
+  // Link color: match source genre, or subtle green for track links
   const linkColor = useCallback(
     (link) => {
+      if (link.type === 'track-link') {
+        return 'rgba(29, 185, 84, 0.08)' // faint Spotify green
+      }
       const target = typeof link.target === 'object' ? link.target : null
       if (!target) return '#ffffff08'
       const color = genreColorMap.get(target.label) || '#ffffff'
       return `${color}18`
     },
     [genreColorMap]
+  )
+
+  const linkWidth = useCallback(
+    (link) => {
+      if (link.type === 'track-link') return 0.2
+      return 0.4
+    },
+    []
   )
 
   return (
@@ -150,7 +188,7 @@ export default function GraphView({
       nodePointerAreaPaint={nodePointerAreaPaint}
       nodeVal={nodeVal}
       linkColor={linkColor}
-      linkWidth={0.4}
+      linkWidth={linkWidth}
       onNodeClick={handleNodeClick}
       onBackgroundClick={handleBackgroundClick}
       warmupTicks={0}
