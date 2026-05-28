@@ -35,7 +35,7 @@ export default function Sidebar({ node, genreColorMap, onClose }) {
         </button>
       </div>
 
-      <div className="flex-1 overflow-y-auto px-4 py-4 space-y-5">
+      <div className="flex-1 overflow-y-hidden px-4 py-4 space-y-5">
         {/* Stats */}
         <div className="grid grid-cols-2 gap-2">
           {isTrack ? (
@@ -62,18 +62,18 @@ export default function Sidebar({ node, genreColorMap, onClose }) {
               <div className="text-white font-medium text-sm mt-1">{node.artistLabel}</div>
             </div>
 
-            <div className="pt-2">
-              <a
-                href={node.spotifyUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex items-center justify-center gap-2 w-full bg-[#1DB954] hover:bg-[#1ed760] text-black font-bold py-2.5 px-4 rounded-full transition-colors text-sm shadow-md"
-              >
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
-                  <path d="M12 2C6.477 2 2 6.477 2 12s4.477 10 10 10 10-4.477 10-10S17.523 2 12 2zm4.586 14.424c-.18.295-.565.387-.86.207-2.377-1.454-5.37-1.783-8.893-.978-.336.077-.67-.133-.747-.47-.077-.337.133-.67.47-.747 3.852-.88 7.15-.51 9.816 1.127.295.18.387.563.207.86zm1.226-2.722c-.226.367-.707.487-1.074.26-2.72-1.672-6.87-2.157-10.075-1.182-.413.125-.847-.107-.972-.52-.125-.413.107-.847.52-.972 3.667-1.112 8.225-.572 11.34 1.343.367.227.488.708.26 1.074zm.107-2.833C14.384 8.7 8.564 8.51 5.176 9.537c-.52.158-1.07-.143-1.228-.662-.158-.52.143-1.07.662-1.228 3.885-1.18 10.31-.96 14.37 1.45.47.28.62.89.34 1.36-.28.47-.89.62-1.36.34z"/>
-                </svg>
-                Ouvir música no Spotify?
-              </a>
+            <div className="-mx-4 pt-2">
+              <iframe
+                key={node.rawId}
+                src={`https://open.spotify.com/embed/track/${node.rawId}?utm_source=generator&autoplay=1`}
+                width="100%"
+                height="152"
+                frameBorder="0"
+                scrolling="no"
+                allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
+                loading="lazy"
+                style={{ display: 'block' }}
+              />
             </div>
           </section>
         )}
