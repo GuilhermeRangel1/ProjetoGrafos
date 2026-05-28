@@ -4,6 +4,7 @@ import GraphView from './components/GraphView'
 import Sidebar from './components/Sidebar'
 import Controls from './components/Controls'
 import LoadingScreen from './components/LoadingScreen'
+import ChartsPanel from './components/ChartsPanel'
 
 export default function App() {
   const {
@@ -28,6 +29,7 @@ export default function App() {
   const [selectedNode, setSelectedNode] = useState(null)
   const [searchQuery, setSearchQuery] = useState('')
   const [showLabels, setShowLabels] = useState(false)
+  const [showCharts, setShowCharts] = useState(false)
 
   const graphRef = useRef(null)
 
@@ -94,17 +96,41 @@ export default function App() {
             />
           )}
 
-          {/* Top-right mini legend */}
-          <div className="absolute top-4 right-4 bg-[#12121c]/80 backdrop-blur border border-slate-700/50 rounded-lg px-3 py-2 flex gap-4 text-xs text-slate-400 pointer-events-none z-10">
-            <span className="flex items-center gap-1.5">
-              <span className="w-3.5 h-3.5 rounded-full bg-slate-300 inline-block" />
-              Genre node
-            </span>
-            <span className="flex items-center gap-1.5">
-              <span className="w-2 h-2 rounded-full bg-slate-500 inline-block" />
-              Artist node
-            </span>
+          {/* Top-right: charts tab button + mini legend */}
+          <div className="absolute top-4 right-4 flex flex-col items-end gap-2 z-10">
+            <button
+              onClick={() => setShowCharts(true)}
+              style={{
+                background: '#13131f',
+                border: '1px solid #00c2a8',
+                color: '#00c2a8',
+                fontFamily: "'Space Mono', monospace",
+                fontSize: '0.7rem',
+                padding: '5px 12px',
+                borderRadius: '4px',
+                cursor: 'pointer',
+                fontWeight: 'bold',
+                letterSpacing: '0.5px',
+              }}
+            >
+              📊 Ver Gráficos
+            </button>
+            <div className="bg-[#12121c]/80 backdrop-blur border border-slate-700/50 rounded-lg px-3 py-2 flex gap-4 text-xs text-slate-400 pointer-events-none">
+              <span className="flex items-center gap-1.5">
+                <span className="w-3.5 h-3.5 rounded-full bg-slate-300 inline-block" />
+                Genre node
+              </span>
+              <span className="flex items-center gap-1.5">
+                <span className="w-2 h-2 rounded-full bg-slate-500 inline-block" />
+                Artist node
+              </span>
+            </div>
           </div>
+
+          {/* Charts overlay */}
+          {showCharts && (
+            <ChartsPanel onClose={() => setShowCharts(false)} />
+          )}
         </>
       )}
     </div>
