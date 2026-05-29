@@ -11,6 +11,7 @@ export default function GraphView({
   selectedNode,
   setSelectedNode,
   searchQuery,
+  trackSearchQuery,
   showLabels,
   graphRef: externalRef,
 }) {
@@ -38,7 +39,8 @@ export default function GraphView({
     links: graphData.links.map((l) => ({ ...l })),
   }), [graphData])
 
-  const searchLower = searchQuery.toLowerCase()
+  const searchLower = searchQuery ? searchQuery.toLowerCase() : ''
+  const trackSearchLower = trackSearchQuery ? trackSearchQuery.toLowerCase() : ''
 
   const nodeCanvasObject = useCallback(
     (node, ctx, globalScale) => {
@@ -58,10 +60,39 @@ export default function GraphView({
 
       // Highlight logic
       const isSelected = selectedNode?.id === node.id
-      const isSearchMatch =
-        searchLower && node.label.toLowerCase().includes(searchLower)
+
+      const hasArtistQuery = !!searchLower
+      let isArtistMatch = false
+      if (hasArtistQuery) {
+        if (node.type === 'artist' || node.type === 'genre') {
+          isArtistMatch = node.label.toLowerCase().includes(searchLower)
+        } else if (node.type === 'track') {
+          isArtistMatch = node.label.toLowerCase().includes(searchLower) ||
+                          (node.artistLabel && node.artistLabel.toLowerCase().includes(searchLower))
+        }
+      }
+
+      const hasTrackQuery = !!trackSearchLower
+      let isTrackMatch = false
+      if (hasTrackQuery) {
+        if (node.type === 'track') {
+          isTrackMatch = node.label.toLowerCase().includes(trackSearchLower)
+        } else if (node.type === 'artist') {
+          isTrackMatch = node.topTracks?.some((t) => t.name.toLowerCase().includes(trackSearchLower))
+        }
+      }
+
+      let isSearchMatch = false
+      if (hasArtistQuery && hasTrackQuery) {
+        isSearchMatch = isArtistMatch && isTrackMatch
+      } else if (hasArtistQuery) {
+        isSearchMatch = isArtistMatch
+      } else if (hasTrackQuery) {
+        isSearchMatch = isTrackMatch
+      }
+
       const dimmed =
-        (searchLower && !isSearchMatch) ||
+        ((hasArtistQuery || hasTrackQuery) && !isSearchMatch) ||
         (selectedNode && !isSelected)
 
       ctx.save()
@@ -121,7 +152,7 @@ export default function GraphView({
         ctx.restore()
       }
     },
-    [genreColorMap, selectedNode, searchLower, showLabels, getArtistRadius, getGenreRadius, getTrackRadius]
+    [genreColorMap, selectedNode, searchLower, trackSearchLower, showLabels, getArtistRadius, getGenreRadius, getTrackRadius]
   )
 
   const nodePointerAreaPaint = useCallback(

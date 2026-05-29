@@ -15,6 +15,8 @@ export default function Controls({
   setShowTracks,
   searchQuery,
   setSearchQuery,
+  trackSearchQuery,
+  setTrackSearchQuery,
   showLabels,
   setShowLabels,
   onResetView,
@@ -67,12 +69,19 @@ export default function Controls({
       {panelOpen && (
         <div className="pointer-events-auto ml-4 mt-2 w-64 bg-[#12121c]/95 backdrop-blur border border-slate-700/50 rounded-xl flex flex-col shadow-2xl overflow-hidden max-h-[calc(100vh-100px)]">
           {/* Search */}
-          <div className="px-3 pt-3 pb-2 border-b border-slate-700/50">
+          <div className="px-3 pt-3 pb-2 border-b border-slate-700/50 space-y-2">
             <input
               type="text"
               placeholder="Search artist…"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full bg-slate-800 text-white text-sm rounded-lg px-3 py-1.5 outline-none border border-slate-600/50 focus:border-[#1DB954]/60 placeholder-slate-500"
+            />
+            <input
+              type="text"
+              placeholder="Search song…"
+              value={trackSearchQuery}
+              onChange={(e) => setTrackSearchQuery(e.target.value)}
               className="w-full bg-slate-800 text-white text-sm rounded-lg px-3 py-1.5 outline-none border border-slate-600/50 focus:border-[#1DB954]/60 placeholder-slate-500"
             />
           </div>

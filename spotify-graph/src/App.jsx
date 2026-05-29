@@ -28,6 +28,7 @@ export default function App() {
 
   const [selectedNode, setSelectedNode] = useState(null)
   const [searchQuery, setSearchQuery] = useState('')
+  const [trackSearchQuery, setTrackSearchQuery] = useState('')
   const [showLabels, setShowLabels] = useState(false)
   const [showCharts, setShowCharts] = useState(false)
 
@@ -60,6 +61,7 @@ export default function App() {
             selectedNode={selectedNode}
             setSelectedNode={setSelectedNode}
             searchQuery={searchQuery}
+            trackSearchQuery={trackSearchQuery}
             showLabels={showLabels}
             graphRef={graphRef}
           />
@@ -80,6 +82,8 @@ export default function App() {
             setShowTracks={setShowTracks}
             searchQuery={searchQuery}
             setSearchQuery={setSearchQuery}
+            trackSearchQuery={trackSearchQuery}
+            setTrackSearchQuery={setTrackSearchQuery}
             showLabels={showLabels}
             setShowLabels={setShowLabels}
             onResetView={handleResetView}
