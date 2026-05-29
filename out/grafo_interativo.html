@@ -67,7 +67,7 @@ main{display:flex;flex:1;overflow:hidden; width: 100%;}
 
 .charts-grid {
     display: grid; 
-    grid-template-columns: repeat(3, 1fr); 
+    grid-template-columns: repeat(6, 1fr); 
     gap: 25px; 
     max-width: 1600px; 
     margin: 0 auto;
@@ -76,17 +76,18 @@ main{display:flex;flex:1;overflow:hidden; width: 100%;}
     background: var(--surf); border: 1px solid var(--border); border-radius: 12px; padding: 25px; box-shadow: 0 10px 30px rgba(0,0,0,0.4);
     display: flex; flex-direction: column; justify-content: space-between; min-height: 400px;
 }
-.col-span-1 { grid-column: span 1; }
 .col-span-2 { grid-column: span 2; }
-.col-span-3 { grid-column: 1 / -1; }
+.col-span-3 { grid-column: span 3; }
+.col-span-6 { grid-column: 1 / -1; }
 
 @media (max-width: 1300px) {
     .charts-grid { grid-template-columns: repeat(2, 1fr); }
-    .col-span-2 { grid-column: span 2; }
+    .col-span-2, .col-span-3 { grid-column: span 1; }
+    .col-span-6 { grid-column: 1 / -1; }
 }
 @media (max-width: 900px) {
     .charts-grid { grid-template-columns: 1fr; }
-    .col-span-1, .col-span-2, .col-span-3 { grid-column: 1 / -1; }
+    .col-span-2, .col-span-3, .col-span-6 { grid-column: 1 / -1; }
 }
 
 .chart-card h3 { font-family: 'Syne', sans-serif; font-size: 0.95rem; margin-bottom: 8px; color: #00c2a8; text-transform: uppercase; letter-spacing: 1px; text-align: center; }
@@ -162,12 +163,12 @@ main{display:flex;flex:1;overflow:hidden; width: 100%;}
 
   <div id="charts-container">
     <div class="charts-grid">
-      <div class="col-span-3" style="margin-bottom: 5px; border-bottom: 1px solid var(--border); padding-bottom: 15px;">
+      <div class="col-span-6" style="margin-bottom: 5px; border-bottom: 1px solid var(--border); padding-bottom: 15px;">
          <h2 style="font-family: 'Syne', sans-serif; color: var(--text); font-size: 1.4rem;">Análise Topológica Interativa (Módulo AVD)</h2>
          <p style="color: var(--muted); font-size: 0.8rem; margin-top: 6px;">Visualizações geradas dinamicamente com base nas leis de Gestalt aplicadas aos dados do Grafo.</p>
       </div>
 
-      <div class="chart-card col-span-1">
+      <div class="chart-card col-span-2">
           <h3>Top Hubs Nacionais</h3>
           <div class="chart-controls">
               <span style="font-size:0.65rem; color:var(--muted); align-self:center;">Mostrar:</span>
@@ -181,7 +182,7 @@ main{display:flex;flex:1;overflow:hidden; width: 100%;}
           <p>Aeroportos ordenados pelo Grau. <b style="color:#e0e0f0;">Dica: Clique na barra para ver no mapa!</b></p>
       </div>
 
-      <div class="chart-card col-span-1">
+      <div class="chart-card col-span-2">
           <h3>Distribuição de Graus</h3>
           <div class="chart-controls">
               <button id="dist-line-btn" class="active" onclick="updateDistributionType('line')">Visão em Linha</button>
@@ -193,7 +194,7 @@ main{display:flex;flex:1;overflow:hidden; width: 100%;}
           <p>Mapeia a densidade do ecossistema revelando a topologia de escala da rede.</p>
       </div>
 
-      <div class="chart-card col-span-1">
+      <div class="chart-card col-span-2">
           <h3>Perfil e Análise Multivariada das Regiões</h3>
           <div class="chart-controls">
               <span style="font-size:0.65rem; color:var(--muted); align-self:center;">Métrica:</span>
@@ -209,7 +210,7 @@ main{display:flex;flex:1;overflow:hidden; width: 100%;}
           <p>Alternância dinâmica de variáveis estruturais agrupadas por macrorregião geográfica.</p>
       </div>
 
-      <div class="chart-card col-span-2">
+      <div class="chart-card col-span-3">
           <h3>Dispersão Interna: Boxplot de Graus</h3>
           <div class="chart-wrapper">
               <canvas id="chart-boxplot"></canvas>
@@ -217,7 +218,7 @@ main{display:flex;flex:1;overflow:hidden; width: 100%;}
           <p>Análise estatística descritiva (Mín, Q1, Mediana, Q3, Máx) mapeando assimetrias internas.</p>
       </div>
 
-      <div class="chart-card col-span-1">
+      <div class="chart-card col-span-3">
           <h3>Bolhas Regionais: Volume vs Densidade</h3>
           <div class="chart-wrapper">
               <canvas id="chart-bubbles"></canvas>
@@ -225,7 +226,7 @@ main{display:flex;flex:1;overflow:hidden; width: 100%;}
           <p>Tamanho da bolha = Quantidade de Aeroportos. Identifica a eficiência estrutural média por macro-região.</p>
       </div>
 
-      <div class="chart-card col-span-2">
+      <div class="chart-card col-span-3">
           <h3>Heatmap: Perfil Regional da Rede Aérea</h3>
           <div class="chart-wrapper" id="chart-heatmap-wrapper" style="display:flex; align-items:center; justify-content:center; padding: 10px;">
               
@@ -233,7 +234,7 @@ main{display:flex;flex:1;overflow:hidden; width: 100%;}
           <p>Avaliação das métricas da Rede Ego (Ordem, Tamanho e Densidade) agregadas pela mediana de cada macrorregião.</p>
       </div>
 
-      <div class="chart-card col-span-1">
+      <div class="chart-card col-span-3">
           <h3>Dispersão: Grau do Vértice vs Densidade Ego</h3>
           <div class="chart-wrapper">
               <canvas id="chart-scatter"></canvas>
