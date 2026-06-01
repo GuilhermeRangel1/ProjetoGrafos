@@ -1,4 +1,43 @@
+import { useState } from 'react'
+
 export default function Sidebar({ node, genreColorMap, onClose }) {
+  const [playlist, setPlaylist] = useState(null)
+  const [loadingPlaylist, setLoadingPlaylist] = useState(false)
+  const [playlistError, setPlaylistError] = useState(null)
+  const [copied, setCopied] = useState(false)
+
+  const handleCopyPlaylist = () => {
+    if (!playlist) return
+    const uris = playlist.playlist.map(t => `spotify:track:${t.id}`).join('\n')
+    navigator.clipboard.writeText(uris).then(() => {
+      setCopied(true)
+      setTimeout(() => setCopied(false), 3000)
+    }).catch(err => console.error("Falha ao copiar:", err))
+  }
+
+  const handleGeneratePlaylist = async (algorithm) => {
+    setLoadingPlaylist(true)
+    setPlaylistError(null)
+    setPlaylist(null)
+    
+    try {
+      // Usar node.rawId ou node.label como seed (track id ou nome de artista)
+      const seed = node.type === 'track' ? node.rawId : node.label
+      const res = await fetch(`http://localhost:5000/api/playlist?seed=${encodeURIComponent(seed)}&algorithm=${algorithm}`)
+      const data = await res.json()
+      
+      if (!res.ok) {
+        throw new Error(data.error || 'Erro ao gerar playlist')
+      }
+      
+      setPlaylist(data)
+    } catch (err) {
+      setPlaylistError(err.message)
+    } finally {
+      setLoadingPlaylist(false)
+    }
+  }
+
   if (!node) return null
 
   const isGenre = node.type === 'genre'
@@ -35,7 +74,7 @@ export default function Sidebar({ node, genreColorMap, onClose }) {
         </button>
       </div>
 
-      <div className="flex-1 overflow-y-hidden px-4 py-4 space-y-5">
+      <div className="flex-1 overflow-y-auto px-4 py-4 space-y-5">
         {/* Stats */}
         <div className="grid grid-cols-2 gap-2">
           {isTrack ? (
@@ -121,6 +160,92 @@ export default function Sidebar({ node, genreColorMap, onClose }) {
                 </li>
               ))}
             </ul>
+          </section>
+        )}
+
+        {/* Playlist Generator Section */}
+        {(!isGenre) && (
+          <section className="pt-2 border-t border-slate-700/50">
+            <SectionTitle>Gerar Playlist Automática</SectionTitle>
+            <p className="text-[10px] text-slate-400 mt-1 mb-3">
+              Baseada na similaridade entre músicas usando os algoritmos de grafos BFS e DFS.
+            </p>
+            <div className="flex flex-col gap-2">
+              <button 
+                onClick={() => handleGeneratePlaylist('bfs')}
+                disabled={loadingPlaylist}
+                className="w-full bg-[#1DB954]/20 hover:bg-[#1DB954]/30 text-[#1DB954] border border-[#1DB954]/50 py-1.5 px-3 rounded-lg text-xs font-semibold transition-colors disabled:opacity-50"
+              >
+                🎶 Playlist Suave (BFS)
+              </button>
+              <button 
+                onClick={() => handleGeneratePlaylist('dfs')}
+                disabled={loadingPlaylist}
+                className="w-full bg-purple-500/20 hover:bg-purple-500/30 text-purple-400 border border-purple-500/50 py-1.5 px-3 rounded-lg text-xs font-semibold transition-colors disabled:opacity-50"
+              >
+                🎸 Mergulho Profundo (DFS)
+              </button>
+            </div>
+
+            {loadingPlaylist && (
+              <div className="text-xs text-[#1DB954] mt-3 animate-pulse">Gerando playlist no backend Python...</div>
+            )}
+
+            {playlistError && (
+              <div className="text-xs text-red-400 mt-3 bg-red-400/10 p-2 rounded border border-red-400/30">
+                {playlistError}
+                <div className="text-[9px] mt-1 text-slate-400">Verifique se o backend Python está rodando na porta 5000.</div>
+              </div>
+            )}
+
+            {playlist && (
+              <div className="mt-4 bg-slate-800/40 rounded-lg p-3 border border-slate-700">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-xs font-bold text-white">Playlist ({playlist.playlist.length} faixas)</span>
+                  <div className="flex gap-2">
+                    <button 
+                      onClick={handleCopyPlaylist} 
+                      className={`text-[10px] px-2 py-0.5 rounded transition-colors ${copied ? 'bg-green-500/20 text-green-400' : 'bg-slate-700 hover:bg-slate-600 text-white'}`}
+                    >
+                      {copied ? '✓ Copiado!' : '📋 Copiar p/ Spotify'}
+                    </button>
+                    <button onClick={() => setPlaylist(null)} className="text-[10px] text-slate-400 hover:text-white">Fechar</button>
+                  </div>
+                </div>
+
+                {copied && (
+                  <div className="text-[9px] text-[#1DB954] mb-2 px-1">
+                    Cole (Ctrl+V) dentro de uma playlist vazia no aplicativo do Spotify para Desktop!
+                  </div>
+                )}
+                
+                {playlist.fallback_usado && (
+                  <div className="text-[10px] text-yellow-400 mb-3 bg-yellow-400/10 p-2 rounded">
+                    A música selecionada não estava na nossa amostra processada do grafo. Começamos a playlist a partir de uma música de estilo parecido: <b>{playlist.seed_utilizado.name} - {playlist.seed_utilizado.artist}</b>.
+                  </div>
+                )}
+
+                <div className="space-y-3 mt-3 max-h-64 overflow-y-auto pr-1">
+                  {playlist.playlist.map((track, i) => (
+                    <div key={i} className="flex flex-col gap-1">
+                      <span className="text-xs font-medium text-slate-200">
+                        {i + 1}. {track.name}
+                      </span>
+                      <span className="text-[10px] text-slate-500">{track.artist}</span>
+                      <iframe
+                        src={`https://open.spotify.com/embed/track/${track.id}?utm_source=generator`}
+                        width="100%"
+                        height="80"
+                        frameBorder="0"
+                        allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
+                        loading="lazy"
+                        className="rounded-md mt-1"
+                      ></iframe>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
           </section>
         )}
       </div>

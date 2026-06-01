@@ -1,0 +1,35 @@
+Música Raiz: Cansei - Ao Vivo - Vitinho;Sorriso Maroto
+
+=== PLAYLIST BFS (Transição Suave) ===
+1. Cansei - Ao Vivo - Vitinho;Sorriso Maroto
+2. Identidade / Singelo Menestral - Ao Vivo - Vou pro Sereno
+3. Swing de Campo Grande - Casuarina
+4. Dorme Com Deus - Ao Vivo - Tá Na Mente;Péricles
+5. Diente Blanco - En Vivo - 31 Minutos;John Quijada
+6. Chega de Sofrer / Não Foi à Toa / Presentinho / Manda Áudio - Ao Vivo - Di Propósito;Pique Novo;Guga Nandes
+7. 'O Surdato 'nnamorato - Luciano Pavarotti;The Corrs
+8. Não Sou Mais Disso - Ao Vivo - Zeca Pagodinho
+9. Elko - Railroad Earth
+10. Rasteira - Ao Vivo - Henrique & Juliano
+11. Que Saudade - Grupo Revelação;Di Propósito
+12. Fé Em Deus - Live From Brazil/2007 - Diogo Nogueira
+13. Jingle Bells - Ella Fitzgerald
+14. Zafar - En Vivo - La Vela Puerca;Emiliano Brancciari
+15. Deixa Eu Sofrer - Ao Vivo - Henrique & Juliano
+
+=== PLAYLIST DFS (Jornada Profunda) ===
+1. Cansei - Ao Vivo - Vitinho;Sorriso Maroto
+2. Identidade / Singelo Menestral - Ao Vivo - Vou pro Sereno
+3. Chega de Sofrer / Não Foi à Toa / Presentinho / Manda Áudio - Ao Vivo - Di Propósito;Pique Novo;Guga Nandes
+4. Swing de Campo Grande - Casuarina
+5. Diente Blanco - En Vivo - 31 Minutos;John Quijada
+6. Dorme Com Deus - Ao Vivo - Tá Na Mente;Péricles
+7. Rasteira - Ao Vivo - Henrique & Juliano
+8. Deixa Eu Sofrer - Ao Vivo - Henrique & Juliano
+9. I Saw Mommy Kissing Santa Claus - The Jackson 5
+10. I Saw Mommy Kissing Santa Claus - The Jackson 5
+11. Nosso Flow / Santo Forte - Ao Vivo - Dilsinho;Sorriso Maroto
+12. Ocidentes Acontecem - Nomade Orquestra;Edgar
+13. Estamos de Pé - Ao Vivo - Marcus Salles
+14. Estamos de Pé - Ao Vivo - Marcus Salles
+15. No More Tears - Ozzy Osbourne
