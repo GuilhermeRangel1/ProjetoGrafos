@@ -638,14 +638,14 @@ export default function ChartsPanel({ onClose }) {
 
           <InsightCard color="#6c63ff" title="1. O Iceberg da Popularidade">
             De <b>{insights.totalTracks.toLocaleString('pt-BR')}</b> faixas no dataset,{' '}
-            <b>{insights.obscurePct}%</b> vivem abaixo de 60 de popularidade — nunca chegando ao
+            <b>{insights.obscurePct}%</b> vivem abaixo de 60 de popularidade, nunca chegando ao
             mainstream. A distribuição é quase plana até esse ponto: cada faixa de 20 pontos
-            concentra ~30 mil músicas. Depois, o precipício: apenas{' '}
+            concentra cerca de 30 mil músicas. Depois, o precipício: apenas{' '}
             <b>{POP_DIST[3].toLocaleString('pt-BR')} faixas (11.9%)</b> entram no intervalo 61–80,
             e míseras <b>{POP_DIST[4].toLocaleString('pt-BR')} ({insights.viralPct}%)</b> alcançam a
-            elite 81–100. Cruzar 60 de popularidade não é evolução gradual — é um{' '}
+            elite 81–100. Cruzar 60 de popularidade não é evolução gradual, é um{' '}
             <b>salto de classe</b>. O gênero campeão, <b>{insights.mostPopular.genre}</b> (média{' '}
-            {insights.mostPopular.avg_pop}), ainda fica ABAIXO desse limiar: nem o gênero de topo
+            {insights.mostPopular.avg_pop}), ainda fica abaixo desse limiar: nem o gênero de topo
             escapa do "iceberg". A maior parte de suas faixas permanece invisível ao algoritmo
             de descoberta do Spotify.
           </InsightCard>
@@ -654,10 +654,10 @@ export default function ChartsPanel({ onClose }) {
             O radar revela uma <b>tensão universal</b>: energia e valência raramente coexistem em
             valores extremos. <b>{insights.mostEnergetic.genre}</b> domina energia ({' '}
             <b>{insights.mostEnergetic.avg_energy}</b>) mas tem valência de apenas{' '}
-            <b>{insights.mostEnergetic.avg_valence}</b> — adrenalina sem euforia, o perfil clássico
+            <b>{insights.mostEnergetic.avg_valence}</b>, adrenalina sem euforia, o perfil clássico
             do metal extremo. A exceção que quebra a regra:{' '}
             <b>{insights.mostCheerful.genre}</b> (valência <b>{insights.mostCheerful.avg_valence}</b>,
-            energia <b>{insights.mostCheerful.avg_energy}</b>) — único gênero que combina intensidade
+            energia <b>{insights.mostCheerful.avg_energy}</b>), único gênero que combina intensidade
             e alegria ao mesmo tempo. O insight mais revelador:{' '}
             <b>{insights.mostPopular.genre}</b> (gênero mais popular) não vence em nenhum eixo do
             radar. Traça um hexágono perfeitamente mediano.{' '}
@@ -676,11 +676,11 @@ export default function ChartsPanel({ onClose }) {
               accent="#ff7070"
             />
             Indie/progressivo → rock → folk irlandês → canção alemã → Bon Jovi.
-            Cada salto maximiza sobreposição de features de áudio — nenhum "impõe" gênero.
+            Cada salto maximiza sobreposição de features de áudio, nenhum "impõe" gênero.
             Um segundo caminho (6 saltos) conecta <b>"Naranjo en Flor"</b> (tango argentino) a{' '}
             <b>"Tumhare Siva"</b> (música indiana) passando por{' '}
             "Riders on the Storm" (The Doors) e "Blue Moon of Kentucky" (country).
-            Conclusão: <b>o espaço sonoro não tem fronteiras de gênero — apenas gradientes
+            Conclusão: <b>o espaço sonoro não tem fronteiras de gênero, apenas gradientes
             contínuos de distância euclidiana.</b>
           </InsightCard>
 
@@ -716,7 +716,7 @@ export default function ChartsPanel({ onClose }) {
             color: C.text, fontSize: '0.85rem', marginBottom: 18,
             textTransform: 'uppercase', letterSpacing: 1,
           }}>
-            🔬 Síntese — O que o Grafo Revela sobre o Espaço Musical
+             Síntese: O que o Grafo Revela sobre o Espaço Musical
           </h3>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 24 }}>
             <div>
@@ -726,7 +726,7 @@ export default function ChartsPanel({ onClose }) {
               <p style={{ fontSize: '0.77rem', color: C.muted, lineHeight: 1.75, margin: 0 }}>
                 KNN com K=30 cria um grafo <b style={{ color: C.text }}>fortemente conectado</b>.
                 O DFS revela que ~{insights.dfsBackEdgePct}% das {insights.totalArestas.toLocaleString('pt-BR')} arestas
-                são "back edges" — a simetria acústica domina sobre a direção.
+                são "back edges", a simetria acústica domina sobre a direção.
                 Na prática, se A soa parecido com B, B também soa parecido com A:
                 o grafo se comporta como não-dirigido pela geometria euclidiana.
               </p>
@@ -738,7 +738,7 @@ export default function ChartsPanel({ onClose }) {
               <p style={{ fontSize: '0.77rem', color: C.muted, lineHeight: 1.75, margin: 0 }}>
                 <b style={{ color: C.text }}>Gênero é uma convenção social, não uma fronteira
                 acústica.</b> Dijkstra atravessa de indie a Bon Jovi, de tango argentino a música
-                indiana — sempre por features de áudio contínuas, nunca por saltos bruscos.
+                indiana, sempre por features de áudio contínuas, nunca por saltos bruscos.
                 O espaço sonoro é um contínuo: fronteiras de gênero são rótulos humanos
                 impostos sobre uma geometria sem paredes.
               </p>
@@ -750,7 +750,7 @@ export default function ChartsPanel({ onClose }) {
               <p style={{ fontSize: '0.77rem', color: C.muted, lineHeight: 1.75, margin: 0 }}>
                 Um sistema de recomendação baseado em{' '}
                 <b style={{ color: C.text }}>distância euclidiana sobre features de áudio</b> replicaria
-                a percepção de "músicas parecidas" sem nenhum dado de gênero — só geometria sonora.
+                a percepção de "músicas parecidas" sem nenhum dado de gênero, só geometria sonora.
                 Qualquer música é descoberta em ≤{insights.maxCamadas} saltos. O BF com pesos
                 negativos seria o algoritmo ideal para o "corredor sonoro ótimo" de playlists.
               </p>
