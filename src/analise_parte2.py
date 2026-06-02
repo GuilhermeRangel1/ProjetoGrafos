@@ -236,15 +236,41 @@ def rodar_bellman_ford(grafo, pares, mapa_nome, tag=""):
 # ── visualizações ────────────────────────────────────────────────────────────
 
 def vis_distribuicao_graus(grafo, nos, titulo, arquivo):
-    graus = [len(grafo.obter_vizinhos_simples(n)) for n in nos]
-    fig, ax = plt.subplots(figsize=(8, 5))
-    ax.hist(graus, bins=30, color="#1DB954", edgecolor="black", linewidth=0.5)
-    ax.set_title(titulo, fontsize=14, fontweight="bold")
-    ax.set_xlabel("Grau de saída (k)", fontsize=12)
-    ax.set_ylabel("Número de nós", fontsize=12)
-    ax.axvline(sum(graus)/len(graus), color="red", linestyle="--",
-               label=f"Média = {sum(graus)/len(graus):.1f}")
-    ax.legend()
+    graus_saida = [len(grafo.obter_vizinhos_simples(n)) for n in nos]
+
+    # in-degree: conta quantas arestas chegam em cada nó
+    nos_set = set(nos)
+    grau_entrada = {n: 0 for n in nos}
+    for n in nos:
+        for v in grafo.obter_vizinhos_simples(n):
+            if v in nos_set:
+                grau_entrada[v] += 1
+    graus_entrada = [grau_entrada[n] for n in nos]
+
+    fig, axes = plt.subplots(1, 2, figsize=(14, 5))
+    fig.suptitle(titulo, fontsize=13, fontweight="bold")
+
+    # painel esquerdo: grau de saída (constante por construção KNN)
+    ax = axes[0]
+    n_bins_saida = max(1, len(set(graus_saida)))
+    ax.hist(graus_saida, bins=n_bins_saida, color="#1DB954", edgecolor="black", linewidth=0.5)
+    ax.set_title("Grau de Saída (out-degree)\nconstante por construção KNN", fontsize=11)
+    ax.set_xlabel("Grau de saída (k)", fontsize=11)
+    ax.set_ylabel("Número de nós", fontsize=11)
+    media_s = sum(graus_saida) / len(graus_saida)
+    ax.axvline(media_s, color="red", linestyle="--", label=f"Média = {media_s:.1f}")
+    ax.legend(fontsize=10)
+
+    # painel direito: grau de entrada (variável — distribuição real)
+    ax = axes[1]
+    ax.hist(graus_entrada, bins=40, color="#1565C0", edgecolor="black", linewidth=0.5)
+    ax.set_title("Grau de Entrada (in-degree)\nvaria conforme popularidade da faixa", fontsize=11)
+    ax.set_xlabel("Grau de entrada (k)", fontsize=11)
+    ax.set_ylabel("Número de nós", fontsize=11)
+    media_e = sum(graus_entrada) / len(graus_entrada)
+    ax.axvline(media_e, color="red", linestyle="--", label=f"Média = {media_e:.1f}")
+    ax.legend(fontsize=10)
+
     plt.tight_layout()
     plt.savefig(arquivo, dpi=120)
     plt.close()
@@ -458,7 +484,7 @@ def main():
     vis_heatmap_distancias(
         D_bf, nos_bf, mapa_nome,
         os.path.join(OUT, "p2_vis3_heatmap_distancias.png"),
-        n_show=20,
+        n_show=10,
     )
 
     # BFS layers do primeiro fonte
