@@ -174,16 +174,52 @@ export default function ChartsPanel({ onClose }) {
       })
     }
 
+    // Caminhos reais do Dijkstra e Bellman-Ford
+    const dijPaths = fullReport?.dijkstra ?? []
+    const bonjoviPath = dijPaths.find(p => p.caminho && p.caminho.includes('You Give Love A Bad Name'))
+      ?? (dijPaths.length > 0 ? dijPaths[0] : null)
+    const bfPaths = fullReport?.bellman_ford_pesos_negativos ?? []
+    const bestBfPath = bfPaths.length > 0
+      ? bfPaths.reduce((best, r) =>
+          typeof r.custo === 'number' && r.custo < (typeof best.custo === 'number' ? best.custo : Infinity) ? r : best,
+          bfPaths[0])
+      : null
+    const bfCycle = fullReport?.bellman_ford_ciclo_negativo?.[0] ?? null
+
+    // BFS stats reais
+    const bfsRuns = fullReport?.bfs ?? []
+    const minCamadas = bfsRuns.length > 0 ? Math.min(...bfsRuns.map(r => r.camadas)) : 7
+    const maxCamadas = bfsRuns.length > 0 ? Math.max(...bfsRuns.map(r => r.camadas)) : 9
+
+    // DFS: percentual de back edges sobre total de arestas
+    const dfsBackEdgePct = totalArestas > 0
+      ? ((avgBackEdges / totalArestas) * 100).toFixed(1)
+      : '60.1'
+
+    // Popularidade: percentual abaixo de 60
+    const totalPop = POP_DIST.reduce((s, n) => s + n, 0)
+    const obscurePct = (((POP_DIST[0] + POP_DIST[1] + POP_DIST[2]) / totalPop) * 100).toFixed(1)
+    const viralPct = ((POP_DIST[4] / totalPop) * 100).toFixed(1)
+
+    // Timing: speedup do BF c/ ciclo vs BFS
+    const bfCycleMs = timingData?.find(a => a.label.includes('c/ ciclo'))?.avg ?? 0.00012
+    const bfsMs = timingData?.find(a => a.label === 'BFS')?.avg ?? 0.02044
+    const cycleSpeedup = Math.round(bfsMs / bfCycleMs)
+
     return {
       totalNos, totalArestas, bfsTotalVisited, bfsMaxDepth, peakLayer, peakNos,
       bfsCovPct, bfs4CovPct, bfs4LayerNodes,
-      avgBackEdges, backEdgesPct,
+      avgBackEdges, backEdgesPct, dfsBackEdgePct,
       avgSaltos, maxSaltosRun,
       bfNosSubgrafo, bfArestasTotal, bfArestasNeg, bfNegPct,
       slowest, fastest, dfsBfsRatio, dijT,
       mostPopular, mostEnergetic, mostCheerful, leastDanceable,
       totalTracks, topPct, lowPct,
       mostSimilar, mostDistant,
+      bonjoviPath, bestBfPath, bfCycle,
+      minCamadas, maxCamadas,
+      obscurePct, viralPct,
+      cycleSpeedup,
     }
   }, [fullReport, timingData, heatData])
 
@@ -594,30 +630,165 @@ export default function ChartsPanel({ onClose }) {
             📖 Storytelling Analítico & Insights
           </h2>
           <p style={{ color: C.muted, fontSize: '0.8rem', marginTop: 6 }}>
-            Discussão crítica e conclusões acionáveis baseadas nos algoritmos de grafos e métricas do dataset Spotify.
+            O que os algoritmos de grafos revelam sobre o espaço musical — análise crítica com evidências dos dados reais.
           </p>
         </div>
 
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 25, marginBottom: 40 }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 25, marginBottom: 25 }}>
 
-          <InsightCard color="#6c63ff" title="1. Top Gêneros & Distribuição de Popularidade">
-            No gráfico de <b>Top Gêneros</b>, <b>{insights.mostPopular.genre}</b> lidera com <b>{insights.mostPopular.avg_pop}</b> de popularidade média — mas a diferença entre o 1º e o 10º colocado é de apenas ~12 pontos, indicando que o topo é surpreendentemente nivelado. A <b>Distribuição de Popularidade</b> explica o porquê: as faixas 0–20, 21–40 e 41–60 concentram quase <b>30% cada</b> das {insights.totalTracks.toLocaleString('pt-BR')} músicas — uma curva quase plana. O tombo é abrupto após 60: apenas <b>{POP_DIST[3].toLocaleString('pt-BR')} músicas</b> (11.9%) chegam a 61–80, e míseros <b>{POP_DIST[4].toLocaleString('pt-BR')} ({insights.topPct}%)</b> alcançam 81–100. Isso revela um <b>limiar viral</b>: cruzar 60 de popularidade não é evolução linear — é um salto qualitativo raro.
+          <InsightCard color="#6c63ff" title="1. O Iceberg da Popularidade">
+            De <b>{insights.totalTracks.toLocaleString('pt-BR')}</b> faixas no dataset,{' '}
+            <b>{insights.obscurePct}%</b> vivem abaixo de 60 de popularidade — nunca chegando ao
+            mainstream. A distribuição é quase plana até esse ponto: cada faixa de 20 pontos
+            concentra ~30 mil músicas. Depois, o precipício: apenas{' '}
+            <b>{POP_DIST[3].toLocaleString('pt-BR')} faixas (11.9%)</b> entram no intervalo 61–80,
+            e míseras <b>{POP_DIST[4].toLocaleString('pt-BR')} ({insights.viralPct}%)</b> alcançam a
+            elite 81–100. Cruzar 60 de popularidade não é evolução gradual — é um{' '}
+            <b>salto de classe</b>. O gênero campeão, <b>{insights.mostPopular.genre}</b> (média{' '}
+            {insights.mostPopular.avg_pop}), ainda fica ABAIXO desse limiar: nem o gênero de topo
+            escapa do "iceberg". A maior parte de suas faixas permanece invisível ao algoritmo
+            de descoberta do Spotify.
           </InsightCard>
 
-          <InsightCard color="#f5a623" title="2. Radar — Perfil de Áudio por Gênero">
-            O <b>radar</b> expõe as tensões sonoras do dataset. <b>{insights.mostEnergetic.genre}</b> tem a maior energy (<b>{insights.mostEnergetic.avg_energy}</b>), mas valência de apenas <b>{insights.mostEnergetic.avg_valence}</b> — o gênero mais intenso é também dos menos alegres. Em contrapartida, <b>{insights.mostCheerful.genre}</b> lidera valência (<b>{insights.mostCheerful.avg_valence}</b>) com alta energy (<b>{insights.mostCheerful.avg_energy}</b>) — alta densidade emocional positiva. <b>{insights.mostPopular.genre}</b>, o mais popular, traça um hexágono equilibrado sem pico nem vale em nenhum eixo: seu sucesso vem da <b>ausência de extremos</b>, com apelo universal. Já <b>{insights.leastDanceable.genre}</b> tem o menor danceability (<b>{insights.leastDanceable.avg_dance}</b>) e o radar quase não fecha — perfil de escuta passiva, não de dança.
+          <InsightCard color="#f5a623" title="2. A DNA Sonora: Tensão entre Energia e Alegria">
+            O radar revela uma <b>tensão universal</b>: energia e valência raramente coexistem em
+            valores extremos. <b>{insights.mostEnergetic.genre}</b> domina energia ({' '}
+            <b>{insights.mostEnergetic.avg_energy}</b>) mas tem valência de apenas{' '}
+            <b>{insights.mostEnergetic.avg_valence}</b> — adrenalina sem euforia, o perfil clássico
+            do metal extremo. A exceção que quebra a regra:{' '}
+            <b>{insights.mostCheerful.genre}</b> (valência <b>{insights.mostCheerful.avg_valence}</b>,
+            energia <b>{insights.mostCheerful.avg_energy}</b>) — único gênero que combina intensidade
+            e alegria ao mesmo tempo. O insight mais revelador:{' '}
+            <b>{insights.mostPopular.genre}</b> (gênero mais popular) não vence em nenhum eixo do
+            radar. Traça um hexágono perfeitamente mediano.{' '}
+            <b>Popularidade é ausência de extremos</b>: trilha sonora de filmes funciona exatamente
+            porque não intimida nem provoca ninguém.
           </InsightCard>
 
-          <InsightCard color="#ff7070" title="3. Tempo por Algoritmo & Heatmap de Distâncias">
-            No gráfico de <b>Tempo Médio</b>, a barra do DFS (<b>{insights.slowest?.label === 'DFS' ? (insights.slowest.avg * 1000).toFixed(1) : '76.5'} ms</b>) é visualmente dominante — <b>{insights.dfsBfsRatio}× acima do BFS</b>. No outro extremo, o <b>BF com ciclo negativo</b> é o mais rápido ({insights.fastest ? (insights.fastest.avg * 1000).toFixed(2) : '0.12'} ms): ao detectar o ciclo artificial (a→b→c→a) ele interrompe a busca imediatamente, sem processar o grafo inteiro. No <b>Heatmap</b>, a diagonal amarela é a única certeza absoluta (distância zero consigo mesmo). O padrão de cores revela clusters sonoros: {heatData && insights.mostSimilar ? <>o par <b>"{insights.mostSimilar.y}"</b> × <b>"{insights.mostSimilar.x}"</b> é o mais próximo (dist. <b>{insights.mostSimilar.v.toFixed(4)}</b>), enquanto <b>"{insights.mostDistant?.y}"</b> × <b>"{insights.mostDistant?.x}"</b> é o mais distante (dist. <b>{insights.mostDistant?.v.toFixed(4)}</b>).</> : <>o padrão de cores vermelho intenso em certas linhas/colunas indica faixas orquestrais isoladas sonicamente do grupo de baladas ao redor.</>}
+          <InsightCard color="#ff7070" title="3. Seis Graus de Similaridade — Dijkstra no Espaço Sonoro">
+            Dijkstra prova que qualquer música está a apenas <b>{insights.avgSaltos} saltos</b> de
+            qualquer outra via features de áudio. O caminho mais revelador (
+            {insights.bonjoviPath?.saltos ?? 4} saltos, custo{' '}
+            {typeof insights.bonjoviPath?.custo === 'number'
+              ? insights.bonjoviPath.custo.toFixed(3) : '0.861'}):
+            <PathTrail
+              caminho={insights.bonjoviPath?.caminho ?? 'Two Generals → Song #3 → Whiskey In The Jar → Biermelodie → You Give Love A Bad Name'}
+              accent="#ff7070"
+            />
+            Indie/progressivo → rock → folk irlandês → canção alemã → Bon Jovi.
+            Cada salto maximiza sobreposição de features de áudio — nenhum "impõe" gênero.
+            Um segundo caminho (6 saltos) conecta <b>"Naranjo en Flor"</b> (tango argentino) a{' '}
+            <b>"Tumhare Siva"</b> (música indiana) passando por{' '}
+            "Riders on the Storm" (The Doors) e "Blue Moon of Kentucky" (country).
+            Conclusão: <b>o espaço sonoro não tem fronteiras de gênero — apenas gradientes
+            contínuos de distância euclidiana.</b>
           </InsightCard>
 
-          <InsightCard color="#00c2a8" title="4. BFS por Camada — A Geometria do Espaço Sonoro">
-            O gráfico de <b>Nós por Camada</b> conta a história do grafo em {insights.bfsMaxDepth} passos. A <b>Camada 1 tem exatamente {BFS_LAYERS.nos[1]} nós</b> — confirmando K={BFS_LAYERS.nos[1]} do KNN. A curva acelera para <b>{BFS_LAYERS.nos[3]} nós</b> na camada 3 e atinge o pico de <b>{insights.peakNos} nós na camada {insights.peakLayer}</b>, depois despenca para {BFS_LAYERS.nos[BFS_LAYERS.nos.length - 1]} na camada {insights.bfsMaxDepth}. Esse formato de sino assimétrico é a assinatura de um <b>small-world graph</b>: vizinhanças crescem exponencialmente (1→{BFS_LAYERS.nos[1]}→{BFS_LAYERS.nos[2]}→{BFS_LAYERS.nos[3]}) até saturar o espaço. Em <b>4 camadas já são {insights.bfs4LayerNodes} músicas ({insights.bfs4CovPct}%)</b> alcançadas — as {BFS_LAYERS.nos[BFS_LAYERS.nos.length - 1]} restantes da última camada são as faixas mais periféricas do dataset a partir deste ponto de origem.
+          <InsightCard color="#00c2a8" title="4. Small-World Musical & o Corredor Sonoro Ótimo">
+            <b>BFS confirma small-world</b>: de qualquer origem, TODAS as{' '}
+            {insights.totalNos.toLocaleString('pt-BR')} músicas são alcançadas em apenas{' '}
+            {insights.minCamadas}–{insights.maxCamadas} camadas. Camada 1: exatamente 30 nós
+            (= K do KNN). Pico na Camada 4 com 649 nós. O sino assimétrico
+            1→30→130→550→649→… é a assinatura do small-world: crescimento exponencial
+            até saturar, depois retração. O <b>Bellman-Ford com pesos negativos</b> revela o
+            "corredor ótimo" onde cada salto é acima da média de similaridade. Melhor caminho
+            encontrado ({insights.bestBfPath?.saltos ?? 9} saltos, custo{' '}
+            {typeof insights.bestBfPath?.custo === 'number'
+              ? insights.bestBfPath.custo.toFixed(3) : '−2.129'}):
+            <PathTrail
+              caminho={insights.bestBfPath?.caminho ?? 'Too Much Heaven → More Than Gravity → Please Don\'t Say You Love Me → SAVE YOURSELF → Oxyrhynchus → Ain\'t No Grave (Sparse) → Go Solo → Thank You for Asking - Acoustic → Hush Little Baby → The Boo Boo Song'}
+              accent="#00c2a8"
+            />
+            Quando há ciclo negativo, BF encerra em{' '}
+            <b>{insights.bfCycle ? (insights.bfCycle.tempo_s * 1000).toFixed(2) : '0.12'} ms</b> —
+            {insights.cycleSpeedup}× mais rápido que o BFS.{' '}
+            <b>Provar a impossibilidade é mais rápido que encontrar a resposta.</b>
           </InsightCard>
 
         </div>
+
+        {/* Synthesis card */}
+        <div style={{
+          background: C.surf, border: `1px solid ${C.border}`, borderRadius: 12,
+          padding: 28, marginBottom: 40, boxShadow: '0 10px 30px rgba(0,0,0,0.4)',
+        }}>
+          <h3 style={{
+            color: C.text, fontSize: '0.85rem', marginBottom: 18,
+            textTransform: 'uppercase', letterSpacing: 1,
+          }}>
+            🔬 Síntese — O que o Grafo Revela sobre o Espaço Musical
+          </h3>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 24 }}>
+            <div>
+              <div style={{ color: '#6c63ff', fontSize: '0.68rem', fontWeight: 700, marginBottom: 8, letterSpacing: 1, textTransform: 'uppercase' }}>
+                Estrutura do Grafo
+              </div>
+              <p style={{ fontSize: '0.77rem', color: C.muted, lineHeight: 1.75, margin: 0 }}>
+                KNN com K=30 cria um grafo <b style={{ color: C.text }}>fortemente conectado</b>.
+                O DFS revela que ~{insights.dfsBackEdgePct}% das {insights.totalArestas.toLocaleString('pt-BR')} arestas
+                são "back edges" — a simetria acústica domina sobre a direção.
+                Na prática, se A soa parecido com B, B também soa parecido com A:
+                o grafo se comporta como não-dirigido pela geometria euclidiana.
+              </p>
+            </div>
+            <div>
+              <div style={{ color: '#ff7070', fontSize: '0.68rem', fontWeight: 700, marginBottom: 8, letterSpacing: 1, textTransform: 'uppercase' }}>
+                Descoberta Central
+              </div>
+              <p style={{ fontSize: '0.77rem', color: C.muted, lineHeight: 1.75, margin: 0 }}>
+                <b style={{ color: C.text }}>Gênero é uma convenção social, não uma fronteira
+                acústica.</b> Dijkstra atravessa de indie a Bon Jovi, de tango argentino a música
+                indiana — sempre por features de áudio contínuas, nunca por saltos bruscos.
+                O espaço sonoro é um contínuo: fronteiras de gênero são rótulos humanos
+                impostos sobre uma geometria sem paredes.
+              </p>
+            </div>
+            <div>
+              <div style={{ color: '#00c2a8', fontSize: '0.68rem', fontWeight: 700, marginBottom: 8, letterSpacing: 1, textTransform: 'uppercase' }}>
+                Implicação Prática
+              </div>
+              <p style={{ fontSize: '0.77rem', color: C.muted, lineHeight: 1.75, margin: 0 }}>
+                Um sistema de recomendação baseado em{' '}
+                <b style={{ color: C.text }}>distância euclidiana sobre features de áudio</b> replicaria
+                a percepção de "músicas parecidas" sem nenhum dado de gênero — só geometria sonora.
+                Qualquer música é descoberta em ≤{insights.maxCamadas} saltos. O BF com pesos
+                negativos seria o algoritmo ideal para o "corredor sonoro ótimo" de playlists.
+              </p>
+            </div>
+          </div>
+        </div>
+
       </div>
+    </div>
+  )
+}
+
+function PathTrail({ caminho, accent = '#6c63ff' }) {
+  const songs = caminho.split(' → ')
+  return (
+    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4, alignItems: 'center', margin: '10px 0' }}>
+      {songs.flatMap((song, i) => {
+        const pill = (
+          <span
+            key={`s${i}`}
+            title={song}
+            style={{
+              background: '#111122', border: `1px solid ${accent}44`,
+              borderRadius: 4, padding: '2px 7px',
+              fontSize: '0.67rem', color: '#c0c0e0',
+              maxWidth: 145, overflow: 'hidden', textOverflow: 'ellipsis',
+              whiteSpace: 'nowrap', display: 'inline-block', flexShrink: 0,
+              cursor: 'default',
+            }}
+          >
+            {song}
+          </span>
+        )
+        if (i < songs.length - 1) {
+          return [pill, <span key={`a${i}`} style={{ color: accent + '88', fontSize: '0.75rem', flexShrink: 0 }}>→</span>]
+        }
+        return [pill]
+      })}
     </div>
   )
 }
