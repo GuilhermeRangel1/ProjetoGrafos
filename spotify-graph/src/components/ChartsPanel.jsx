@@ -20,19 +20,41 @@ function ylOrRd(t) {
   return YL_OR_RD[i].map((v, k) => Math.round(v + f * (YL_OR_RD[i + 1][k] - v)))
 }
 
-// Build matrix chart data from fetched heatmap_data.json
-function buildCells(tracks, matrix) {
+function computeHeatStats(tracks, matrix) {
   const n = tracks.length
-  const cells = []
   let maxDist = 0
+  let minDist = Infinity
   for (let i = 0; i < n; i++) {
     for (let j = 0; j < n; j++) {
       const v = matrix[i][j]
       if (v > maxDist) maxDist = v
-      cells.push({ x: tracks[j], y: tracks[i], v })
+      if (i !== j && v > 0 && v < minDist) minDist = v
     }
   }
-  return { cells, maxDist }
+  return { maxDist, minDist: minDist === Infinity ? 0 : minDist }
+}
+
+function buildFilteredCells(tracks, matrix, threshold) {
+  const n = tracks.length
+  // Keep a track index if it has at least one other track within threshold
+  const keep = new Set()
+  for (let i = 0; i < n; i++) {
+    for (let j = 0; j < n; j++) {
+      if (i !== j && matrix[i][j] <= threshold) {
+        keep.add(i)
+        keep.add(j)
+      }
+    }
+  }
+  const idxs = [...keep].sort((a, b) => a - b)
+  const filteredTracks = idxs.map(i => tracks[i])
+  const cells = []
+  for (const i of idxs) {
+    for (const j of idxs) {
+      cells.push({ x: tracks[j], y: tracks[i], v: matrix[i][j] })
+    }
+  }
+  return { cells, filteredTracks }
 }
 
 const C = {
@@ -66,7 +88,8 @@ export default function ChartsPanel({ onClose }) {
   const [selGenres, setSelGenres] = useState(['pop-film', 'k-pop', 'forro'])
   const [hubCount, setHubCount]   = useState(10)
   const [timingData, setTimingData] = useState(null)
-  const [heatData, setHeatData]     = useState(null)
+  const [rawHeat, setRawHeat]       = useState(null) // { tracks, matrix, maxDist, minDist }
+  const [distThreshold, setDistThreshold] = useState(null)
   const [fullReport, setFullReport] = useState(null)
 
   const top15 = useMemo(() => [...GENRES].sort((a, b) => b.avg_pop - a.avg_pop).slice(0, 15), [])
@@ -76,9 +99,21 @@ export default function ChartsPanel({ onClose }) {
   useEffect(() => {
     fetch('/heatmap_data.json')
       .then(r => r.json())
-      .then(({ tracks, matrix }) => setHeatData(buildCells(tracks, matrix)))
+      .then(({ tracks, matrix }) => {
+        const { maxDist, minDist } = computeHeatStats(tracks, matrix)
+        setRawHeat({ tracks, matrix, maxDist, minDist })
+        setDistThreshold(maxDist)
+      })
       .catch(() => console.warn('heatmap_data.json not found'))
   }, [])
+
+  // ── Filtered heatmap data recomputed when threshold changes ───────────────
+  const heatData = useMemo(() => {
+    if (!rawHeat || distThreshold === null) return null
+    const { tracks, matrix, maxDist, minDist } = rawHeat
+    const { cells, filteredTracks } = buildFilteredCells(tracks, matrix, distThreshold)
+    return { cells, filteredTracks, maxDist, minDist, total: tracks.length }
+  }, [rawHeat, distThreshold])
 
   // ── Fetch timing data from parte2_report.json ─────────────────────────────
   useEffect(() => {
@@ -364,12 +399,12 @@ export default function ChartsPanel({ onClose }) {
   useEffect(() => {
     const Chart = window.Chart
     if (!Chart || !heatCanvasRef.current || !heatData) return
-    const { cells, maxDist } = heatData
+    const { cells, filteredTracks, maxDist } = heatData
+    if (cells.length === 0) return
 
-    // Derive ordered label lists from cells
-    const xLabels = [...new Set(cells.map(c => c.x))]
-    const yLabels = [...new Set(cells.map(c => c.y))].reverse()
-    const n = xLabels.length
+    const xLabels = filteredTracks
+    const yLabels = [...filteredTracks].reverse()
+    const n = filteredTracks.length
 
     const chart = new Chart(heatCanvasRef.current.getContext('2d'), {
       type: 'matrix',
@@ -596,17 +631,59 @@ export default function ChartsPanel({ onClose }) {
           </ChartCard>
 
           <ChartCard title="Heatmap de Distâncias">
-            {!heatData ? (
+            {!rawHeat ? (
               <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', color: C.muted, fontSize: '0.8rem' }}>
                 Carregando…
               </div>
             ) : (
-              <div style={{ position: 'relative', flex: 1, minHeight: 300, marginTop: 8 }}>
-                <canvas ref={heatCanvasRef} />
-              </div>
+              <>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 6, padding: '0 4px' }}>
+                  <span style={{ fontSize: '0.65rem', color: C.muted, whiteSpace: 'nowrap' }}>Dist. máx:</span>
+                  <input
+                    type="range"
+                    min={rawHeat.minDist}
+                    max={rawHeat.maxDist}
+                    step={0.01}
+                    value={distThreshold ?? rawHeat.maxDist}
+                    onChange={e => setDistThreshold(parseFloat(e.target.value))}
+                    style={{ flex: 1, accentColor: C.teal, cursor: 'pointer' }}
+                  />
+                  <span style={{
+                    fontSize: '0.7rem', color: C.teal,
+                    fontFamily: "'DM Mono', monospace", minWidth: 40, textAlign: 'right',
+                  }}>
+                    {(distThreshold ?? rawHeat.maxDist).toFixed(2)}
+                  </span>
+                  <button
+                    onClick={() => setDistThreshold(rawHeat.maxDist)}
+                    title="Mostrar todas"
+                    style={{
+                      background: 'none', border: `1px solid ${C.border}`, color: C.muted,
+                      fontFamily: 'inherit', fontSize: '0.6rem', padding: '2px 6px',
+                      borderRadius: 4, cursor: 'pointer',
+                    }}
+                  >
+                    reset
+                  </button>
+                </div>
+                <div style={{ fontSize: '0.62rem', color: C.muted, textAlign: 'center', marginBottom: 6 }}>
+                  {heatData && heatData.cells.length > 0
+                    ? <><span style={{ color: C.teal }}>{heatData.filteredTracks.length}</span> / {rawHeat.total} músicas visíveis</>
+                    : <span style={{ color: '#FF6B6B' }}>nenhuma música no intervalo — aumente o limiar</span>
+                  }
+                </div>
+                <div style={{ position: 'relative', flex: 1, minHeight: 300, marginTop: 4 }}>
+                  {heatData && heatData.cells.length > 0
+                    ? <canvas ref={heatCanvasRef} />
+                    : <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', color: C.muted, fontSize: '0.8rem' }}>
+                        Sem dados para exibir
+                      </div>
+                  }
+                </div>
+              </>
             )}
             <p style={{ fontSize: '0.72rem', color: C.muted, marginTop: 12, textAlign: 'center' }}>
-              Distância euclidiana (9 features de áudio) entre as 20 faixas do subgrafo BF — amarelo=próximo, vermelho=distante.
+              Distância euclidiana (9 features de áudio). Diminua o limiar para focar nas músicas mais próximas — a matriz encolhe e as células ficam maiores.
             </p>
           </ChartCard>
 
