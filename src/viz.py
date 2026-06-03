@@ -1149,10 +1149,22 @@ function highlightVertex(iata) {{
 
   const neighbors = new Set([iata]);
   EDGES.forEach(e => {{
-    if (e.from === iata) neighbors.add(e.to);
-    if (e.to   === iata) neighbors.add(e.from);
+    if (activeMapFilterNodes.has(e.from) && activeMapFilterNodes.has(e.to)) {{
+      if (e.from === iata) neighbors.add(e.to);
+      if (e.to   === iata) neighbors.add(e.from);
+    }}
   }});
-  Object.entries(mkMap).forEach(([id, mk]) => mk.setOpacity(neighbors.has(id) ? 1 : 0.2));
+  
+  Object.entries(mkMap).forEach(([id, mk]) => {{
+    if (activeMapFilterNodes.has(id)) {{
+      // Se o nó está no filtro: destaca se for vizinho, ofusca se não for
+      mk.setOpacity(neighbors.has(id) ? 1 : 0.2);
+    }} else {{
+      // Se o nó não está no filtro: mantém ele quase invisível
+      mk.setOpacity(0.05);
+    }}
+  }});
+  
   document.getElementById('statusbar').textContent = `${{iata}} (${{AP[iata]?.cidade}}) — Analisando ego-network.`;
 }}
 
