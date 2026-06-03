@@ -931,7 +931,6 @@ function highlightVertex(iata) {
   }
   selectedVertex = iata;
 
-  // 1. Destacar apenas as arestas que estão dentro do filtro
   EDGES.forEach(e => {
     const k  = ekey(e.from, e.to);
     const ln = lineMap[k]; if (!ln) return;
@@ -946,7 +945,6 @@ function highlightVertex(iata) {
     }
   });
 
-  // 2. CORREÇÃO: Listar como vizinhos APENAS nós que passam no filtro
   const neighbors = new Set([iata]);
   EDGES.forEach(e => {
     if (activeMapFilterNodes.has(e.from) && activeMapFilterNodes.has(e.to)) {
@@ -955,7 +953,6 @@ function highlightVertex(iata) {
     }
   });
   
-  // 3. CORREÇÃO: Aplicar a opacidade respeitando quem está fora do filtro
   Object.entries(mkMap).forEach(([id, mk]) => {
     if (activeMapFilterNodes.has(id)) {
       // Se o nó está no filtro: destaca se for vizinho, ofusca se não for
