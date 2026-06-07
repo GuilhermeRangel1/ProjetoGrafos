@@ -296,7 +296,7 @@ main{{display:flex;flex:1;overflow:hidden; width: 100%;}}
     .col-span-6 {{ grid-column: 1 / -1; }}
 }}
 @media (max-width: 900px) {{
-    .charts-grid {{ grid-template-columns: 1fr; }}
+    .charts-grid {{ grid-column: 1fr; }}
     .col-span-2, .col-span-3, .col-span-6 {{ grid-column: 1 / -1; }}
 }}
 
@@ -513,13 +513,11 @@ const REGIONS_LIST = Object.keys(R_COLORS);
 let showingCharts = false;
 let chartInstances = {{}};
 
-// Variáveis de Controle de Filtro
 let currentAP = AP;
 let currentRegionsList = REGIONS_LIST;
 let activeMapFilterNodes = new Set(Object.keys(AP));
 let activeMapFilterEdges = [...EDGES];
 
-// Autocomplete Datalist
 function setupDatalist() {{
     let dt = '<datalist id="iata-list">';
     Object.keys(AP).forEach(k => {{ dt += '<option value="' + k + '">' + AP[k].cidade + ' (' + k + ')</option>'; }});
@@ -529,6 +527,13 @@ function setupDatalist() {{
 setupDatalist();
 
 function applyFilters() {{
+    if (rpoLine) {{ map.removeLayer(rpoLine); rpoLine = null; }}
+    if (mspLine) {{ map.removeLayer(mspLine); mspLine = null; }}
+    if (rotaLine) {{ map.removeLayer(rotaLine); rotaLine = null; }}
+    document.getElementById('btn-rpo').classList.remove('active');
+    document.getElementById('btn-msp').classList.remove('active');
+    selectedVertex = null;
+
     const rFiltro = document.getElementById('ux-regiao').value;
     const gFiltro = parseInt(document.getElementById('ux-grau').value);
     
@@ -638,7 +643,7 @@ function generateInsights() {{
     let regiaoDominante = Object.keys(regiaoCount).length > 0 ? Object.keys(regiaoCount).reduce((a, b) => regiaoCount[a] > regiaoCount[b] ? a : b) : "Nenhuma";
     let countDominante = regiaoCount[regiaoDominante] || 0;
 
-    document.getElementById('insight-1').innerHTML = `A análise exploratória das <b>${{totalEdges}} arestas mapeadas</b> entre os <b>${{totalNodes}} vértices ativos</b> evidencia que a malha aérea nacional se comporta como uma rede Livre de Escala (Scale-Free). O aeroporto <b>${{maiorHub}} (${{maiorHubRegiao}})</b> polariza o ecossistema atual atuando como o hub primário (grau máximo de <b>${{maxGrau}}</b>). A região <b>${{regiaoDominante}}</b> domina a concentração com <b>${{countDominante}}</b> nós. A baixa densidade ego média (<b>${{densidadeMedia}}</b>) indica que, fora dos grandes centros, a rede é esparsa.`;
+    document.getElementById('insight-1').innerHTML = `A análise exploratória das <b>${{totalEdges}} arestas mapeadas</b> entre os <b>${{totalNodes}} vértices ativos</b> evidencia que a malha aérea nacional se comporta como uma rede Livre de Escala (Scale-Free). O aeroporto <b>${{maiorHub}} (${{maiorHubRegiao}})</b> polariza o ecossistema atual atuando como o hub primário (grau máximo de <b>${{maxGrau}}</b>). A região <b>${{regiaoDominante}}</b> domina a concentração com <b>${{countDominante}}</b> nós. A baixa densidade ego média (<b>${{densidadeMedia}}</b>) indica que, fora grandes centros, a rede é esparsa.`;
 
     document.getElementById('insight-2').innerHTML = `Para mitigar a severa carga cognitiva da visualização e evitar o efeito "hairball", o design foi construído sobre princípios estritos da Gestalt. A <b>Lei da Similaridade</b> foi aplicada no mapeamento semântico de cores (categorical colormap) associando nós à sua macrorregião. A <b>Lei da Continuidade e Figura-Fundo</b> é empregada na resposta interativa: filtros e cálculos (como Dijkstra) ganham destaque (figura), enquanto a matriz subjacente entra em estado de opacidade (fundo), isolando o ruído analítico.`;
 
@@ -1132,6 +1137,10 @@ function highlightVertex(iata) {{
     return;
   }}
   selectedVertex = iata;
+  
+  if (rpoLine) {{ map.removeLayer(rpoLine); rpoLine = null; document.getElementById('btn-rpo').classList.remove('active'); }}
+  if (mspLine) {{ map.removeLayer(mspLine); mspLine = null; document.getElementById('btn-msp').classList.remove('active'); }}
+  if (rotaLine) {{ map.removeLayer(rotaLine); rotaLine = null; }}
 
   EDGES.forEach(e => {{
     const k  = ekey(e.from, e.to);
@@ -1149,22 +1158,17 @@ function highlightVertex(iata) {{
 
   const neighbors = new Set([iata]);
   EDGES.forEach(e => {{
-    if (activeMapFilterNodes.has(e.from) && activeMapFilterNodes.has(e.to)) {{
-      if (e.from === iata) neighbors.add(e.to);
-      if (e.to   === iata) neighbors.add(e.from);
-    }}
+    if (e.from === iata && activeMapFilterNodes.has(e.to)) neighbors.add(e.to);
+    if (e.to   === iata && activeMapFilterNodes.has(e.from)) neighbors.add(e.from);
   }});
   
   Object.entries(mkMap).forEach(([id, mk]) => {{
-    if (activeMapFilterNodes.has(id)) {{
-      // Se o nó está no filtro: destaca se for vizinho, ofusca se não for
-      mk.setOpacity(neighbors.has(id) ? 1 : 0.2);
-    }} else {{
-      // Se o nó não está no filtro: mantém ele quase invisível
-      mk.setOpacity(0.05);
-    }}
+      if (!activeMapFilterNodes.has(id)) {{
+          mk.setOpacity(0.05);
+      }} else {{
+          mk.setOpacity(neighbors.has(id) ? 1 : 0.15);
+      }}
   }});
-  
   document.getElementById('statusbar').textContent = `${{iata}} (${{AP[iata]?.cidade}}) — Analisando ego-network.`;
 }}
 
@@ -1201,22 +1205,32 @@ function highlightPath(which) {{
   }}
 
   const latlngs = path.map(iata => [AP[iata].lat, AP[iata].lon]);
-  const pathLine = L.polyline(latlngs, {{ color: color, weight: 5, opacity: 1, dashArray: '12, 12', className: 'animated-path' }}).addTo(map);
-  pathLine.bringToFront();
-  pathLine.bindTooltip(`${{path.join(' → ')}} | ${{label}}`, {{sticky:true, direction:'top'}});
-
-  if (which === 'rpo') rpoLine = pathLine; else mspLine = pathLine;
-
-  const pathSet = new Set(path);
-  Object.entries(mkMap).forEach(([iata, mk]) => {{ mk.setOpacity(pathSet.has(iata) ? 1 : 0.2); }});
-  map.fitBounds(pathLine.getBounds(), {{ padding: [50, 50], maxZoom: 7, animate: true, duration: 1.2 }});
-  document.getElementById('statusbar').textContent = `${{which === 'rpo' ? 'REC → POA' : 'MAO → GRU'}}: ${{path.join(' → ')}} (${{path.length - 1}} trecho(s))`;
+  
+  const allNodesInFilter = path.every(iata => activeMapFilterNodes.has(iata));
+  
+  if(allNodesInFilter) {{
+      const pathLine = L.polyline(latlngs, {{ color: color, weight: 5, opacity: 1, dashArray: '12, 12', className: 'animated-path' }}).addTo(map);
+      pathLine.bringToFront();
+      pathLine.bindTooltip(`${{path.join(' → ')}} | ${{label}}`, {{sticky:true, direction:'top'}});
+    
+      if (which === 'rpo') rpoLine = pathLine; else mspLine = pathLine;
+    
+      const pathSet = new Set(path);
+      Object.entries(mkMap).forEach(([iata, mk]) => {{ mk.setOpacity(pathSet.has(iata) ? 1 : 0.2); }});
+      map.fitBounds(pathLine.getBounds(), {{ padding: [50, 50], maxZoom: 7, animate: true, duration: 1.2 }});
+      document.getElementById('statusbar').textContent = `${{which === 'rpo' ? 'REC → POA' : 'MAO → GRU'}}: ${{path.join(' → ')}} (${{path.length - 1}} trecho(s))`;
+  }} else {{
+      document.getElementById('btn-rpo').classList.remove('active');
+      document.getElementById('btn-msp').classList.remove('active');
+      document.getElementById('statusbar').textContent = `Impossível exibir rota ${{label}}: Nós filtrados/escondidos.`;
+      applyFilters(); 
+  }}
 }}
 
 let rotaLine = null;
 function limparRota() {{
   if (rotaLine) {{ map.removeLayer(rotaLine); rotaLine = null; }}
-  highlightPath('none');
+  
   document.getElementById('btn-rpo').classList.remove('active');
   document.getElementById('btn-msp').classList.remove('active');
   
@@ -1273,7 +1287,6 @@ function buscarRota() {{
   const escalas = caminho.length - 2;
   const tipo    = direto ? '✅ Voo direto' : `🔁 Com ${{escalas}} escala(s)`;
 
-  // PEGANDO A COR DO AEROPORTO DE ORIGEM
   const corOrigem = AP[origem].color;
 
   box.innerHTML = `<b style="color:#e0e0f0">${{origem}} → ${{destino}}</b><br>${{tipo}}<br>`+
@@ -1286,7 +1299,6 @@ function buscarRota() {{
 
   const latlngs = caminho.map(iata => [AP[iata].lat, AP[iata].lon]);
   
-  // APLICANDO A COR DA ORIGEM NA LINHA (POLYLINE)
   rotaLine = L.polyline(latlngs, {{ color: corOrigem, weight:4, opacity:1, dashArray: '12, 12', className: 'animated-path' }}).addTo(map);
   rotaLine.bringToFront();
   
@@ -1313,10 +1325,8 @@ function resetView() {{
   document.getElementById('ux-regiao').value = 'Todas';
   document.getElementById('ux-grau').value = '0';
   limparRota();
-  applyFilters();
 }}
 
-// Inicia com os filtros zerados alimentando o painel de métricas na primeira carga
 applyFilters();
 
 </script>
