@@ -1,0 +1,4 @@
+spotify-graph/node_modules/
+spotify-graph/dist/
+out/
+__pycache__/
