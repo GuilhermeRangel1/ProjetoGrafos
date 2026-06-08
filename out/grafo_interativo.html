@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Grafo Interativo — Aeroportos do Brasil</title>
+<link  rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@800&display=swap" rel="stylesheet"/>
+<style>
+:root{--bg:#0d0d14;--surf:#13131f;--border:#252535;--accent:#6c63ff;--text:#e0e0f0;--muted:#777799}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--text);font-family:'Space Mono',monospace;
+      display:flex;flex-direction:column;height:100vh;overflow:hidden}
+header{display:flex;align-items:center;justify-content:space-between;
+        padding:8px 18px;background:var(--surf);border-bottom:1px solid var(--border);flex-shrink:0}
+.logo{font-family:'Syne',sans-serif;font-size:1.1rem;
+       background:linear-gradient(90deg,#6c63ff,#00c2a8);
+       -webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.sub{font-size:.65rem;color:var(--muted);margin-top:1px}
+.toolbar{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+.toolbar input{background:var(--bg);border:1px solid var(--border);color:var(--text);
+                font-family:inherit;font-size:.75rem;padding:4px 9px;border-radius:4px;
+                width:175px;outline:none;transition:border .2s}
+.toolbar input:focus{border-color:var(--accent)}
+.toolbar button{background:var(--bg);border:1px solid var(--border);color:var(--text);
+                 font-family:inherit;font-size:.7rem;padding:4px 10px;border-radius:4px;
+                 cursor:pointer;transition:background .2s}
+.toolbar button:hover{background:var(--border)}
+.toolbar button.active{background:var(--accent);border-color:var(--accent);color:#fff}
+main{display:flex;flex:1;overflow:hidden}
+#map{flex:1}
+#sidebar{width:228px;background:var(--surf);border-left:1px solid var(--border);
+          overflow-y:auto;flex-shrink:0;padding:12px 10px;
+          display:flex;flex-direction:column;gap:13px}
+.ptitle{font-family:'Syne',sans-serif;font-size:.67rem;text-transform:uppercase;
+         letter-spacing:2px;color:var(--muted);margin-bottom:4px}
+.leg-item{display:flex;align-items:center;gap:7px;font-size:.68rem;margin-bottom:3px}
+.leg-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
+.ibox{background:var(--bg);border:1px solid var(--border);border-radius:5px;
+       padding:9px;font-size:.68rem;line-height:1.65;min-height:80px;color:var(--muted)}
+.ibox b{color:var(--text)}
+.pbox{background:var(--bg);border:1px solid var(--border);border-radius:5px;
+       padding:7px;font-size:.64rem;line-height:1.75;word-break:break-all}
+.pr{color:#ff7070} .pm{color:#70b8ff}
+#statusbar{padding:3px 14px;font-size:.62rem;color:var(--muted);
+            background:var(--surf);border-top:1px solid var(--border);flex-shrink:0}
+.rota-input{background:var(--bg);border:1px solid var(--border);color:var(--text);
+             font-family:inherit;font-size:.75rem;padding:5px 8px;border-radius:4px;
+             width:100%;outline:none;text-transform:uppercase;transition:border .2s}
+.rota-input:focus{border-color:var(--accent)}
+.leaflet-tile{filter:brightness(.42) saturate(.55) hue-rotate(195deg)}
+.leaflet-container{background:#0d0d14}
+/* marcadores */
+.ap-dot{border-radius:50%;border:2px solid #fff;display:flex;align-items:center;
+         justify-content:center;font-family:'Space Mono',monospace;font-weight:700;
+         color:#fff;cursor:pointer;box-shadow:0 0 10px rgba(0,0,0,.8);
+         transition:transform .15s, box-shadow .15s;}
+.ap-dot:hover{transform:scale(1.3);box-shadow:0 0 16px rgba(255,255,255,.3)}
+</style>
+</head>
+<body>
+<header>
+  <div>
+    <div class="logo">✈ AeroBrasil Graph</div>
+    <div class="sub">Rede de Aeroportos — Grafo Interativo (Etapa 9)</div>
+  </div>
+  <div class="toolbar">
+    <input id="search-box" placeholder="Buscar IATA…" oninput="searchNode()"/>
+    <button onclick="resetView()">↺ Reset</button>
+    <button id="btn-rpo" onclick="highlightPath('rpo')">REC → POA</button>
+    <button id="btn-msp" onclick="highlightPath('msp')">MAO → GRU</button>
+    <button onclick="highlightPath('none')">Limpar rotas</button>
+  </div>
+</header>
+<main>
+  <div id="map"></div>
+  <div id="sidebar">
+    <div>
+      <div class="ptitle">Legenda — Regiões</div>
+      <div id="legend"></div>
+    </div>
+    <div>
+      <div class="ptitle">Buscar Rota</div>
+      <div style="display:flex;flex-direction:column;gap:5px">
+        <input id="rota-origem"  class="rota-input" placeholder="Origem (ex: REC)" maxlength="3"/>
+        <input id="rota-destino" class="rota-input" placeholder="Destino (ex: POA)" maxlength="3"/>
+        <button onclick="buscarRota()" style="margin-top:2px;padding:5px;background:var(--accent);border:none;color:#fff;border-radius:4px;cursor:pointer;font-family:inherit;font-size:.72rem;font-weight:700">🔍 Calcular Rota</button>
+        <button onclick="limparRota()" style="padding:4px;background:var(--bg);border:1px solid var(--border);color:var(--muted);border-radius:4px;cursor:pointer;font-family:inherit;font-size:.68rem">✕ Limpar</button>
+      </div>
+      <div class="ibox" id="rota-result" style="margin-top:6px;min-height:60px">Digite origem e destino para calcular.</div>
+    </div>
+    <div>
+      <div class="ptitle">Aeroporto selecionado</div>
+      <div class="ibox" id="node-info">Clique em um aeroporto para ver detalhes.</div>
+    </div>
+    <div>
+      <div class="ptitle">Caminhos obrigatórios</div>
+      <div class="pbox">
+        <span class="pr">▶ REC → POA</span><br/>
+        <span id="txt-rpo" style="color:#888">—</span><br/><br/>
+        <span class="pm">▶ MAO → GRU</span><br/>
+        <span id="txt-msp" style="color:#888">—</span>
+      </div>
+    </div>
+    <div>
+      <div class="ptitle">Estatísticas</div>
+      <div class="pbox" id="stats" style="color:#aaa">…</div>
+    </div>
+  </div>
+</main>
+<div id="statusbar">Carregando mapa…</div>
+<script>
+const AP       = {"REC": {"cidade": "Recife", "regiao": "Nordeste", "lat": -8.1264, "lon": -34.9236, "color": "#f5a623", "grau": "16", "ordem_ego": "17", "tamanho_ego": "16", "densidade_ego": "0.118"}, "SSA": {"cidade": "Salvador", "regiao": "Nordeste", "lat": -12.9086, "lon": -38.3225, "color": "#f5a623", "grau": "14", "ordem_ego": "15", "tamanho_ego": "14", "densidade_ego": "0.133"}, "FOR": {"cidade": "Fortaleza", "regiao": "Nordeste", "lat": -3.7763, "lon": -38.5326, "color": "#f5a623", "grau": "11", "ordem_ego": "12", "tamanho_ego": "11", "densidade_ego": "0.167"}, "NAT": {"cidade": "Natal", "regiao": "Nordeste", "lat": -5.9114, "lon": -35.2477, "color": "#f5a623", "grau": "8", "ordem_ego": "9", "tamanho_ego": "8", "densidade_ego": "0.222"}, "JPA": {"cidade": "João Pessoa", "regiao": "Nordeste", "lat": -7.1458, "lon": -34.9508, "color": "#f5a623", "grau": "7", "ordem_ego": "8", "tamanho_ego": "7", "densidade_ego": "0.25"}, "GRU": {"cidade": "São Paulo", "regiao": "Sudeste", "lat": -23.4356, "lon": -46.4731, "color": "#e84393", "grau": "18", "ordem_ego": "19", "tamanho_ego": "18", "densidade_ego": "0.105"}, "CGH": {"cidade": "São Paulo", "regiao": "Sudeste", "lat": -23.6261, "lon": -46.6564, "color": "#e84393", "grau": "14", "ordem_ego": "15", "tamanho_ego": "14", "densidade_ego": "0.133"}, "GIG": {"cidade": "Rio de Janeiro", "regiao": "Sudeste", "lat": -22.8099, "lon": -43.2505, "color": "#e84393", "grau": "17", "ordem_ego": "18", "tamanho_ego": "17", "densidade_ego": "0.111"}, "CNF": {"cidade": "Belo Horizonte", "regiao": "Sudeste", "lat": -19.6244, "lon": -43.9719, "color": "#e84393", "grau": "19", "ordem_ego": "20", "tamanho_ego": "19", "densidade_ego": "0.1"}, "VIX": {"cidade": "Vitória", "regiao": "Sudeste", "lat": -20.2581, "lon": -40.2864, "color": "#e84393", "grau": "7", "ordem_ego": "8", "tamanho_ego": "7", "densidade_ego": "0.25"}, "BSB": {"cidade": "Brasília", "regiao": "Centro-Oeste", "lat": -15.8711, "lon": -47.9186, "color": "#ff6b35", "grau": "19", "ordem_ego": "20", "tamanho_ego": "19", "densidade_ego": "0.1"}, "GYN": {"cidade": "Goiânia", "regiao": "Centro-Oeste", "lat": -16.6319, "lon": -49.2206, "color": "#ff6b35", "grau": "7", "ordem_ego": "8", "tamanho_ego": "7", "densidade_ego": "0.25"}, "CWB": {"cidade": "Curitiba", "regiao": "Sul", "lat": -25.5285, "lon": -49.1758, "color": "#6c63ff", "grau": "7", "ordem_ego": "8", "tamanho_ego": "7", "densidade_ego": "0.25"}, "FLN": {"cidade": "Florianópolis", "regiao": "Sul", "lat": -27.6703, "lon": -48.5478, "color": "#6c63ff", "grau": "7", "ordem_ego": "8", "tamanho_ego": "7", "densidade_ego": "0.25"}, "POA": {"cidade": "Porto Alegre", "regiao": "Sul", "lat": -29.9939, "lon": -51.1714, "color": "#6c63ff", "grau": "9", "ordem_ego": "10", "tamanho_ego": "9", "densidade_ego": "0.2"}, "MAO": {"cidade": "Manaus", "regiao": "Norte", "lat": -3.0386, "lon": -60.0497, "color": "#00c2a8", "grau": "9", "ordem_ego": "10", "tamanho_ego": "9", "densidade_ego": "0.2"}, "BEL": {"cidade": "Belém", "regiao": "Norte", "lat": -1.3792, "lon": -48.4761, "color": "#00c2a8", "grau": "7", "ordem_ego": "8", "tamanho_ego": "7", "densidade_ego": "0.25"}, "PVH": {"cidade": "Porto Velho", "regiao": "Norte", "lat": -8.7093, "lon": -63.9023, "color": "#00c2a8", "grau": "4", "ordem_ego": "5", "tamanho_ego": "4", "densidade_ego": "0.4"}, "RBR": {"cidade": "Rio Branco", "regiao": "Norte", "lat": -9.8688, "lon": -67.8981, "color": "#00c2a8", "grau": "4", "ordem_ego": "5", "tamanho_ego": "4", "densidade_ego": "0.4"}, "THE": {"cidade": "Teresina", "regiao": "Nordeste", "lat": -5.06, "lon": -42.8236, "color": "#f5a623", "grau": "8", "ordem_ego": "9", "tamanho_ego": "8", "densidade_ego": "0.222"}};
+const EDGES    = [{"from": "REC", "to": "SSA", "tipo": "regional", "just": "mesma região", "peso": 649.0}, {"from": "REC", "to": "FOR", "tipo": "regional", "just": "mesma região", "peso": 626.0}, {"from": "REC", "to": "NAT", "tipo": "regional", "just": "mesma região", "peso": 266.0}, {"from": "REC", "to": "JPA", "tipo": "regional", "just": "mesma região", "peso": 108.0}, {"from": "REC", "to": "GRU", "tipo": "hub", "just": "conexão via hub nacional", "peso": 2099.0}, {"from": "REC", "to": "CGH", "tipo": "hub", "just": "conexão via hub nacional", "peso": 2128.0}, {"from": "REC", "to": "GIG", "tipo": "hub", "just": "conexão via hub nacional", "peso": 1857.0}, {"from": "REC", "to": "CNF", "tipo": "hub", "just": "conexão via hub nacional", "peso": 1606.0}, {"from": "REC", "to": "VIX", "tipo": "ponto a ponto", "just": "conexão ponto a ponto", "peso": 1466.0}, {"from": "REC", "to": "BSB", "tipo": "hub", "just": "conexão via hub nacional", "peso": 1653.0}, {"from": "REC", "to": "GYN", "tipo": "inter-regional", "just": "conexão média entre regiões", "peso": 1815.0}, {"from": "REC", "to": "FLN", "tipo": "inter-regional", "just": "conexão média entre regiões", "peso": 2601.0}, {"from": "REC", "to": "POA", "tipo": "inter-regional", "just": "conexão média entre regiões", "peso": 2961.0}, {"from": "REC", "to": "MAO", "tipo": "inter-regional", "just": "conexão média entre regiões", "peso": 2834.0}, {"from": "REC", "to": "BEL", "tipo": "inter-regional", "just": "conexão média entre regiões", "peso": 1677.0}, {"from": "REC", "to": "THE", "tipo": "regional", "just": "mesma região", "peso": 935.0}, {"from": "SSA", "to": "FOR", "tipo": "regional", "just": "mesma região", "peso": 1014.0}, {"from": "SSA", "to": "NAT", "tipo": "regional", "just": "mesma região", "peso": 856.0}, {"from": "SSA", "to": "JPA", "tipo": "regional", "just": "mesma região", "peso": 739.0}, {"from": "SSA", "to": "GRU", "tipo": "hub", "just": "conexão via hub nacional", "peso": 1450.0}, {"from": "SSA", "to": "CGH", "tipo": "hub", "just": "conexão via hub nacional", "peso": 1479.0}, {"from": "SSA", "to": "GIG", "tipo": "hub", "just": "conexão via hub nacional", "peso": 1217.0}, {"from": "SSA", "to": "CNF", "tipo": "hub", "just": "conexão via hub nacional", "peso": 958.0}, {"from": "SSA", "to": "VIX", "tipo": "ponto a ponto", "just": "conexão ponto a ponto", "peso": 842.0}, {"from": "SSA", "to": "BSB", "tipo": "inter-regional", "just": "conexão média entre regiões", "peso": 1083.0}, {"from": "SSA", "to": "GYN", "tipo": "inter-regional", "just": "conexão média entre regiões", "peso": 1241.0}, {"from": "SSA", "to": "CWB", "tipo": "inter-regional", "just": "conexão média entre regiões", "peso": 1802.0}, {"from": "SSA", "to": "POA", "tipo": "inter-regional", "just": "conexão média entre regiões", "peso": 2313.0}, {"from": "SSA", "to": "THE", "tipo": "regional", "just": "mesma região", "peso": 1001.0}, {"from": "FOR", "to": "NAT", "tipo": "regional", "just": "mesma região", "peso": 414.0}, {"from": "FOR", "to": "GRU", "tipo": "hub", "just": "conexão via hub nacional", "peso": 2345.0}, {"from": "FOR", "to": "CGH", "tipo": "hub", "just": "conexão via hub nacional", "peso": 2372.0}, {"from": "FOR", "to": "GIG", "tipo": "hub", "just": "conexão via hub nacional", "peso": 2174.0}, {"from": "FOR", "to": "CNF", "tipo": "hub", "just": "conexão via hub nacional", "peso": 1857.0}, {"from": "FOR", "to": "BSB", "tipo": "hub", "just": "conexão via hub nacional", "peso": 1690.0}, {"from": "FOR", "to": "MAO", "tipo": "inter-regional", "just": "conexão média entre regiões", "peso": 2388.0}, {"from": "FOR", "to": "BEL", "tipo": "inter-regional", "just": "conexão média entre regiões", "peso": 1135.0}, {"from": "FOR", "to": "THE", "tipo": "regional", "just": "mesma região", "peso": 496.0}, {"from": "NAT", "to": "BSB", "tipo": "hub", "just": "conexão via hub nacional", "peso": 1769.0}, {"from": "NAT", "to": "CNF", "tipo": "hub", "just": "conexão via hub nacional", "peso": 1799.0}, {"from": "NAT", "to": "GRU", "tipo": "hub", "just": "conexão via hub nacional", "peso": 2293.0}, {"from": "NAT", "to": "CGH", "tipo": "hub", "just": "conexão via hub nacional", "peso": 2322.0}, {"from": "NAT", "to": "GIG", "tipo": "hub", "just": "conexão via hub nacional", "peso": 2073.0}, {"from": "JPA", "to": "GRU", "tipo": "hub", "just": "conexão via hub nacional", "peso": 2187.0}, {"from": "JPA", "to": "CGH", "tipo": "hub", "just": "conexão via hub nacional", "peso": 2216.0}, {"from": "JPA", "to": "GIG", "tipo": "hub", "just": "conexão via hub nacional", "peso": 1954.0}, {"from": "JPA", "to": "CNF", "tipo": "hub", "just": "conexão via hub nacional", "peso": 1695.0}, {"from": "JPA", "to": "BSB", "tipo": "hub", "just": "conexão via hub nacional", "peso": 1711.0}, {"from": "GRU", "to": "GIG", "tipo": "hub", "just": "conexão via hub nacional", "peso": 336.0}, {"from": "GRU", "to": "CNF", "tipo": "hub", "just": "conexão via hub nacional", "peso": 494.0}, {"from": "GRU", "to": "VIX", "tipo": "regional", "just": "mesma região", "peso": 727.0}, {"from": "GRU", "to": "BSB", "tipo": "hub", "just": "conexão via hub nacional", "peso": 853.0}, {"from": "GRU", "to": "GYN", "tipo": "inter-regional", "just": "conexão média entre regiões", "peso": 808.0}, {"from": "GRU", "to": "CWB", "tipo": "inter-regional", "just": "conexão média entre regiões", "peso": 359.0}, {"from": "GRU", "to": "FLN", "tipo": "inter-regional", "just": "conexão média entre regiões", "peso": 515.0}, {"from": "GRU", "to": "POA", "tipo": "inter-regional", "just": "conexão média entre regiões", "peso": 864.0}, {"from": "GRU", "to": "MAO", "tipo": "inter-regional", "just": "conexão média entre regiões", "peso": 2696.0}, {"from": "GRU", "to": "BEL", "tipo": "inter-regional", "just": "conexão média entre regiões", "peso": 2459.0}, {"from": "GRU", "to": "PVH", "tipo": "inter-regional", "just": "conexão média entre regiões", "peso": 2472.0}, {"from": "GRU", "to": "RBR", "tipo": "inter-regional", "just": "conexão média entre regiões", "peso": 2726.0}, {"from": "GRU", "to": "THE", "tipo": "inter-regional", "just": "conexão média entre regiões", "peso": 2078.0}, {"from": "CGH", "to": "GIG", "tipo": "hub", "just": "conexão via hub nacional", "peso": 359.0}, {"from": "CGH", "to": "CNF", "tipo": "hub", "just": "conexão via hub nacional", "peso": 523.0}, {"from": "CGH", "to": "VIX", "tipo": "regional", "just": "mesma região", "peso": 755.0}, {"from": "CGH", "to": "BSB", "tipo": "hub", "just": "conexão via hub nacional", "peso": 871.0}, {"from": "CGH", "to": "GYN", "tipo": "inter-regional", "just": "conexão média entre regiões", "peso": 821.0}, {"from": "CGH", "to": "CWB", "tipo": "inter-regional", "just": "conexão média entre regiões", "peso": 330.0}, {"from": "CGH", "to": "FLN", "tipo": "inter-regional", "just": "conexão média entre regiões", "peso": 488.0}, {"from": "CGH", "to": "POA", "tipo": "inter-regional", "just": "conexão média entre regiões", "peso": 837.0}, {"from": "CGH", "to": "THE", "tipo": "inter-regional", "just": "conexão média entre regiões", "peso": 2103.0}, {"from": "GIG", "to": "CNF", "tipo": "hub", "just": "conexão via hub nacional", "peso": 360.0}, {"from": "GIG", "to": "VIX", "tipo": "regional", "just": "mesma região", "peso": 417.0}, {"from": "GIG", "to": "BSB", "tipo": "hub", "just": "conexão via hub nacional", "peso": 912.0}, {"from": "GIG", "to": "GYN", "tipo": "inter-regional", "just": "conexão média entre regiões", "peso": 927.0}, {"from": "GIG", "to": "CWB", "tipo": "inter-regional", "just": "conexão média entre regiões", "peso": 671.0}, {"from": "GIG", "to": "FLN", "tipo": "inter-regional", "just": "conexão média entre regiões", "peso": 758.0}, {"from": "GIG", "to": "POA", "tipo": "inter-regional", "just": "conexão média entre regiões", "peso": 1120.0}, {"from": "GIG", "to": "MAO", "tipo": "inter-regional", "just": "conexão média entre regiões", "peso": 2845.0}, {"from": "GIG", "to": "BEL", "tipo": "inter-regional", "just": "conexão média entre regiões", "peso": 2448.0}, {"from": "GIG", "to": "THE", "tipo": "inter-regional", "just": "conexão média entre regiões", "peso": 1973.0}, {"from": "CNF", "to": "VIX", "tipo": "regional", "just": "mesma região", "peso": 389.0}, {"from": "CNF", "to": "BSB", "tipo": "hub", "just": "conexão via hub nacional", "peso": 591.0}, {"from": "CNF", "to": "GYN", "tipo": "inter_regional", "just": "conexão média entre regiões", "peso": 647.0}, {"from": "CNF", "to": "CWB", "tipo": "inter_regional", "just": "conexão média entre regiões", "peso": 845.0}, {"from": "CNF", "to": "FLN", "tipo": "inter_regional", "just": "conexão média entre regiões", "peso": 1006.0}, {"from": "CNF", "to": "POA", "tipo": "inter_regional", "just": "conexão média entre regiões", "peso": 1360.0}, {"from": "CNF", "to": "MAO", "tipo": "inter_regional", "just": "conexão média entre regiões", "peso": 2538.0}, {"from": "CNF", "to": "BEL", "tipo": "inter_regional", "just": "conexão média entre regiões", "peso": 2086.0}, {"from": "CNF", "to": "PVH", "tipo": "inter_regional", "just": "conexão média entre regiões", "peso": 2462.0}, {"from": "CNF", "to": "RBR", "tipo": "inter_regional", "just": "conexão média entre regiões", "peso": 2786.0}, {"from": "CNF", "to": "THE", "tipo": "inter_regional", "just": "conexão média entre regiões", "peso": 1624.0}, {"from": "VIX", "to": "BSB", "tipo": "hub", "just": "conexão via hub nacional", "peso": 941.0}, {"from": "BSB", "to": "GYN", "tipo": "regional", "just": "mesma região", "peso": 163.0}, {"from": "BSB", "to": "CWB", "tipo": "inter_regional", "just": "conexão média entre regiões", "peso": 1080.0}, {"from": "BSB", "to": "FLN", "tipo": "inter_regional", "just": "conexão média entre regiões", "peso": 1312.0}, {"from": "BSB", "to": "POA", "tipo": "inter_regional", "just": "conexão média entre regiões", "peso": 1603.0}, {"from": "BSB", "to": "MAO", "tipo": "inter_regional", "just": "conexão média entre regiões", "peso": 1947.0}, {"from": "BSB", "to": "BEL", "tipo": "inter_regional", "just": "conexão média entre regiões", "peso": 1611.0}, {"from": "BSB", "to": "PVH", "tipo": "inter_regional", "just": "conexão média entre regiões", "peso": 1907.0}, {"from": "BSB", "to": "RBR", "tipo": "inter_regional", "just": "conexão média entre regiões", "peso": 2263.0}, {"from": "BSB", "to": "THE", "tipo": "inter_regional", "just": "conexão média entre regiões", "peso": 1323.0}, {"from": "CWB", "to": "POA", "tipo": "regional", "just": "mesma região", "peso": 533.0}, {"from": "FLN", "to": "POA", "tipo": "regional", "just": "mesma região", "peso": 362.0}, {"from": "MAO", "to": "BEL", "tipo": "regional", "just": "mesma região", "peso": 1297.0}, {"from": "MAO", "to": "PVH", "tipo": "regional", "just": "mesma região", "peso": 760.0}, {"from": "MAO", "to": "RBR", "tipo": "regional", "just": "mesma região", "peso": 1151.0}];
+const LEGEND   = [{"color": "#00c2a8", "label": "Norte"}, {"color": "#f5a623", "label": "Nordeste"}, {"color": "#e84393", "label": "Sudeste"}, {"color": "#6c63ff", "label": "Sul"}, {"color": "#ff6b35", "label": "Centro-Oeste"}];
+const PATH_RPO = ["REC", "POA"];
+const PATH_MSP = ["MAO", "GRU"];
+
+// sidebar
+document.getElementById('txt-rpo').textContent = PATH_RPO.join(' → ') || '(sem caminho)';
+document.getElementById('txt-msp').textContent = PATH_MSP.join(' → ') || '(sem caminho)';
+document.getElementById('stats').innerHTML =
+  `Aeroportos: <b style="color:#e0e0f0">${Object.keys(AP).length}</b><br>`+
+  `Conexões: <b style="color:#e0e0f0">${EDGES.length}</b><br>`+
+  `REC→POA: <b style="color:#ff7070">${PATH_RPO.length-1} saltos</b><br>`+
+  `MAO→GRU: <b style="color:#70b8ff">${PATH_MSP.length-1} saltos</b>`;
+const lc = document.getElementById('legend');
+LEGEND.forEach(it => {
+  lc.innerHTML += `<div class="leg-item"><div class="leg-dot" style="background:${it.color}"></div><span>${it.label}</span></div>`;
+});
+
+// mapa
+const map = L.map('map',{center:[-15,-53],zoom:4,zoomControl:true});
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{
+  attribution:'© OpenStreetMap contributors', maxZoom:12
+}).addTo(map);
+
+// helpers
+function ekey(a,b){ return [a,b].sort().join('|'); }
+const rpoEdges = new Set(), mspEdges = new Set();
+const rpoNodes = new Set(PATH_RPO), mspNodes = new Set(PATH_MSP);
+for(let i=0;i<PATH_RPO.length-1;i++) rpoEdges.add(ekey(PATH_RPO[i],PATH_RPO[i+1]));
+for(let i=0;i<PATH_MSP.length-1;i++) mspEdges.add(ekey(PATH_MSP[i],PATH_MSP[i+1]));
+
+// arestas
+const lineMap = {};
+EDGES.forEach(e => {
+  const a=AP[e.from], b=AP[e.to]; if(!a||!b) return;
+  const k=ekey(e.from,e.to);
+  const inR=rpoEdges.has(k), inM=mspEdges.has(k);
+  let color='#3a3a55',weight=1.5,opacity=.5,dash='5,7';
+  if(inR&&inM){color='#ffff00';weight=5;opacity=1;dash=null;}
+  else if(inR){color='#ff4444';weight=4;opacity=1;dash=null;}
+  else if(inM){color='#44aaff';weight=4;opacity=1;dash=null;}
+  const ln=L.polyline([[a.lat,a.lon],[b.lat,b.lon]],{color,weight,opacity,dashArray:dash}).addTo(map);
+  ln.bindTooltip(`${e.from} ↔ ${e.to} | ${e.tipo} | peso ${parseFloat(e.peso).toFixed(2)}`,{sticky:true});
+  lineMap[k]=ln;
+});
+
+// marcadores
+const mkMap = {};
+Object.entries(AP).forEach(([iata,info]) => {
+  const inR=rpoNodes.has(iata), inM=mspNodes.has(iata);
+  let border='#ffffff', sz=28;
+  if(inR&&inM){border='#ffff00';sz=36;}
+  else if(inR){border='#ff4444';sz=34;}
+  else if(inM){border='#44aaff';sz=34;}
+  const icon=L.divIcon({
+    className:'',
+    html:`<div class="ap-dot" style="width:${sz}px;height:${sz}px;background:${info.color};border-color:${border};font-size:${sz>30?'9px':'8px'}">${iata}</div>`,
+    iconSize:[sz,sz], iconAnchor:[sz/2,sz/2]
+  });
+  const mk=L.marker([info.lat,info.lon],{icon}).addTo(map);
+  mk.bindTooltip(`<b>${iata}</b> — ${info.cidade}<br>Região: ${info.regiao}<br>Grau: ${info.grau}`,{direction:'top'});
+  mk.on('click',()=>{
+    document.getElementById('node-info').innerHTML=
+      `<b>${iata}</b> — ${info.cidade}<br>Região: ${info.regiao}<br>`+
+      `Grau: ${info.grau}<br>Ordem ego: ${info.ordem_ego}<br>`+
+      `Tam. ego: ${info.tamanho_ego}<br>Dens. ego: ${info.densidade_ego}`;
+    highlightVertex(iata);
+  });
+  mkMap[iata]=mk;
+});
+
+document.getElementById('statusbar').textContent=
+  `Grafo pronto — ${Object.keys(AP).length} aeroportos, ${EDGES.length} conexões.`;
+
+// ── Highlight de arestas ao clicar num vértice ──
+let selectedVertex = null;
+
+function highlightVertex(iata) {
+  // se clicar no mesmo, deseleciona
+  if (selectedVertex === iata) {
+    selectedVertex = null;
+    restoreEdges();
+    document.getElementById('statusbar').textContent =
+      `Grafo pronto — ${Object.keys(AP).length} aeroportos, ${EDGES.length} conexões.`;
+    return;
+  }
+  selectedVertex = iata;
+
+  // vizinhos diretos
+  const neighbors = new Set();
+  EDGES.forEach(e => {
+    if (e.from === iata) neighbors.add(e.to);
+    if (e.to   === iata) neighbors.add(e.from);
+  });
+
+  // escurecer todas as arestas; acender as do vértice selecionado
+  EDGES.forEach(e => {
+    const k = ekey(e.from, e.to);
+    const ln = lineMap[k]; if (!ln) return;
+    const connected = (e.from === iata || e.to === iata);
+    if (connected) {
+      const neighbor = e.from === iata ? e.to : e.from;
+      const nColor   = AP[neighbor]?.color || '#ffffff';
+      ln.setStyle({ color: nColor, weight: 4, opacity: 1, dashArray: null });
+      ln.bringToFront();
+    } else {
+      ln.setStyle({ color: '#1e1e2e', weight: 1, opacity: 0.15, dashArray: '4,8' });
+    }
+  });
+
+  document.getElementById('statusbar').textContent =
+    `${iata} — ${neighbors.size} conexão(ões) destacada(s). Clique novamente para desfazer.`;
+}
+
+function restoreEdges() {
+  EDGES.forEach(e => {
+    const k=ekey(e.from,e.to), ln=lineMap[k]; if(!ln) return;
+    const inR=rpoEdges.has(k), inM=mspEdges.has(k);
+    let color='#3a3a55',weight=1.5,opacity=.5,dash='5,7';
+    if(inR&&inM){color='#ffff00';weight=5;opacity=1;dash=null;}
+    else if(inR){color='#ff4444';weight=4;opacity=1;dash=null;}
+    else if(inM){color='#44aaff';weight=4;opacity=1;dash=null;}
+    ln.setStyle({color,weight,opacity,dashArray:dash});
+  });
+}
+
+// clicar no mapa (fora de marcadores) desfaz seleção
+map.on('click', () => {
+  if (selectedVertex) {
+    selectedVertex = null;
+    restoreEdges();
+    document.getElementById('statusbar').textContent =
+      `Grafo pronto — ${Object.keys(AP).length} aeroportos, ${EDGES.length} conexões.`;
+  }
+});
+
+// highlight
+function highlightPath(which){
+  document.getElementById('btn-rpo').classList.toggle('active',which==='rpo');
+  document.getElementById('btn-msp').classList.toggle('active',which==='msp');
+  EDGES.forEach(e=>{
+    const k=ekey(e.from,e.to), ln=lineMap[k]; if(!ln) return;
+    const inR=rpoEdges.has(k), inM=mspEdges.has(k);
+    if(which==='none'){
+      let color='#3a3a55',weight=1.5,opacity=.5,dash='5,7';
+      if(inR&&inM){color='#ffff00';weight=5;opacity=1;dash=null;}
+      else if(inR){color='#ff4444';weight=4;opacity=1;dash=null;}
+      else if(inM){color='#44aaff';weight=4;opacity=1;dash=null;}
+      ln.setStyle({color,weight,opacity,dashArray:dash});
+    } else {
+      const active=(which==='rpo'&&inR)||(which==='msp'&&inM);
+      ln.setStyle(active
+        ?{color:which==='rpo'?'#ff4444':'#44aaff',weight:5,opacity:1,dashArray:null}
+        :{color:'#1e1e2e',weight:1,opacity:.2,dashArray:'4,8'});
+    }
+  });
+  if(which==='none') return;
+  const path=which==='rpo'?PATH_RPO:PATH_MSP;
+  if(path.length){const f=AP[path[0]]; if(f) map.flyTo([f.lat,f.lon],5,{duration:1.2});}
+}
+
+// busca
+function searchNode(){
+  const q=document.getElementById('search-box').value.trim().toUpperCase();
+  if(!q) return;
+  const info=AP[q];
+  if(info){map.flyTo([info.lat,info.lon],7,{duration:.8});mkMap[q]?.openTooltip();}
+}
+
+// ── Dijkstra em JavaScript (para busca de rota no frontend) ──
+function dijkstraJS(origem, destino) {
+  const INF = Infinity;
+  const dist = {}, prev = {};
+  // montar adjacência a partir de EDGES
+  const adj = {};
+  Object.keys(AP).forEach(n => { adj[n] = []; });
+  EDGES.forEach(e => {
+    if(adj[e.from]) adj[e.from].push({node: e.to,   peso: parseFloat(e.peso)});
+    if(adj[e.to])   adj[e.to].push(  {node: e.from, peso: parseFloat(e.peso)});
+  });
+
+  Object.keys(AP).forEach(n => { dist[n] = INF; });
+  dist[origem] = 0;
+
+  const visited = new Set();
+  const queue   = Object.keys(AP).slice();
+
+  while(queue.length > 0) {
+    // pegar nó com menor distância
+    queue.sort((a,b) => dist[a] - dist[b]);
+    const u = queue.shift();
+    if(dist[u] === INF) break;
+    if(u === destino) break;
+    visited.add(u);
+    (adj[u] || []).forEach((nb) => { const v=nb.node, w=nb.peso;
+      if(visited.has(v)) return;
+      const nd = dist[u] + w;
+      if(nd < dist[v]) { dist[v] = nd; prev[v] = u; }
+    });
+  }
+
+  if(dist[destino] === INF) return {custo: INF, caminho: []};
+
+  const caminho = [];
+  let cur = destino;
+  while(cur !== undefined) { caminho.unshift(cur); cur = prev[cur]; }
+  return {custo: dist[destino], caminho};
+}
+
+// linha da rota buscada
+let rotaLine = null;
+
+function buscarRota() {
+  const origem  = document.getElementById('rota-origem').value.trim().toUpperCase();
+  const destino = document.getElementById('rota-destino').value.trim().toUpperCase();
+  const box     = document.getElementById('rota-result');
+
+  if(!origem || !destino) {
+    box.innerHTML = '<span style="color:#ff7070">Preencha origem e destino.</span>'; return;
+  }
+  if(!AP[origem]) {
+    box.innerHTML = `<span style="color:#ff7070">Aeroporto "${origem}" não encontrado.</span>`; return;
+  }
+  if(!AP[destino]) {
+    box.innerHTML = `<span style="color:#ff7070">Aeroporto "${destino}" não encontrado.</span>`; return;
+  }
+  if(origem === destino) {
+    box.innerHTML = '<span style="color:#ff7070">Origem e destino são iguais.</span>'; return;
+  }
+
+  const {custo, caminho} = dijkstraJS(origem, destino);
+
+  // remover linha anterior
+  if(rotaLine) { map.removeLayer(rotaLine); rotaLine = null; }
+
+  if(caminho.length === 0) {
+    box.innerHTML = `<span style="color:#ff7070">Sem caminho entre ${origem} e ${destino}.</span>`; return;
+  }
+
+  // verificar se é direto
+  const direto = EDGES.some(e =>
+    (e.from===origem && e.to===destino) || (e.from===destino && e.to===origem)
+  );
+  const escalas  = caminho.length - 2;
+  const tipo     = direto ? '✅ Voo direto' : `🔁 Com ${escalas} escala(s)`;
+  const custo_km = custo.toFixed(0);
+
+  // montar HTML do resultado
+  let html = `<b style="color:#e0e0f0">${origem} → ${destino}</b><br>`;
+  html += `${tipo}<br>`;
+  html += `Distância: <b style="color:#00c2a8">${custo_km} km</b><br>`;
+  html += `Percurso:<br><span style="color:#f5a623">${caminho.join(' → ')}</span>`;
+  box.innerHTML = html;
+
+  // desenhar rota no mapa
+  const latlngs = caminho.map(iata => [AP[iata].lat, AP[iata].lon]);
+  rotaLine = L.polyline(latlngs, {
+    color: '#00c2a8', weight: 4, opacity: 1, dashArray: null,
+    className: 'rota-buscada'
+  }).addTo(map);
+  rotaLine.bringToFront();
+
+  // zoom para o caminho
+  map.fitBounds(rotaLine.getBounds(), {padding: [40, 40], maxZoom: 7, animate: true, duration: 1});
+
+  document.getElementById('statusbar').textContent =
+    `Rota ${origem} → ${destino}: ${custo_km} km | ${caminho.length-1} trecho(s) | ${tipo}`;
+}
+
+function limparRota() {
+  if(rotaLine) { map.removeLayer(rotaLine); rotaLine = null; }
+  document.getElementById('rota-origem').value  = '';
+  document.getElementById('rota-destino').value = '';
+  document.getElementById('rota-result').innerHTML = 'Digite origem e destino para calcular.';
+  document.getElementById('statusbar').textContent =
+    `Grafo pronto — ${Object.keys(AP).length} aeroportos, ${EDGES.length} conexões.`;
+}
+
+// permitir Enter nos campos de rota
+document.getElementById('rota-origem') .addEventListener('keydown', e => { if(e.key==='Enter') buscarRota(); });
+document.getElementById('rota-destino').addEventListener('keydown', e => { if(e.key==='Enter') buscarRota(); });
+
+// reset
+function resetView(){
+  map.flyTo([-15,-53],4,{duration:.8});
+  document.getElementById('search-box').value='';
+  highlightPath('none');
+  document.getElementById('btn-rpo').classList.remove('active');
+  document.getElementById('btn-msp').classList.remove('active');
+  limparRota();
+}
+</script>
+</body>
+</html>

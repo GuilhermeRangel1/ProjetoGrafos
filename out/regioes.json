@@ -1,0 +1,27 @@
+{
+    "Nordeste": {
+        "ordem": 6,
+        "tamanho": 11,
+        "densidade": 0.7333
+    },
+    "Sudeste": {
+        "ordem": 5,
+        "tamanho": 9,
+        "densidade": 0.9
+    },
+    "Centro-Oeste": {
+        "ordem": 2,
+        "tamanho": 1,
+        "densidade": 1.0
+    },
+    "Sul": {
+        "ordem": 3,
+        "tamanho": 2,
+        "densidade": 0.6667
+    },
+    "Norte": {
+        "ordem": 4,
+        "tamanho": 3,
+        "densidade": 0.5
+    }
+}
