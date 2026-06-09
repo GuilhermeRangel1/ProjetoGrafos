@@ -6,58 +6,128 @@ import Controls from './components/Controls'
 import LoadingScreen from './components/LoadingScreen'
 import ChartsPanel from './components/ChartsPanel'
 
-const TAB_H = 44
-
-const tabBarStyle = {
-  position: 'fixed',
-  top: 0,
-  left: 0,
-  right: 0,
-  height: TAB_H,
-  zIndex: 9999,
-  display: 'flex',
-  alignItems: 'center',
-  background: '#0d0d14',
-  borderBottom: '1px solid #252535',
-  padding: '0 16px',
-  gap: 8,
-  fontFamily: "'Space Mono', monospace",
-}
-
-const logoStyle = {
-  fontFamily: "'Syne', sans-serif",
-  fontWeight: 800,
-  fontSize: '0.85rem',
-  background: 'linear-gradient(90deg,#6c63ff,#00c2a8)',
-  WebkitBackgroundClip: 'text',
-  WebkitTextFillColor: 'transparent',
-  marginRight: 16,
-  letterSpacing: 1,
-}
-
-function TabBtn({ label, active, onClick }) {
+function BackButton({ onClick }) {
   return (
     <button
       onClick={onClick}
       style={{
-        background: active ? '#6c63ff' : '#13131f',
-        border: `1px solid ${active ? '#6c63ff' : '#252535'}`,
-        color: active ? '#fff' : '#777799',
+        position: 'fixed',
+        bottom: 20,
+        right: 20,
+        zIndex: 9999,
+        background: '#13131f',
+        border: '1px solid #252535',
+        color: '#777799',
         fontFamily: "'Space Mono', monospace",
-        fontSize: '0.72rem',
-        padding: '4px 14px',
+        fontSize: '0.7rem',
+        padding: '6px 14px',
         borderRadius: 4,
         cursor: 'pointer',
-        fontWeight: active ? 'bold' : 'normal',
         transition: 'all 0.15s',
       }}
+      onMouseEnter={e => { e.target.style.borderColor = '#6c63ff'; e.target.style.color = '#fff' }}
+      onMouseLeave={e => { e.target.style.borderColor = '#252535'; e.target.style.color = '#777799' }}
     >
-      {label}
+      ← Voltar
     </button>
   )
 }
 
-function SpotifyApp() {
+function LandingPage({ onSelect }) {
+  const cards = [
+    {
+      id: 'airports',
+      icon: '✈',
+      title: 'Aeroportos do Brasil',
+      desc: 'Rede de aeroportos brasileiros com rotas, algoritmos de caminho e estatísticas regionais.',
+      accent: '#6c63ff',
+    },
+    {
+      id: 'spotify',
+      icon: '🎵',
+      title: 'Grafo Spotify',
+      desc: 'Grafo interativo de artistas e gêneros musicais com geração de playlists via BFS e DFS.',
+      accent: '#00c2a8',
+    },
+  ]
+
+  return (
+    <div style={{
+      width: '100vw',
+      height: '100vh',
+      background: '#0d0d14',
+      display: 'flex',
+      flexDirection: 'column',
+      alignItems: 'center',
+      justifyContent: 'center',
+      fontFamily: "'Space Mono', monospace",
+      gap: 48,
+    }}>
+      <div style={{ textAlign: 'center' }}>
+        <div style={{
+          fontFamily: "'Syne', sans-serif",
+          fontWeight: 800,
+          fontSize: '2rem',
+          background: 'linear-gradient(90deg,#6c63ff,#00c2a8)',
+          WebkitBackgroundClip: 'text',
+          WebkitTextFillColor: 'transparent',
+          marginBottom: 8,
+        }}>
+          ProjetoGrafos
+        </div>
+        <div style={{ color: '#777799', fontSize: '0.75rem', letterSpacing: 2 }}>
+          SELECIONE UMA VISUALIZAÇÃO
+        </div>
+      </div>
+
+      <div style={{ display: 'flex', gap: 28 }}>
+        {cards.map(card => (
+          <button
+            key={card.id}
+            onClick={() => onSelect(card.id)}
+            style={{
+              background: '#13131f',
+              border: `1px solid #252535`,
+              borderRadius: 12,
+              padding: '36px 40px',
+              width: 260,
+              cursor: 'pointer',
+              textAlign: 'left',
+              transition: 'all 0.2s',
+              color: '#e0e0f0',
+            }}
+            onMouseEnter={e => {
+              e.currentTarget.style.borderColor = card.accent
+              e.currentTarget.style.transform = 'translateY(-4px)'
+              e.currentTarget.style.boxShadow = `0 8px 32px ${card.accent}22`
+            }}
+            onMouseLeave={e => {
+              e.currentTarget.style.borderColor = '#252535'
+              e.currentTarget.style.transform = 'translateY(0)'
+              e.currentTarget.style.boxShadow = 'none'
+            }}
+          >
+            <div style={{ fontSize: '2.2rem', marginBottom: 16 }}>{card.icon}</div>
+            <div style={{
+              fontFamily: "'Syne', sans-serif",
+              fontWeight: 800,
+              fontSize: '1rem',
+              color: card.accent,
+              marginBottom: 10,
+            }}>
+              {card.title}
+            </div>
+            <div style={{ fontSize: '0.68rem', color: '#777799', lineHeight: 1.7 }}>
+              {card.desc}
+            </div>
+          </button>
+        ))}
+      </div>
+    </div>
+  )
+}
+
+function SpotifyApp({ onBack }) {
   const {
     graphData,
     genreColorMap,
@@ -86,9 +156,7 @@ function SpotifyApp() {
   const graphRef = useRef(null)
 
   const handleResetView = useCallback(() => {
-    if (graphRef.current) {
-      graphRef.current.zoomToFit(600, 60)
-    }
+    if (graphRef.current) graphRef.current.zoomToFit(600, 60)
     setSelectedNode(null)
   }, [])
 
@@ -97,9 +165,7 @@ function SpotifyApp() {
   const isLoading = loadingStatus === 'loading' || loadingStatus === 'idle'
 
   return (
-    <div
-      style={{ position: 'absolute', inset: 0, top: TAB_H, overflow: 'hidden', background: '#0a0a0f' }}
-    >
+    <div className="relative w-screen h-screen overflow-hidden bg-[#0a0a0f]">
       {(isLoading || isError) && (
         <LoadingScreen progress={loadingProgress} status={loadingStatus} error={error} />
       )}
@@ -179,60 +245,34 @@ function SpotifyApp() {
             </div>
           </div>
 
-          {showCharts && (
-            <ChartsPanel onClose={() => setShowCharts(false)} />
-          )}
+          {showCharts && <ChartsPanel onClose={() => setShowCharts(false)} />}
         </>
       )}
+
+      <BackButton onClick={onBack} />
     </div>
   )
 }
 
 export default function App() {
-  const [activeTab, setActiveTab] = useState('spotify')
+  const [view, setView] = useState(null)
 
-  return (
-    <div style={{ width: '100vw', height: '100vh', background: '#0d0d14', overflow: 'hidden' }}>
-      {/* Tab bar */}
-      <div style={tabBarStyle}>
-        <span style={logoStyle}>ProjetoGrafos</span>
-        <TabBtn
-          label="✈ Aeroportos"
-          active={activeTab === 'airports'}
-          onClick={() => setActiveTab('airports')}
+  if (view === 'airports') {
+    return (
+      <>
+        <iframe
+          src="/grafo_interativo.html"
+          style={{ position: 'fixed', inset: 0, width: '100%', height: '100%', border: 'none' }}
+          title="Aeroportos do Brasil"
         />
-        <TabBtn
-          label="🎵 Spotify"
-          active={activeTab === 'spotify'}
-          onClick={() => setActiveTab('spotify')}
-        />
-      </div>
+        <BackButton onClick={() => setView(null)} />
+      </>
+    )
+  }
 
-      {/* Airport iframe — always mounted to avoid losing map state on tab switch */}
-      <iframe
-        src="/grafo_interativo.html"
-        style={{
-          position: 'absolute',
-          top: TAB_H,
-          left: 0,
-          width: '100%',
-          height: `calc(100% - ${TAB_H}px)`,
-          border: 'none',
-          visibility: activeTab === 'airports' ? 'visible' : 'hidden',
-          pointerEvents: activeTab === 'airports' ? 'auto' : 'none',
-        }}
-        title="Aeroportos do Brasil"
-      />
+  if (view === 'spotify') {
+    return <SpotifyApp onBack={() => setView(null)} />
+  }
 
-      {/* Spotify app — always mounted to avoid reloading graph data on tab switch */}
-      <div
-        style={{
-          visibility: activeTab === 'spotify' ? 'visible' : 'hidden',
-          pointerEvents: activeTab === 'spotify' ? 'auto' : 'none',
-        }}
-      >
-        <SpotifyApp />
-      </div>
-    </div>
-  )
+  return <LandingPage onSelect={setView} />
 }
