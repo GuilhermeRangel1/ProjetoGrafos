@@ -1,11 +1,11 @@
 # Rede de Aeroportos do Brasil + Comparação de Algoritmos
 
-Projeto final de Teoria dos Grafos — modelagem da malha aérea brasileira (Parte 1) e comparação de algoritmos em dataset maior do Spotify (Parte 2).
+Projeto final de Teoria dos Grafos — modelagem da malha aérea brasileira (Parte 1) e comparação de algoritmos em dataset maior do Spotify (Parte 2), com interface web interativa unificada.
 
 ## Requisitos
 
 - Python 3.11+
-- Instalar dependências:
+- Node.js 18+
 
 ```bash
 pip install -r requirements.txt
@@ -22,12 +22,15 @@ projeto-grafos/
 │   └── dataset_parte2/
 │       └── dataset.csv              # Spotify Tracks Dataset (Kaggle)
 ├── out/                             # saídas geradas (.json/.html/.png)
+├── spotify-graph/                   # app React da interface web
 ├── src/
 │   ├── solve.py                     # pipeline Parte 1
 │   ├── analise.py                   # visualizações Parte 1
 │   ├── analise_etapa10.py           # análise AVD Parte 1
 │   ├── analise_parte2.py            # pipeline Parte 2
 │   ├── viz.py                       # grafo interativo e árvores de percurso
+│   ├── api.py                       # API Flask para o app web (Parte 2)
+│   ├── gerador_playlists.py         # geração de playlists via BFS/DFS
 │   └── graphs/
 │       ├── graph.py                 # estrutura: lista de adjacência
 │       ├── algorithms.py            # BFS, DFS, Dijkstra, Bellman-Ford
@@ -39,6 +42,26 @@ projeto-grafos/
     └── test_bellman_ford.py
 ```
 
+## Interface web interativa
+
+A interface unifica os dois grafos em uma página de entrada com navegação entre eles.
+
+**Terminal 1 — backend (necessário para a Parte 2):**
+
+```bash
+python src/api.py
+```
+
+**Terminal 2 — frontend:**
+
+```bash
+cd spotify-graph
+npm install   # apenas na primeira vez
+npm run dev
+```
+
+Acesse `http://localhost:5173`. A página inicial permite escolher entre o grafo de aeroportos e o grafo do Spotify.
+
 ## Parte 1 — Grafo de Aeroportos do Brasil
 
 Executa todas as etapas: métricas globais, rotas com Dijkstra e visualizações.
@@ -47,7 +70,7 @@ Executa todas as etapas: métricas globais, rotas com Dijkstra e visualizações
 python -m src.solve
 ```
 
-Gera visualizações analíticas (AVD):
+Gera visualizações analíticas:
 
 ```bash
 python -m src.analise
@@ -65,7 +88,7 @@ python -m src.viz
 | Arquivo | Conteúdo |
 |---|---|
 | `global.json` | Ordem, tamanho e densidade do grafo completo |
-| `regioes.json` | Métricas por região (Norte, Nordeste, etc.) |
+| `regioes.json` | Métricas por região |
 | `ego_aeroportos.csv` | Grau, ordem, tamanho e densidade ego por aeroporto |
 | `graus.csv` | Ranking de graus |
 | `distancias_rotas.csv` | Caminhos mínimos (Dijkstra) para os pares em `rotas.csv` |
@@ -75,13 +98,11 @@ python -m src.viz
 | `vis2_distribuicao_graus.png` | Distribuição de graus |
 | `vis3_comparacao_regioes.png` | Comparação de métricas por região |
 | `vis4_subgrafo_hubs.html` | Subgrafo dos maiores hubs |
-| `vis_exp1_*`, `vis_exp2_*` | Visualizações exploratórias |
-| `vis_expl1_*`, `vis_expl2_*` | Visualizações explanatórias |
 
 ## Parte 2 — Dataset Spotify + Comparação de Algoritmos
 
 **Dataset:** [Spotify Tracks Dataset (Kaggle)](https://www.kaggle.com/datasets/maharshipandya/-spotify-tracks-dataset)  
-**Nós:** faixas musicais | **Arestas:** K vizinhos mais próximos por distância euclidiana de features de áudio | **Restrição:** não é dataset de malha aérea
+**Nós:** faixas musicais | **Arestas:** K vizinhos mais próximos por distância euclidiana de features de áudio
 
 ```bash
 python -m src.analise_parte2
@@ -91,19 +112,25 @@ O script:
 1. Amostra 2.000 faixas de forma estratificada por gênero
 2. Constrói um grafo KNN dirigido (~57.000 arestas, K=30)
 3. Executa e mede o tempo de BFS, DFS, Dijkstra e Bellman-Ford
-4. Demonstra Bellman-Ford com pesos negativos (DAG, sem ciclo negativo)
-5. Demonstra detecção de ciclo negativo pelo Bellman-Ford
-6. Gera 4 visualizações e o relatório `out/parte2_report.json`
+4. Demonstra Bellman-Ford com pesos negativos e detecção de ciclo negativo
+5. Gera 4 visualizações e o relatório `out/parte2_report.json`
+
+Para gerar playlists via terminal:
+
+```bash
+python -m src.gerador_playlists
+```
 
 ### Saídas geradas em `out/`
 
 | Arquivo | Conteúdo |
 |---|---|
-| `parte2_report.json` | Métricas do dataset e tempos de execução de cada algoritmo |
+| `parte2_report.json` | Métricas do dataset e tempos de execução por algoritmo |
 | `p2_vis1_distribuicao_graus.png` | Histograma de graus do grafo Spotify |
 | `p2_vis2_tempo_algoritmos.png` | Comparação de tempo médio por algoritmo |
 | `p2_vis3_heatmap_distancias.png` | Heatmap de distâncias entre 20 faixas |
 | `p2_vis4_bfs_camadas.png` | Distribuição de nós por camada (BFS) |
+| `playlists_geradas.txt` | Playlists geradas pelo `gerador_playlists.py` |
 
 ## Testes
 
@@ -111,7 +138,7 @@ O script:
 python -m pytest tests/ -v
 ```
 
-Cobertura mínima exigida:
+Cobertura mínima:
 
 - **BFS:** níveis corretos, ordem de largura, nó isolado
 - **DFS:** detecção de ciclo, classificação de arestas (tree/back/forward/cross)
@@ -120,7 +147,7 @@ Cobertura mínima exigida:
 
 ## Algoritmos implementados
 
-Todos implementados do zero em `src/graphs/algorithms.py` (sem uso de networkx, igraph ou similares).
+Todos implementados do zero em `src/graphs/algorithms.py`, sem uso de networkx, igraph ou similares.
 
 | Algoritmo | Complexidade | Pesos negativos |
 |---|---|---|
