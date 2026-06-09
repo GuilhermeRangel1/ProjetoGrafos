@@ -1,0 +1,543 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Music Data Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;700;900&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<style>
+:root{--green:#1DB954;--black:#0A0A0A;--s1:#121212;--s2:#181818;--s3:#242424;--text:#FFF;--dim:#B3B3B3;--muted:#535353}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{font-family:'Space Grotesk',sans-serif;background:var(--black);color:var(--text);overflow-x:hidden}
+
+/* HERO */
+.hero{min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;position:relative;overflow:hidden;background:radial-gradient(ellipse 80% 60% at 50% 40%,#0d2818 0%,#0A0A0A 70%)}
+.hero-grid{position:absolute;inset:0;background-image:linear-gradient(rgba(29,185,84,.04) 1px,transparent 1px),linear-gradient(90deg,rgba(29,185,84,.04) 1px,transparent 1px);background-size:60px 60px;pointer-events:none}
+
+/* DISCO BALL — globo 3D real */
+.disco-wrap{position:relative;width:280px;height:280px;cursor:grab;margin-bottom:2.5rem;perspective:900px;perspective-origin:50% 50%}
+.disco-wrap:active{cursor:grabbing}
+.disco-aura{position:absolute;inset:-90px;border-radius:50%;pointer-events:none;background:radial-gradient(circle,rgba(29,185,84,.45),rgba(29,185,84,.12) 45%,transparent 70%);opacity:.25;transition:opacity .5s ease;filter:blur(18px)}
+.disco-wrap.shining .disco-aura{opacity:1}
+.disco-ball{position:absolute;inset:0;border-radius:50%;transform-style:preserve-3d;transform:rotateX(0) rotateY(0);will-change:transform}
+.disco-core{position:absolute;inset:0;border-radius:50%;background:radial-gradient(circle at 38% 32%,#2a8f44 0%,#0d5a26 35%,#03200f 75%,#000 100%);box-shadow:inset -30px -30px 70px rgba(0,0,0,.7),inset 0 0 40px rgba(0,0,0,.5)}
+.tile{position:absolute;left:50%;top:50%;background:linear-gradient(135deg,#a8ffc8 0%,#3dee78 20%,#1DB954 50%,#118c3e 78%,#053a18 100%);box-shadow:inset 0 0 0 .5px rgba(0,0,0,.35);backface-visibility:hidden}
+.tile.v2{background:linear-gradient(135deg,#bfffd4 0%,#4af085 22%,#22c459 50%,#0e7a36 78%,#063a18 100%)}
+.tile.v3{background:linear-gradient(135deg,#8aeaa8 0%,#2dd062 20%,#159848 50%,#0d6b30 78%,#04280f 100%)}
+.tile.v4{background:linear-gradient(135deg,#c8ffe0 0%,#54ff95 18%,#1DB954 50%,#0a6b30 80%,#031b0a 100%)}
+.disco-wrap.shining .disco-ball{filter:brightness(1.12)}
+.disco-shine{position:absolute;inset:0;border-radius:50%;pointer-events:none;overflow:hidden;mix-blend-mode:screen;opacity:.7;transition:opacity .35s}
+.disco-wrap.shining .disco-shine{opacity:1}
+.disco-shine::before{content:'';position:absolute;inset:0;border-radius:50%;background:radial-gradient(circle 110px at var(--mx,50%) var(--my,40%),rgba(255,255,255,.9) 0%,rgba(180,255,210,.45) 25%,rgba(29,185,84,.2) 55%,transparent 75%);transition:background .12s linear}
+.disco-shine::after{content:'';position:absolute;inset:0;border-radius:50%;background:radial-gradient(circle 30px at var(--mx,50%) var(--my,40%),rgba(255,255,255,1),rgba(255,255,255,.4) 45%,transparent 70%);opacity:0;transition:opacity .35s}
+.disco-wrap.shining .disco-shine::after{opacity:1}
+.disco-specular{position:absolute;inset:0;border-radius:50%;pointer-events:none;background:radial-gradient(circle at 32% 26%,rgba(255,255,255,.85) 0%,rgba(255,255,255,.45) 8%,rgba(255,255,255,.18) 22%,transparent 40%),radial-gradient(circle at 78% 82%,rgba(0,0,0,.6) 0%,rgba(0,0,0,.25) 25%,transparent 55%);mix-blend-mode:overlay;opacity:1}
+.disco-vignette{position:absolute;inset:0;border-radius:50%;pointer-events:none;background:radial-gradient(circle at 50% 50%,transparent 55%,rgba(0,0,0,.35) 80%,rgba(0,0,0,.7) 100%);mix-blend-mode:multiply}
+.disco-rim{position:absolute;inset:0;border-radius:50%;pointer-events:none;box-shadow:inset 0 0 24px rgba(0,0,0,.7),inset 0 0 60px rgba(0,20,10,.55)}
+.spark-layer{position:absolute;inset:0;pointer-events:none;overflow:visible;border-radius:50%}
+.spark{position:absolute;width:70px;height:70px;margin:-35px 0 0 -35px;pointer-events:none;will-change:transform,opacity;background:radial-gradient(circle at center,#fff 0%,#fff 3%,rgba(255,255,255,.7) 6%,rgba(255,255,255,.2) 12%,transparent 22%),linear-gradient(0deg,transparent 49%,#fff 49.7%,#fff 50.3%,transparent 51%),linear-gradient(90deg,transparent 49%,#fff 49.7%,#fff 50.3%,transparent 51%),linear-gradient(45deg,transparent 49.3%,rgba(255,255,255,.7) 50%,transparent 50.7%),linear-gradient(-45deg,transparent 49.3%,rgba(255,255,255,.7) 50%,transparent 50.7%);-webkit-mask:radial-gradient(circle at center,#000 0%,#000 20%,transparent 55%);mask:radial-gradient(circle at center,#000 0%,#000 20%,transparent 55%);filter:drop-shadow(0 0 3px #fff) drop-shadow(0 0 9px #7dffa8)}
+.spark.fixed{animation:twinkle 2.4s ease-in-out infinite}
+@keyframes twinkle{0%,100%{transform:scale(.4) rotate(0deg);opacity:.35}50%{transform:scale(1) rotate(20deg);opacity:1}}
+@keyframes sparkOut{0%{transform:translate(0,0) scale(.2) rotate(0deg);opacity:0}15%{transform:translate(0,0) scale(1) rotate(10deg);opacity:1}55%{transform:translate(calc(var(--dx)*.6),calc(var(--dy)*.6)) scale(1.1) rotate(35deg);opacity:.95}100%{transform:translate(var(--dx),var(--dy)) scale(.3) rotate(70deg);opacity:0}}
+.disco-ray{position:absolute;left:50%;top:50%;width:2px;height:240px;margin-left:-1px;margin-top:-120px;background:linear-gradient(to top,rgba(29,185,84,0),rgba(29,185,84,.55),rgba(29,185,84,0));transform-origin:50% 50%;opacity:0;transition:opacity .5s;pointer-events:none;filter:blur(1px)}
+@keyframes spinRay{to{transform:rotate(360deg)}}
+.disco-wrap.shining .disco-ray{opacity:.6}
+
+.hero-title{font-size:clamp(2rem,5vw,3.5rem);font-weight:900;letter-spacing:-1px;text-align:center;line-height:1.1}
+.hero-title span{color:var(--green)}
+.hero-sub{color:var(--dim);font-size:1.05rem;font-weight:300;margin-top:.8rem;text-align:center}
+.hero-stats{display:flex;gap:3rem;margin-top:3rem;flex-wrap:wrap;justify-content:center}
+.h-stat-val{font-size:2.5rem;font-weight:700;color:var(--green);line-height:1;font-variant-numeric:tabular-nums;text-align:center}
+.h-stat-lbl{font-size:.7rem;color:var(--muted);text-transform:uppercase;letter-spacing:2px;margin-top:6px;text-align:center}
+.scroll-hint{position:absolute;bottom:2rem;display:flex;flex-direction:column;align-items:center;gap:8px;color:var(--muted);font-size:.72rem;letter-spacing:2px;text-transform:uppercase;animation:bob 2s ease-in-out infinite}
+@keyframes bob{0%,100%{transform:translateY(0)}50%{transform:translateY(6px)}}
+
+/* DASHBOARD */
+.dash{max-width:1200px;margin:0 auto;padding:4rem 2rem}
+.sec-lbl{font-size:.68rem;text-transform:uppercase;letter-spacing:4px;color:var(--green);margin-bottom:.5rem}
+.sec-title{font-size:2rem;font-weight:700;margin-bottom:2rem}
+
+/* KPI */
+.kpi-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:1px;background:var(--s3);border-radius:16px;overflow:hidden;margin-bottom:3rem}
+.kpi{background:var(--s2);padding:1.5rem;position:relative;overflow:hidden;transition:background .2s;cursor:default}
+.kpi::after{content:'';position:absolute;bottom:0;left:0;right:0;height:2px;background:var(--green);transform:scaleX(0);transform-origin:left;transition:transform .3s}
+.kpi:hover::after{transform:scaleX(1)}
+.kpi:hover{background:var(--s3)}
+.kpi-lbl{font-size:.7rem;text-transform:uppercase;letter-spacing:2px;color:var(--muted);margin-bottom:.5rem}
+.kpi-val{font-size:1.6rem;font-weight:700;line-height:1}
+.kpi-sub{font-size:.78rem;color:var(--dim);margin-top:.4rem}
+
+/* Charts */
+.charts-grid{display:grid;grid-template-columns:1fr 1fr;gap:1.5rem;margin-bottom:3rem}
+@media(max-width:768px){.charts-grid{grid-template-columns:1fr}}
+.chart-card{background:var(--s2);border-radius:16px;padding:1.5rem;border:1px solid var(--s3)}
+.chart-card h3{font-size:.78rem;font-weight:500;color:var(--dim);text-transform:uppercase;letter-spacing:2px;margin-bottom:1.2rem}
+
+/* Radar */
+.radar-section{background:var(--s2);border-radius:16px;padding:2rem;border:1px solid var(--s3);margin-bottom:3rem}
+.radar-btns{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:1.5rem}
+.rbtn{padding:5px 14px;border-radius:20px;border:1px solid var(--s3);background:none;color:var(--muted);font-size:.75rem;font-family:inherit;cursor:pointer;transition:all .15s}
+
+/* Genre bars */
+.metric-tabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:1rem}
+.mtab{padding:4px 12px;border-radius:20px;border:1px solid var(--s3);background:none;color:var(--muted);font-size:.75rem;font-family:inherit;cursor:pointer;transition:all .15s}
+.genre-bars{display:flex;flex-direction:column;gap:.5rem;margin-bottom:3rem}
+.genre-row{display:grid;grid-template-columns:130px 1fr 70px;align-items:center;gap:12px;cursor:pointer;padding:4px 8px;border-radius:8px;transition:background .15s}
+.genre-row:hover{background:var(--s2)}
+.genre-row.hl{background:rgba(29,185,84,.1)}
+.genre-name{font-size:.82rem;color:var(--dim);text-align:right;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;transition:color .15s}
+.genre-row:hover .genre-name,.genre-row.hl .genre-name{color:var(--text)}
+.gbar-track{background:var(--s3);border-radius:4px;height:8px;overflow:hidden}
+.gbar-fill{height:100%;border-radius:4px;background:var(--green);transition:width .6s cubic-bezier(.34,1.56,.64,1)}
+.gbar-fill.c-dance{background:#FF6B6B}
+.gbar-fill.c-energy{background:#FFD93D}
+.gbar-fill.c-valence{background:#6BCB77}
+.gbar-fill.c-tempo{background:#4D96FF}
+.gbar-val{font-size:.75rem;color:var(--muted);font-family:'DM Mono',monospace;text-align:right}
+
+/* Tracks table */
+.search-bar{background:var(--s2);border:1px solid var(--s3);border-radius:12px;padding:.9rem 1.4rem;display:flex;gap:1rem;align-items:center;margin-bottom:1.5rem;transition:border-color .2s}
+.search-bar:focus-within{border-color:var(--green)}
+.search-bar input{background:none;border:none;outline:none;color:var(--text);font-family:inherit;font-size:.9rem;flex:1}
+.search-bar input::placeholder{color:var(--muted)}
+.sort-sel{background:var(--s3);border:none;border-radius:8px;color:var(--dim);padding:.35rem .8rem;font-family:inherit;font-size:.78rem;cursor:pointer;outline:none}
+.tracks-wrap{overflow-x:auto;background:var(--s2);border-radius:16px;border:1px solid var(--s3)}
+table{width:100%;border-collapse:collapse}
+th{font-size:.68rem;text-transform:uppercase;letter-spacing:2px;color:var(--muted);padding:.6rem 1rem;text-align:left;border-bottom:1px solid var(--s3);white-space:nowrap}
+td{padding:.75rem 1rem;font-size:.88rem;border-bottom:1px solid rgba(255,255,255,.04);vertical-align:middle}
+.tr-row{transition:background .15s;cursor:default}
+.tr-row:hover{background:rgba(255,255,255,.04)}
+.tr-row:last-child td{border-bottom:none}
+.rank{font-size:.75rem;color:var(--muted);font-family:'DM Mono',monospace;text-align:right;width:2rem}
+.t-name{font-weight:500}
+.t-artist{font-size:.75rem;color:var(--dim);margin-top:2px}
+.pop-pill{display:flex;align-items:center;gap:6px}
+.pop-bar{width:52px;height:4px;background:var(--s3);border-radius:2px;overflow:hidden}
+.pop-fill{height:100%;background:var(--green);border-radius:2px}
+.gtag{display:inline-block;background:rgba(29,185,84,.15);color:var(--green);border-radius:20px;font-size:.68rem;padding:2px 8px;font-weight:500}
+.mono{font-size:.75rem;color:var(--dim);font-family:'DM Mono',monospace}
+.explicit-tag{display:inline-block;background:rgba(255,255,255,.1);color:var(--dim);border-radius:3px;font-size:.6rem;padding:1px 5px;font-weight:700;letter-spacing:1px;vertical-align:middle;margin-left:4px}
+
+/* Fade in */
+.fade-up{opacity:0;transform:translateY(28px);transition:opacity .6s,transform .6s}
+.fade-up.in{opacity:1;transform:translateY(0)}
+
+footer{text-align:center;padding:3rem 2rem;border-top:1px solid var(--s3);color:var(--muted);font-size:.78rem;letter-spacing:1px}
+footer span{color:var(--green)}
+</style>
+</head>
+<body>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-grid"></div>
+  <div class="disco-wrap" id="discoBall">
+    <div class="disco-aura"></div>
+    <div class="disco-ray" id="discoRay1" style="transform:rotate(0deg)"></div>
+    <div class="disco-ray" id="discoRay2" style="transform:rotate(60deg)"></div>
+    <div class="disco-ray" id="discoRay3" style="transform:rotate(120deg)"></div>
+    <div class="disco-ball" id="discoBall3d">
+      <div class="disco-core"></div>
+      <!-- tiles injected here by JS -->
+    </div>
+    <div class="disco-specular"></div>
+    <div class="disco-vignette"></div>
+    <div class="disco-rim"></div>
+    <div class="disco-shine"></div>
+    <div class="spark-layer" id="sparkLayer"></div>
+  </div>
+
+  <h1 class="hero-title">Music <span>Data</span> Dashboard</h1>
+  <p class="hero-sub">114.000 músicas · 114 gêneros · dados 100% do CSV</p>
+
+  <div class="hero-stats">
+    <div><div class="h-stat-val" id="c1">0</div><div class="h-stat-lbl">Músicas</div></div>
+    <div><div class="h-stat-val" id="c2">0</div><div class="h-stat-lbl">Gêneros</div></div>
+    <div><div class="h-stat-val" id="c3">0</div><div class="h-stat-lbl">Artistas únicos</div></div>
+    <div><div class="h-stat-val" id="c4">0</div><div class="h-stat-lbl">Pop. média</div></div>
+  </div>
+
+  <div class="scroll-hint">
+    <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor"><path d="M8 10.5L3 5.5h10z"/></svg>
+    explorar dados
+  </div>
+</section>
+
+<!-- DASHBOARD -->
+<div class="dash">
+
+  <!-- KPIs — 100% do CSV -->
+  <div class="kpi-grid fade-up">
+    <div class="kpi"><div class="kpi-lbl">Gênero mais popular</div><div class="kpi-val">pop-film</div><div class="kpi-sub">média 59.3 de popularidade</div></div>
+    <div class="kpi"><div class="kpi-lbl">Mais dançante</div><div class="kpi-val">kids</div><div class="kpi-sub">danceability 0.779</div></div>
+    <div class="kpi"><div class="kpi-lbl">Mais enérgico</div><div class="kpi-val">death-metal</div><div class="kpi-sub">energy 0.931</div></div>
+    <div class="kpi"><div class="kpi-lbl">Mais alegre</div><div class="kpi-val">salsa</div><div class="kpi-sub">valence 0.815</div></div>
+    <div class="kpi"><div class="kpi-lbl">Maior tempo</div><div class="kpi-val">drum&bass</div><div class="kpi-sub">155.2 bpm em média</div></div>
+    <div class="kpi"><div class="kpi-lbl">Música nº 1</div><div class="kpi-val" style="font-size:1.05rem;line-height:1.3">Unholy</div><div class="kpi-sub">Sam Smith · popularidade 100</div></div>
+  </div>
+
+  <!-- Charts -->
+  <div class="charts-grid fade-up">
+    <div class="chart-card">
+      <h3>Top 10 gêneros — popularidade média</h3>
+      <div style="position:relative;height:280px"><canvas id="barChart" role="img" aria-label="Top gêneros por popularidade">Gráfico de barras dos gêneros mais populares.</canvas></div>
+    </div>
+    <div class="chart-card">
+      <h3>Distribuição real de popularidade (0–100)</h3>
+      <div style="position:relative;height:280px"><canvas id="distChart" role="img" aria-label="Distribuição de popularidade">Distribuição real das músicas por faixa de popularidade.</canvas></div>
+    </div>
+  </div>
+
+  <!-- Radar -->
+  <div class="radar-section fade-up">
+    <p class="sec-lbl">Análise comparativa</p>
+    <h2 class="sec-title" style="font-size:1.3rem;margin-bottom:1rem">Perfil de áudio por gênero</h2>
+    <div class="radar-btns" id="radarBtns"></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.5rem;align-items:center">
+      <div style="position:relative;height:300px;max-width:340px;margin:auto;width:100%">
+        <canvas id="radarChart" role="img" aria-label="Radar de métricas de áudio">Radar comparando danceability, energy, valence e tempo.</canvas>
+      </div>
+      <div id="radarInfo" style="padding:1rem"></div>
+    </div>
+  </div>
+
+  <!-- Genre Explorer -->
+  <div class="fade-up">
+    <p class="sec-lbl">Explorador</p>
+    <h2 class="sec-title">Todos os 114 gêneros</h2>
+    <div class="metric-tabs">
+      <button class="mtab" style="background:var(--green);border-color:var(--green);color:#000;font-weight:700" onclick="setMetric('pop',this)">Popularidade</button>
+      <button class="mtab" onclick="setMetric('dance',this)">Danceability</button>
+      <button class="mtab" onclick="setMetric('energy',this)">Energia</button>
+      <button class="mtab" onclick="setMetric('valence',this)">Valência</button>
+      <button class="mtab" onclick="setMetric('tempo',this)">Tempo</button>
+    </div>
+    <div class="genre-bars" id="genreBars"></div>
+  </div>
+
+  <!-- Top 20 -->
+  <div class="fade-up">
+    <p class="sec-lbl">Ranking</p>
+    <h2 class="sec-title">Top 20 músicas mais populares</h2>
+    <div class="search-bar">
+      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color:var(--muted);flex-shrink:0"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+      <input type="text" placeholder="Filtrar por música, artista ou gênero…" id="srch" oninput="filterTracks()">
+      <select class="sort-sel" id="srtKey" onchange="sortTracks()">
+        <option value="popularity">Popularidade</option>
+        <option value="danceability">Danceability</option>
+        <option value="energy">Energia</option>
+        <option value="valence">Valência</option>
+        <option value="tempo">Tempo</option>
+      </select>
+    </div>
+    <div class="tracks-wrap">
+      <table>
+        <thead><tr>
+          <th style="width:3rem">#</th>
+          <th>Música</th>
+          <th>Gênero</th>
+          <th>Popularidade</th>
+          <th>Dance</th>
+          <th>Energia</th>
+          <th>Valência</th>
+          <th>BPM</th>
+        </tr></thead>
+        <tbody id="tbody"></tbody>
+      </table>
+    </div>
+  </div>
+
+</div>
+
+<footer>Dataset com <span>114.000 músicas</span> · <span>114 gêneros</span> · <span>29.859 artistas</span> · dados 100% extraídos do CSV</footer>
+
+<script>
+// ── DADOS 100% DO CSV ──────────────────────────────────────────────────────
+const GENRES = [{"genre":"acoustic","avg_pop":42.5,"avg_dance":0.55,"avg_energy":0.435,"avg_valence":0.424,"avg_tempo":119.0},{"genre":"afrobeat","avg_pop":24.4,"avg_dance":0.67,"avg_energy":0.703,"avg_valence":0.699,"avg_tempo":119.2},{"genre":"alt-rock","avg_pop":33.9,"avg_dance":0.534,"avg_energy":0.754,"avg_valence":0.518,"avg_tempo":124.6},{"genre":"alternative","avg_pop":24.3,"avg_dance":0.56,"avg_energy":0.72,"avg_valence":0.496,"avg_tempo":122.2},{"genre":"ambient","avg_pop":44.2,"avg_dance":0.368,"avg_energy":0.237,"avg_valence":0.167,"avg_tempo":111.1},{"genre":"anime","avg_pop":48.8,"avg_dance":0.537,"avg_energy":0.674,"avg_valence":0.434,"avg_tempo":123.5},{"genre":"black-metal","avg_pop":22.4,"avg_dance":0.296,"avg_energy":0.875,"avg_valence":0.192,"avg_tempo":128.6},{"genre":"bluegrass","avg_pop":25.7,"avg_dance":0.535,"avg_energy":0.53,"avg_valence":0.635,"avg_tempo":126.6},{"genre":"blues","avg_pop":31.2,"avg_dance":0.569,"avg_energy":0.582,"avg_valence":0.604,"avg_tempo":116.6},{"genre":"brazil","avg_pop":44.7,"avg_dance":0.563,"avg_energy":0.621,"avg_valence":0.47,"avg_tempo":121.9},{"genre":"breakbeat","avg_pop":20.1,"avg_dance":0.646,"avg_energy":0.853,"avg_valence":0.475,"avg_tempo":133.0},{"genre":"british","avg_pop":43.8,"avg_dance":0.501,"avg_energy":0.507,"avg_valence":0.44,"avg_tempo":118.8},{"genre":"cantopop","avg_pop":34.7,"avg_dance":0.548,"avg_energy":0.462,"avg_valence":0.394,"avg_tempo":124.3},{"genre":"chicago-house","avg_pop":12.3,"avg_dance":0.766,"avg_energy":0.733,"avg_valence":0.587,"avg_tempo":123.9},{"genre":"children","avg_pop":35.0,"avg_dance":0.716,"avg_energy":0.495,"avg_valence":0.694,"avg_tempo":123.3},{"genre":"chill","avg_pop":53.7,"avg_dance":0.664,"avg_energy":0.427,"avg_valence":0.404,"avg_tempo":115.5},{"genre":"classical","avg_pop":13.1,"avg_dance":0.382,"avg_energy":0.19,"avg_valence":0.381,"avg_tempo":107.9},{"genre":"club","avg_pop":33.3,"avg_dance":0.603,"avg_energy":0.722,"avg_valence":0.368,"avg_tempo":123.3},{"genre":"comedy","avg_pop":24.6,"avg_dance":0.577,"avg_energy":0.7,"avg_valence":0.455,"avg_tempo":101.0},{"genre":"country","avg_pop":17.0,"avg_dance":0.555,"avg_energy":0.597,"avg_valence":0.521,"avg_tempo":124.0},{"genre":"dance","avg_pop":22.7,"avg_dance":0.688,"avg_energy":0.709,"avg_valence":0.553,"avg_tempo":120.1},{"genre":"dancehall","avg_pop":33.5,"avg_dance":0.734,"avg_energy":0.685,"avg_valence":0.629,"avg_tempo":112.9},{"genre":"death-metal","avg_pop":32.2,"avg_dance":0.368,"avg_energy":0.931,"avg_valence":0.248,"avg_tempo":123.8},{"genre":"deep-house","avg_pop":44.8,"avg_dance":0.71,"avg_energy":0.742,"avg_valence":0.447,"avg_tempo":120.9},{"genre":"detroit-techno","avg_pop":11.2,"avg_dance":0.723,"avg_energy":0.711,"avg_valence":0.469,"avg_tempo":126.6},{"genre":"disco","avg_pop":33.5,"avg_dance":0.677,"avg_energy":0.738,"avg_valence":0.671,"avg_tempo":122.0},{"genre":"disney","avg_pop":27.5,"avg_dance":0.463,"avg_energy":0.303,"avg_valence":0.369,"avg_tempo":112.1},{"genre":"drum-and-bass","avg_pop":26.7,"avg_dance":0.535,"avg_energy":0.877,"avg_valence":0.321,"avg_tempo":155.2},{"genre":"dub","avg_pop":40.0,"avg_dance":0.575,"avg_energy":0.715,"avg_valence":0.387,"avg_tempo":129.5},{"genre":"dubstep","avg_pop":42.3,"avg_dance":0.518,"avg_energy":0.759,"avg_valence":0.272,"avg_tempo":133.6},{"genre":"edm","avg_pop":35.0,"avg_dance":0.648,"avg_energy":0.756,"avg_valence":0.465,"avg_tempo":122.0},{"genre":"electro","avg_pop":36.1,"avg_dance":0.652,"avg_energy":0.665,"avg_valence":0.467,"avg_tempo":120.8},{"genre":"electronic","avg_pop":44.3,"avg_dance":0.653,"avg_energy":0.695,"avg_valence":0.392,"avg_tempo":122.9},{"genre":"emo","avg_pop":48.1,"avg_dance":0.599,"avg_energy":0.67,"avg_valence":0.441,"avg_tempo":127.0},{"genre":"folk","avg_pop":38.0,"avg_dance":0.559,"avg_energy":0.546,"avg_valence":0.491,"avg_tempo":118.5},{"genre":"forro","avg_pop":41.8,"avg_dance":0.65,"avg_energy":0.79,"avg_valence":0.761,"avg_tempo":140.4},{"genre":"french","avg_pop":41.1,"avg_dance":0.651,"avg_energy":0.595,"avg_valence":0.43,"avg_tempo":117.8},{"genre":"funk","avg_pop":32.3,"avg_dance":0.678,"avg_energy":0.633,"avg_valence":0.6,"avg_tempo":117.8},{"genre":"garage","avg_pop":40.9,"avg_dance":0.484,"avg_energy":0.744,"avg_valence":0.518,"avg_tempo":127.0},{"genre":"german","avg_pop":26.8,"avg_dance":0.524,"avg_energy":0.532,"avg_valence":0.379,"avg_tempo":117.5},{"genre":"gospel","avg_pop":41.6,"avg_dance":0.473,"avg_energy":0.576,"avg_valence":0.321,"avg_tempo":125.6},{"genre":"goth","avg_pop":28.9,"avg_dance":0.479,"avg_energy":0.741,"avg_valence":0.444,"avg_tempo":124.3},{"genre":"grindcore","avg_pop":14.6,"avg_dance":0.272,"avg_energy":0.924,"avg_valence":0.216,"avg_tempo":119.2},{"genre":"groove","avg_pop":37.8,"avg_dance":0.584,"avg_energy":0.764,"avg_valence":0.426,"avg_tempo":123.7},{"genre":"grunge","avg_pop":49.6,"avg_dance":0.457,"avg_energy":0.803,"avg_valence":0.4,"avg_tempo":129.3},{"genre":"guitar","avg_pop":29.5,"avg_dance":0.54,"avg_energy":0.325,"avg_valence":0.432,"avg_tempo":112.0},{"genre":"happy","avg_pop":21.7,"avg_dance":0.553,"avg_energy":0.911,"avg_valence":0.327,"avg_tempo":152.9},{"genre":"hard-rock","avg_pop":42.8,"avg_dance":0.482,"avg_energy":0.795,"avg_valence":0.514,"avg_tempo":125.4},{"genre":"hardcore","avg_pop":36.1,"avg_dance":0.546,"avg_energy":0.842,"avg_valence":0.496,"avg_tempo":125.4},{"genre":"hardstyle","avg_pop":26.6,"avg_dance":0.539,"avg_energy":0.901,"avg_valence":0.312,"avg_tempo":146.8},{"genre":"heavy-metal","avg_pop":26.2,"avg_dance":0.428,"avg_energy":0.874,"avg_valence":0.388,"avg_tempo":126.6},{"genre":"hip-hop","avg_pop":37.8,"avg_dance":0.736,"avg_energy":0.683,"avg_valence":0.551,"avg_tempo":116.8},{"genre":"honky-tonk","avg_pop":16.4,"avg_dance":0.571,"avg_energy":0.367,"avg_valence":0.632,"avg_tempo":116.6},{"genre":"house","avg_pop":34.2,"avg_dance":0.669,"avg_energy":0.755,"avg_valence":0.495,"avg_tempo":121.1},{"genre":"idm","avg_pop":15.8,"avg_dance":0.528,"avg_energy":0.555,"avg_valence":0.303,"avg_tempo":123.3},{"genre":"indian","avg_pop":49.5,"avg_dance":0.592,"avg_energy":0.567,"avg_valence":0.463,"avg_tempo":116.1},{"genre":"indie-pop","avg_pop":40.7,"avg_dance":0.604,"avg_energy":0.561,"avg_valence":0.461,"avg_tempo":120.2},{"genre":"indie","avg_pop":38.9,"avg_dance":0.587,"avg_energy":0.556,"avg_valence":0.468,"avg_tempo":119.1},{"genre":"industrial","avg_pop":31.0,"avg_dance":0.53,"avg_energy":0.862,"avg_valence":0.425,"avg_tempo":126.8},{"genre":"iranian","avg_pop":2.2,"avg_dance":0.301,"avg_energy":0.546,"avg_valence":0.154,"avg_tempo":114.8},{"genre":"j-dance","avg_pop":26.7,"avg_dance":0.681,"avg_energy":0.704,"avg_valence":0.564,"avg_tempo":114.9},{"genre":"j-idol","avg_pop":24.7,"avg_dance":0.549,"avg_energy":0.869,"avg_valence":0.578,"avg_tempo":136.1},{"genre":"j-pop","avg_pop":41.1,"avg_dance":0.552,"avg_energy":0.68,"avg_valence":0.542,"avg_tempo":124.6},{"genre":"j-rock","avg_pop":40.7,"avg_dance":0.509,"avg_energy":0.761,"avg_valence":0.538,"avg_tempo":128.5},{"genre":"jazz","avg_pop":13.6,"avg_dance":0.51,"avg_energy":0.353,"avg_valence":0.49,"avg_tempo":112.6},{"genre":"k-pop","avg_pop":56.9,"avg_dance":0.648,"avg_energy":0.676,"avg_valence":0.557,"avg_tempo":119.2},{"genre":"kids","avg_pop":14.9,"avg_dance":0.779,"avg_energy":0.613,"avg_valence":0.681,"avg_tempo":121.8},{"genre":"latin","avg_pop":8.3,"avg_dance":0.722,"avg_energy":0.727,"avg_valence":0.631,"avg_tempo":119.8},{"genre":"latino","avg_pop":25.7,"avg_dance":0.757,"avg_energy":0.732,"avg_valence":0.63,"avg_tempo":119.4},{"genre":"malay","avg_pop":30.4,"avg_dance":0.629,"avg_energy":0.578,"avg_valence":0.502,"avg_tempo":119.3},{"genre":"mandopop","avg_pop":45.0,"avg_dance":0.547,"avg_energy":0.498,"avg_valence":0.35,"avg_tempo":123.5},{"genre":"metal","avg_pop":43.7,"avg_dance":0.464,"avg_energy":0.84,"avg_valence":0.418,"avg_tempo":127.9},{"genre":"metalcore","avg_pop":43.5,"avg_dance":0.424,"avg_energy":0.914,"avg_valence":0.315,"avg_tempo":130.6},{"genre":"minimal-techno","avg_pop":34.0,"avg_dance":0.729,"avg_energy":0.68,"avg_valence":0.284,"avg_tempo":124.7},{"genre":"mpb","avg_pop":40.8,"avg_dance":0.574,"avg_energy":0.58,"avg_valence":0.556,"avg_tempo":120.2},{"genre":"new-age","avg_pop":29.1,"avg_dance":0.348,"avg_energy":0.215,"avg_valence":0.183,"avg_tempo":108.0},{"genre":"opera","avg_pop":24.6,"avg_dance":0.314,"avg_energy":0.317,"avg_valence":0.215,"avg_tempo":105.6},{"genre":"pagode","avg_pop":44.3,"avg_dance":0.578,"avg_energy":0.712,"avg_valence":0.688,"avg_tempo":126.9},{"genre":"party","avg_pop":21.0,"avg_dance":0.667,"avg_energy":0.871,"avg_valence":0.681,"avg_tempo":131.3},{"genre":"piano","avg_pop":45.3,"avg_dance":0.455,"avg_energy":0.32,"avg_valence":0.313,"avg_tempo":118.1},{"genre":"pop-film","avg_pop":59.3,"avg_dance":0.597,"avg_energy":0.605,"avg_valence":0.529,"avg_tempo":117.3},{"genre":"pop","avg_pop":47.6,"avg_dance":0.63,"avg_energy":0.606,"avg_valence":0.506,"avg_tempo":120.9},{"genre":"power-pop","avg_pop":26.9,"avg_dance":0.473,"avg_energy":0.802,"avg_valence":0.615,"avg_tempo":134.7},{"genre":"progressive-house","avg_pop":46.6,"avg_dance":0.624,"avg_energy":0.813,"avg_valence":0.365,"avg_tempo":125.1},{"genre":"psych-rock","avg_pop":42.8,"avg_dance":0.503,"avg_energy":0.562,"avg_valence":0.565,"avg_tempo":121.6},{"genre":"punk-rock","avg_pop":38.2,"avg_dance":0.507,"avg_energy":0.81,"avg_valence":0.567,"avg_tempo":132.2},{"genre":"punk","avg_pop":38.3,"avg_dance":0.5,"avg_energy":0.81,"avg_valence":0.556,"avg_tempo":133.6},{"genre":"r-n-b","avg_pop":36.7,"avg_dance":0.614,"avg_energy":0.638,"avg_valence":0.633,"avg_tempo":124.0},{"genre":"reggae","avg_pop":20.6,"avg_dance":0.745,"avg_energy":0.726,"avg_valence":0.648,"avg_tempo":119.9},{"genre":"reggaeton","avg_pop":23.9,"avg_dance":0.759,"avg_energy":0.739,"avg_valence":0.643,"avg_tempo":118.9},{"genre":"rock-n-roll","avg_pop":34.4,"avg_dance":0.55,"avg_energy":0.527,"avg_valence":0.67,"avg_tempo":120.4},{"genre":"rock","avg_pop":19.0,"avg_dance":0.544,"avg_energy":0.679,"avg_valence":0.539,"avg_tempo":126.3},{"genre":"rockabilly","avg_pop":31.5,"avg_dance":0.561,"avg_energy":0.659,"avg_valence":0.727,"avg_tempo":123.7},{"genre":"romance","avg_pop":3.2,"avg_dance":0.432,"avg_energy":0.294,"avg_valence":0.393,"avg_tempo":109.7},{"genre":"sad","avg_pop":52.4,"avg_dance":0.692,"avg_energy":0.462,"avg_valence":0.422,"avg_tempo":119.1},{"genre":"salsa","avg_pop":28.1,"avg_dance":0.668,"avg_energy":0.725,"avg_valence":0.815,"avg_tempo":119.9},{"genre":"samba","avg_pop":38.8,"avg_dance":0.575,"avg_energy":0.673,"avg_valence":0.693,"avg_tempo":118.1},{"genre":"sertanejo","avg_pop":47.9,"avg_dance":0.592,"avg_energy":0.71,"avg_valence":0.619,"avg_tempo":127.1},{"genre":"show-tunes","avg_pop":31.2,"avg_dance":0.464,"avg_energy":0.399,"avg_valence":0.379,"avg_tempo":114.4},{"genre":"singer-songwriter","avg_pop":37.8,"avg_dance":0.562,"avg_energy":0.434,"avg_valence":0.414,"avg_tempo":119.7},{"genre":"ska","avg_pop":35.1,"avg_dance":0.581,"avg_energy":0.793,"avg_valence":0.697,"avg_tempo":128.3},{"genre":"sleep","avg_pop":35.1,"avg_dance":0.168,"avg_energy":0.342,"avg_valence":0.058,"avg_tempo":84.6},{"genre":"songwriter","avg_pop":37.8,"avg_dance":0.562,"avg_energy":0.434,"avg_valence":0.414,"avg_tempo":119.7},{"genre":"soul","avg_pop":19.8,"avg_dance":0.6,"avg_energy":0.534,"avg_valence":0.523,"avg_tempo":114.6},{"genre":"spanish","avg_pop":37.9,"avg_dance":0.604,"avg_energy":0.708,"avg_valence":0.548,"avg_tempo":122.8},{"genre":"study","avg_pop":26.1,"avg_dance":0.685,"avg_energy":0.411,"avg_valence":0.403,"avg_tempo":111.8},{"genre":"swedish","avg_pop":37.2,"avg_dance":0.59,"avg_energy":0.622,"avg_valence":0.533,"avg_tempo":121.1},{"genre":"synth-pop","avg_pop":36.6,"avg_dance":0.621,"avg_energy":0.713,"avg_valence":0.586,"avg_tempo":122.9},{"genre":"tango","avg_pop":19.9,"avg_dance":0.538,"avg_energy":0.373,"avg_valence":0.584,"avg_tempo":114.6},{"genre":"techno","avg_pop":39.0,"avg_dance":0.684,"avg_energy":0.746,"avg_valence":0.322,"avg_tempo":128.3},{"genre":"trance","avg_pop":37.6,"avg_dance":0.583,"avg_energy":0.845,"avg_valence":0.277,"avg_tempo":133.3},{"genre":"trip-hop","avg_pop":34.5,"avg_dance":0.635,"avg_energy":0.622,"avg_valence":0.478,"avg_tempo":118.7},{"genre":"turkish","avg_pop":40.7,"avg_dance":0.616,"avg_energy":0.61,"avg_valence":0.462,"avg_tempo":120.4},{"genre":"world-music","avg_pop":41.9,"avg_dance":0.415,"avg_energy":0.533,"avg_valence":0.25,"avg_tempo":121.4}];
+
+const TRACKS = [{"track_name":"Unholy (feat. Kim Petras)","artists":"Sam Smith · Kim Petras","popularity":100,"danceability":0.714,"energy":0.472,"valence":0.238,"tempo":131.1,"genre":"dance","explicit":false},{"track_name":"Quevedo: Bzrp Sessions, Vol. 52","artists":"Bizarrap · Quevedo","popularity":99,"danceability":0.621,"energy":0.782,"valence":0.55,"tempo":128.0,"genre":"hip-hop","explicit":false},{"track_name":"I'm Good (Blue)","artists":"David Guetta · Bebe Rexha","popularity":98,"danceability":0.561,"energy":0.965,"valence":0.304,"tempo":128.0,"genre":"dance","explicit":true},{"track_name":"La Bachata","artists":"Manuel Turizo","popularity":98,"danceability":0.835,"energy":0.679,"valence":0.85,"tempo":125.0,"genre":"latin","explicit":false},{"track_name":"Me Porto Bonito","artists":"Bad Bunny · Chencho Corleone","popularity":97,"danceability":0.911,"energy":0.712,"valence":0.425,"tempo":92.0,"genre":"latin","explicit":true},{"track_name":"Tití Me Preguntó","artists":"Bad Bunny","popularity":97,"danceability":0.65,"energy":0.715,"valence":0.187,"tempo":106.7,"genre":"latin","explicit":false},{"track_name":"Under The Influence","artists":"Chris Brown","popularity":96,"danceability":0.733,"energy":0.69,"valence":0.31,"tempo":117.0,"genre":"dance","explicit":true},{"track_name":"Efecto","artists":"Bad Bunny","popularity":96,"danceability":0.801,"energy":0.475,"valence":0.234,"tempo":98.0,"genre":"latin","explicit":false},{"track_name":"I Ain't Worried","artists":"OneRepublic","popularity":96,"danceability":0.704,"energy":0.797,"valence":0.825,"tempo":140.0,"genre":"piano","explicit":false},{"track_name":"Ojitos Lindos","artists":"Bad Bunny · Bomba Estéreo","popularity":95,"danceability":0.647,"energy":0.686,"valence":0.268,"tempo":79.9,"genre":"latin","explicit":false},{"track_name":"As It Was","artists":"Harry Styles","popularity":95,"danceability":0.52,"energy":0.731,"valence":0.662,"tempo":173.9,"genre":"pop","explicit":false},{"track_name":"Moscow Mule","artists":"Bad Bunny","popularity":94,"danceability":0.804,"energy":0.674,"valence":0.292,"tempo":100.0,"genre":"latin","explicit":true},{"track_name":"Glimpse of Us","artists":"Joji","popularity":94,"danceability":0.44,"energy":0.317,"valence":0.268,"tempo":169.9,"genre":"pop","explicit":false},{"track_name":"Sweater Weather","artists":"The Neighbourhood","popularity":93,"danceability":0.612,"energy":0.807,"valence":0.398,"tempo":124.1,"genre":"alt-rock","explicit":false},{"track_name":"Another Love","artists":"Tom Odell","popularity":93,"danceability":0.445,"energy":0.537,"valence":0.131,"tempo":122.8,"genre":"chill","explicit":true},{"track_name":"CUFF IT","artists":"Beyoncé","popularity":93,"danceability":0.78,"energy":0.689,"valence":0.642,"tempo":115.0,"genre":"dance","explicit":true},{"track_name":"Neverita","artists":"Bad Bunny","popularity":93,"danceability":0.876,"energy":0.498,"valence":0.428,"tempo":122.0,"genre":"latin","explicit":false},{"track_name":"Left and Right","artists":"Charlie Puth · Jung Kook · BTS","popularity":92,"danceability":0.881,"energy":0.592,"valence":0.719,"tempo":101.1,"genre":"dance","explicit":false},{"track_name":"Super Freaky Girl","artists":"Nicki Minaj","popularity":92,"danceability":0.95,"energy":0.891,"valence":0.912,"tempo":133.0,"genre":"dance","explicit":true},{"track_name":"I Wanna Be Yours","artists":"Arctic Monkeys","popularity":92,"danceability":0.464,"energy":0.417,"valence":0.479,"tempo":67.5,"genre":"garage","explicit":false}];
+
+// Distribuição REAL de popularidade do CSV: [0-20]=32067, [21-40]=33346, [41-60]=33765, [61-80]=13621, [81-100]=1201
+const POP_DIST = [32067,33346,33765,13621,1201];
+
+// ── CONTADORES ───────────────────────────────────────────────────────────────
+function animCount(el,target,suf='',dec=0){
+  let s=0;const d=2000;
+  const step=t=>{if(!s)s=t;const p=Math.min((t-s)/d,1),e=1-Math.pow(1-p,3),v=e*target;
+    el.textContent=dec?v.toFixed(dec)+suf:Math.round(v).toLocaleString('pt-BR')+suf;
+    if(p<1)requestAnimationFrame(step)};
+  requestAnimationFrame(step)}
+
+window.addEventListener('load',()=>{
+  animCount(document.getElementById('c1'),114000);
+  animCount(document.getElementById('c2'),114);
+  animCount(document.getElementById('c3'),29859);
+  animCount(document.getElementById('c4'),33.24,'',2);
+});
+
+// ── CHART BAR ────────────────────────────────────────────────────────────────
+const top10 = [...GENRES].sort((a,b)=>b.avg_pop-a.avg_pop).slice(0,10);
+new Chart(document.getElementById('barChart').getContext('2d'),{
+  type:'bar',
+  data:{labels:top10.map(g=>g.genre),datasets:[{label:'Pop. média',data:top10.map(g=>g.avg_pop),
+    backgroundColor:top10.map((_,i)=>`rgba(29,185,84,${1-i*.07})`),borderRadius:6,borderSkipped:false}]},
+  options:{responsive:true,maintainAspectRatio:false,
+    plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>` ${c.raw} popularidade média`}}},
+    scales:{x:{ticks:{color:'#B3B3B3',font:{size:10}},grid:{display:false}},
+            y:{ticks:{color:'#535353',font:{size:10}},grid:{color:'rgba(255,255,255,.04)'},min:30}}}
+});
+
+// ── CHART DIST (dados reais) ─────────────────────────────────────────────────
+new Chart(document.getElementById('distChart').getContext('2d'),{
+  type:'bar',
+  data:{labels:['0–20','21–40','41–60','61–80','81–100'],
+        datasets:[{label:'Músicas',data:POP_DIST,
+          backgroundColor:['#535353','#888','#1DB95488','#1DB954','#3dff8a'],
+          borderRadius:6,borderSkipped:false}]},
+  options:{responsive:true,maintainAspectRatio:false,
+    plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>` ${c.raw.toLocaleString('pt-BR')} músicas`}}},
+    scales:{x:{ticks:{color:'#B3B3B3',font:{size:11}},grid:{display:false}},
+            y:{ticks:{color:'#535353',font:{size:10},callback:v=>v.toLocaleString('pt-BR')},
+               grid:{color:'rgba(255,255,255,.04)'}}}}
+});
+
+// ── RADAR ─────────────────────────────────────────────────────────────────────
+const RG = ['pop-film','k-pop','chill','grunge','forro','death-metal','acoustic'];
+const RC = ['#1DB954','#FF6B6B','#4D96FF','#FFD93D','#6BCB77','#FF6B6B','#A29BFE'];
+let selR = ['pop-film','k-pop','forro'];
+let radarInst = null;
+
+function buildRBtns(){
+  const c=document.getElementById('radarBtns');c.innerHTML='';
+  RG.forEach((g,i)=>{
+    const b=document.createElement('button');b.className='rbtn';b.textContent=g;
+    if(selR.includes(g))b.style.cssText=`background:${RC[i]};border-color:${RC[i]};color:#000;font-weight:700`;
+    b.onclick=()=>{selR.includes(g)?(selR.length>1&&(selR=selR.filter(x=>x!==g))):(selR.length<4&&selR.push(g));updateRadar();buildRBtns()};
+    c.appendChild(b)});}
+
+function updateRadar(){
+  const ds=selR.map(g=>{
+    const d=GENRES.find(x=>x.genre===g),ci=RG.indexOf(g);
+    return{label:g,data:[d.avg_dance*100,d.avg_energy*100,d.avg_valence*100,Math.min(100,d.avg_tempo/1.6),d.avg_pop],
+      backgroundColor:RC[ci]+'22',borderColor:RC[ci],borderWidth:2,pointBackgroundColor:RC[ci],pointRadius:4}});
+  if(radarInst)radarInst.destroy();
+  radarInst=new Chart(document.getElementById('radarChart').getContext('2d'),{
+    type:'radar',
+    data:{labels:['Danceability','Energia','Valência','Tempo','Popularidade'],datasets:ds},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},
+      scales:{r:{ticks:{display:false,backdropColor:'transparent'},grid:{color:'rgba(255,255,255,.08)'},
+                 pointLabels:{color:'#B3B3B3',font:{size:11}},min:0,max:100}}}});
+  document.getElementById('radarInfo').innerHTML=selR.map(g=>{
+    const d=GENRES.find(x=>x.genre===g),ci=RG.indexOf(g);
+    return`<div style="margin-bottom:.8rem;padding:.7rem 1rem;background:var(--s3);border-radius:10px;border-left:3px solid ${RC[ci]}">
+      <div style="font-weight:700;color:${RC[ci]};margin-bottom:5px;font-size:.88rem">${g}</div>
+      <div style="font-size:.75rem;color:var(--dim);display:grid;grid-template-columns:1fr 1fr;gap:3px">
+        <span>Dance: ${d.avg_dance}</span><span>Energy: ${d.avg_energy}</span>
+        <span>Valence: ${d.avg_valence}</span><span>Tempo: ${d.avg_tempo} bpm</span>
+        <span>Pop: ${d.avg_pop}</span></div></div>`}).join('');}
+
+buildRBtns();updateRadar();
+
+// ── GENRE BARS ────────────────────────────────────────────────────────────────
+const MMAP={
+  pop:{key:'avg_pop',max:65,cls:''},
+  dance:{key:'avg_dance',max:1,cls:'c-dance'},
+  energy:{key:'avg_energy',max:1,cls:'c-energy'},
+  valence:{key:'avg_valence',max:1,cls:'c-valence'},
+  tempo:{key:'avg_tempo',max:160,cls:'c-tempo'}};
+const MC=['#1DB954','#FF6B6B','#FFD93D','#6BCB77','#4D96FF'];
+let curM='pop';
+
+function setMetric(m,btn){
+  curM=m;
+  document.querySelectorAll('.mtab').forEach((b,i)=>{
+    b.style.cssText='';
+    if(b===btn)b.style.cssText=`background:${MC[['pop','dance','energy','valence','tempo'].indexOf(m)]};border-color:${MC[['pop','dance','energy','valence','tempo'].indexOf(m)]};color:${m==='energy'||m==='valence'?'#000':'#fff'};font-weight:700`});
+  renderBars();}
+
+function renderBars(){
+  const{key,max,cls}=MMAP[curM];
+  const sorted=[...GENRES].sort((a,b)=>b[key]-a[key]);
+  const c=document.getElementById('genreBars');c.innerHTML='';
+  sorted.forEach(g=>{
+    const val=g[key],pct=Math.min(100,(val/max)*100);
+    const disp=curM==='tempo'?val.toFixed(1)+' bpm':val.toFixed(3);
+    const d=document.createElement('div');d.className='genre-row';
+    d.innerHTML=`<div class="genre-name">${g.genre}</div>
+      <div class="gbar-track"><div class="gbar-fill ${cls}" style="width:0%" data-pct="${pct}"></div></div>
+      <div class="gbar-val">${disp}</div>`;
+    d.onclick=()=>d.classList.toggle('hl');
+    c.appendChild(d);});
+  setTimeout(()=>c.querySelectorAll('.gbar-fill').forEach(el=>el.style.width=el.dataset.pct+'%'),50);}
+
+renderBars();
+
+// ── TRACKS TABLE ─────────────────────────────────────────────────────────────
+let tData=[...TRACKS];
+
+function renderTracks(data){
+  document.getElementById('tbody').innerHTML=data.map((t,i)=>`
+    <tr class="tr-row">
+      <td class="rank">${String(i+1).padStart(2,'0')}</td>
+      <td><div class="t-name">${t.track_name}${t.explicit?'<span class="explicit-tag">E</span>':''}</div><div class="t-artist">${t.artists}</div></td>
+      <td><span class="gtag">${t.genre}</span></td>
+      <td><div class="pop-pill"><div class="pop-bar"><div class="pop-fill" style="width:${t.popularity}%"></div></div><span class="mono">${t.popularity}</span></div></td>
+      <td class="mono">${t.danceability.toFixed(3)}</td>
+      <td class="mono">${t.energy.toFixed(3)}</td>
+      <td class="mono">${t.valence.toFixed(3)}</td>
+      <td class="mono">${t.tempo.toFixed(1)}</td>
+    </tr>`).join('');}
+
+function filterTracks(){
+  const q=document.getElementById('srch').value.toLowerCase();
+  tData=TRACKS.filter(t=>t.track_name.toLowerCase().includes(q)||t.artists.toLowerCase().includes(q)||t.genre.toLowerCase().includes(q));
+  sortTracks();}
+
+function sortTracks(){
+  const k=document.getElementById('srtKey').value;
+  renderTracks([...tData].sort((a,b)=>b[k]-a[k]));}
+
+renderTracks(TRACKS);
+
+// ── DISCO BALL 3D ─────────────────────────────────────────────────────────────
+(function(){
+  const wrap = document.getElementById('discoBall');
+  const ball = document.getElementById('discoBall3d');
+  const sparkLayer = document.getElementById('sparkLayer');
+  const R = 132;                  // raio da esfera em px
+  const RINGS = 14;               // anéis de latitude (otimizado)
+  const TILE_TARGET = 22;         // tamanho alvo da faceta em px
+  const VARIANTS = ['','v2','v3','v4'];
+
+  // Geração em grade lat/lon. Usa fragment p/ inserir tudo de uma vez
+  // (evita 200+ reflows) e classes pré-definidas em vez de filter inline
+  // (cada filter cria uma camada de composição no browser → trava a tela).
+  const frag = document.createDocumentFragment();
+  const ringHeight = Math.PI * R / RINGS;
+  for (let r = 0; r < RINGS; r++) {
+    const lat = -90 + (r + 0.5) * (180 / RINGS);
+    const latRad = lat * Math.PI / 180;
+    const ringRadius = R * Math.cos(latRad);
+    if (ringRadius < 4) continue;
+    const circumference = 2 * Math.PI * ringRadius;
+    const tilesInRing = Math.max(4, Math.round(circumference / TILE_TARGET));
+    const tileW = circumference / tilesInRing - 1.6;
+    const tileH = ringHeight - 1.6;
+    const halfW = (tileW/2).toFixed(1);
+    const halfH = (tileH/2).toFixed(1);
+    const stagger = (r % 2) * (180 / tilesInRing);
+    for (let i = 0; i < tilesInRing; i++) {
+      const lon = (i / tilesInRing) * 360 + stagger;
+      const tile = document.createElement('div');
+      const v = VARIANTS[(r*7 + i) % 4];
+      tile.className = v ? 'tile ' + v : 'tile';
+      tile.style.cssText =
+        `width:${tileW.toFixed(1)}px;height:${tileH.toFixed(1)}px;` +
+        `margin:-${halfH}px 0 0 -${halfW}px;` +
+        `transform:rotateY(${lon.toFixed(1)}deg) rotateX(${(-lat).toFixed(1)}deg) translateZ(${R}px)`;
+      frag.appendChild(tile);
+    }
+  }
+  ball.appendChild(frag);
+
+  // Estrelas fixas que ficam piscando sobre o globo (como na referência)
+  const fixedSparks = [{x:'30%',y:'30%',d:'0s'},{x:'68%',y:'48%',d:'1.2s'}];
+  fixedSparks.forEach(s=>{
+    const el = document.createElement('div');
+    el.className = 'spark fixed';
+    el.style.left = s.x; el.style.top = s.y;
+    el.style.marginLeft = '-35px'; el.style.marginTop = '-35px';
+    el.style.animationDelay = s.d;
+    sparkLayer.appendChild(el);
+  });
+
+  // ── Estado de rotação ──────────────────────────────────────────────────────
+  let targetRX = -8, targetRY = 0;
+  let currentRX = -8, currentRY = 0;
+  let spinY = 0;
+  const spinSpeed = 0.25;    // graus por frame em idle
+  let lastMoveAt = 0;
+  let mouseInside = false;
+
+  function tick(){
+    spinY += spinSpeed;
+    currentRX += (targetRX - currentRX) * 0.09;
+    currentRY += (targetRY - currentRY) * 0.09;
+    ball.style.transform = `rotateX(${currentRX.toFixed(2)}deg) rotateY(${(currentRY + spinY).toFixed(2)}deg)`;
+    requestAnimationFrame(tick);
+  }
+  tick();
+
+  // Raios externos giram em CSS, não no rAF
+  const r1 = document.getElementById('discoRay1');
+  const r2 = document.getElementById('discoRay2');
+  const r3 = document.getElementById('discoRay3');
+  if (r1) r1.style.animation = 'spinRay 14s linear infinite';
+  if (r2) r2.style.animation = 'spinRay 18s linear infinite reverse';
+  if (r3) r3.style.animation = 'spinRay 22s linear infinite';
+
+  // ── Mouse: rotação + posição da luz ───────────────────────────────────────
+  wrap.addEventListener('mouseenter', () => { mouseInside = true; });
+  wrap.addEventListener('mouseleave', () => {
+    mouseInside = false;
+    targetRX = -8; targetRY = 0;
+    wrap.classList.remove('shining');
+  });
+
+  wrap.addEventListener('mousemove', e => {
+    const r = wrap.getBoundingClientRect();
+    const lx = e.clientX - r.left;
+    const ly = e.clientY - r.top;
+    const nx = (lx / r.width  - 0.5) * 2;  // -1..1
+    const ny = (ly / r.height - 0.5) * 2;
+    targetRY = nx * 70;   // até 70° de rotação horizontal
+    targetRX = -ny * 55;  // até 55° vertical (invertido p/ feel natural)
+    wrap.style.setProperty('--mx', lx + 'px');
+    wrap.style.setProperty('--my', ly + 'px');
+    lastMoveAt = performance.now();
+    if (wrap.classList.contains('shining')) wrap.classList.remove('shining');
+  });
+
+  // ── Detector de idle: brilha quando mouse para sobre o globo ──────────────
+  setInterval(() => {
+    if (!mouseInside) return;
+    const idleFor = performance.now() - lastMoveAt;
+    if (idleFor > 220 && !wrap.classList.contains('shining')) {
+      wrap.classList.add('shining');
+    }
+  }, 50);
+
+  // ── Cintilação contínua enquanto está brilhando ───────────────────────────
+  function emitSpark(){
+    if (wrap.classList.contains('shining')) {
+      const mx = parseFloat(wrap.style.getPropertyValue('--mx')) || 140;
+      const my = parseFloat(wrap.style.getPropertyValue('--my')) || 140;
+      const s = document.createElement('div');
+      s.className = 'spark';
+      const jx = (Math.random() - 0.5) * 14;
+      const jy = (Math.random() - 0.5) * 14;
+      s.style.left = (mx + jx) + 'px';
+      s.style.top  = (my + jy) + 'px';
+      const ang = Math.random() * Math.PI * 2;
+      const dist = 18 + Math.random() * 38;
+      s.style.setProperty('--dx', Math.cos(ang) * dist + 'px');
+      s.style.setProperty('--dy', Math.sin(ang) * dist + 'px');
+      s.style.animation = `sparkOut ${0.9 + Math.random() * 0.5}s ease-out forwards`;
+      sparkLayer.appendChild(s);
+      setTimeout(() => s.remove(), 1500);
+      setTimeout(emitSpark, 140 + Math.random() * 120);
+    } else {
+      setTimeout(emitSpark, 400);
+    }
+  }
+  emitSpark();
+})();
+
+// ── SCROLL FADE-IN ────────────────────────────────────────────────────────────
+const obs=new IntersectionObserver(es=>es.forEach(e=>e.isIntersecting&&e.target.classList.add('in')),{threshold:.1});
+document.querySelectorAll('.fade-up').forEach(el=>obs.observe(el));
+</script>
+</body>
+</html>
