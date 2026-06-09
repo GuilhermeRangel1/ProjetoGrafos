@@ -3,7 +3,6 @@ from collections import deque
 
 
 def bfs(grafo, origem):
-    """Retorna (ordem_visita, niveis, pais). niveis[v] = distância em saltos de origem."""
     visitados = {origem}
     niveis = {origem: 0}
     pais = {origem: None}
@@ -24,12 +23,6 @@ def bfs(grafo, origem):
 
 
 def dfs(grafo, origem):
-    """Retorna (ordem_visita, tem_ciclo, arestas).
-    arestas: dict {(u,v): tipo} onde tipo é 'tree', 'back', 'forward' ou 'cross'.
-    Back edge em grafo dirigido indica ciclo."""
-    # Implementação iterativa para evitar RecursionError em grafos grandes.
-    # 0=branco, 1=cinza (em progresso), 2=preto (finalizado)
-    cor = {no: 0 for no in grafo.obter_todos_nos()}
     entrada = {}
     saida = {}
     tempo = [0]
@@ -73,8 +66,6 @@ def dfs(grafo, origem):
 
 
 def bellman_ford(grafo, origem, destino):
-    """Retorna (distancias, caminho, tem_ciclo_negativo).
-    Suporta pesos negativos. Se detectar ciclo negativo, tem_ciclo_negativo=True."""
     nos = grafo.obter_todos_nos()
     n = len(nos)
     distancias = {no: float('inf') for no in nos}
@@ -93,12 +84,10 @@ def bellman_ford(grafo, origem, destino):
         if not atualizado:
             break
 
-    # Verifica ciclo negativo
     for u, v, peso in arestas:
         if distancias[u] != float('inf') and distancias[u] + peso < distancias[v]:
             return distancias, [], True
 
-    # Reconstrói caminho
     caminho = []
     atual = destino
     visitados_rec = set()
