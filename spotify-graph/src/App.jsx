@@ -6,7 +6,58 @@ import Controls from './components/Controls'
 import LoadingScreen from './components/LoadingScreen'
 import ChartsPanel from './components/ChartsPanel'
 
-export default function App() {
+const TAB_H = 44
+
+const tabBarStyle = {
+  position: 'fixed',
+  top: 0,
+  left: 0,
+  right: 0,
+  height: TAB_H,
+  zIndex: 9999,
+  display: 'flex',
+  alignItems: 'center',
+  background: '#0d0d14',
+  borderBottom: '1px solid #252535',
+  padding: '0 16px',
+  gap: 8,
+  fontFamily: "'Space Mono', monospace",
+}
+
+const logoStyle = {
+  fontFamily: "'Syne', sans-serif",
+  fontWeight: 800,
+  fontSize: '0.85rem',
+  background: 'linear-gradient(90deg,#6c63ff,#00c2a8)',
+  WebkitBackgroundClip: 'text',
+  WebkitTextFillColor: 'transparent',
+  marginRight: 16,
+  letterSpacing: 1,
+}
+
+function TabBtn({ label, active, onClick }) {
+  return (
+    <button
+      onClick={onClick}
+      style={{
+        background: active ? '#6c63ff' : '#13131f',
+        border: `1px solid ${active ? '#6c63ff' : '#252535'}`,
+        color: active ? '#fff' : '#777799',
+        fontFamily: "'Space Mono', monospace",
+        fontSize: '0.72rem',
+        padding: '4px 14px',
+        borderRadius: 4,
+        cursor: 'pointer',
+        fontWeight: active ? 'bold' : 'normal',
+        transition: 'all 0.15s',
+      }}
+    >
+      {label}
+    </button>
+  )
+}
+
+function SpotifyApp() {
   const {
     graphData,
     genreColorMap,
@@ -46,13 +97,13 @@ export default function App() {
   const isLoading = loadingStatus === 'loading' || loadingStatus === 'idle'
 
   return (
-    <div className="relative w-screen h-screen overflow-hidden bg-[#0a0a0f]">
-      {/* Loading overlay */}
+    <div
+      style={{ position: 'absolute', inset: 0, top: TAB_H, overflow: 'hidden', background: '#0a0a0f' }}
+    >
       {(isLoading || isError) && (
         <LoadingScreen progress={loadingProgress} status={loadingStatus} error={error} />
       )}
 
-      {/* Graph canvas — always mounted so ref is stable */}
       {isDone && (
         <>
           <GraphView
@@ -66,7 +117,6 @@ export default function App() {
             graphRef={graphRef}
           />
 
-          {/* Left controls panel */}
           <Controls
             allGenres={allGenres}
             genreColorMap={genreColorMap}
@@ -91,7 +141,6 @@ export default function App() {
             linkCount={graphData.links.length}
           />
 
-          {/* Right sidebar */}
           {selectedNode && (
             <Sidebar
               node={selectedNode}
@@ -100,7 +149,6 @@ export default function App() {
             />
           )}
 
-          {/* Top-right: charts tab button + mini legend */}
           <div className="absolute top-4 right-4 flex flex-col items-end gap-2 z-10">
             <button
               onClick={() => setShowCharts(true)}
@@ -131,12 +179,60 @@ export default function App() {
             </div>
           </div>
 
-          {/* Charts overlay */}
           {showCharts && (
             <ChartsPanel onClose={() => setShowCharts(false)} />
           )}
         </>
       )}
+    </div>
+  )
+}
+
+export default function App() {
+  const [activeTab, setActiveTab] = useState('spotify')
+
+  return (
+    <div style={{ width: '100vw', height: '100vh', background: '#0d0d14', overflow: 'hidden' }}>
+      {/* Tab bar */}
+      <div style={tabBarStyle}>
+        <span style={logoStyle}>ProjetoGrafos</span>
+        <TabBtn
+          label="✈ Aeroportos"
+          active={activeTab === 'airports'}
+          onClick={() => setActiveTab('airports')}
+        />
+        <TabBtn
+          label="🎵 Spotify"
+          active={activeTab === 'spotify'}
+          onClick={() => setActiveTab('spotify')}
+        />
+      </div>
+
+      {/* Airport iframe — always mounted to avoid losing map state on tab switch */}
+      <iframe
+        src="/grafo_interativo.html"
+        style={{
+          position: 'absolute',
+          top: TAB_H,
+          left: 0,
+          width: '100%',
+          height: `calc(100% - ${TAB_H}px)`,
+          border: 'none',
+          visibility: activeTab === 'airports' ? 'visible' : 'hidden',
+          pointerEvents: activeTab === 'airports' ? 'auto' : 'none',
+        }}
+        title="Aeroportos do Brasil"
+      />
+
+      {/* Spotify app — always mounted to avoid reloading graph data on tab switch */}
+      <div
+        style={{
+          visibility: activeTab === 'spotify' ? 'visible' : 'hidden',
+          pointerEvents: activeTab === 'spotify' ? 'auto' : 'none',
+        }}
+      >
+        <SpotifyApp />
+      </div>
     </div>
   )
 }
