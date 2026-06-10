@@ -37,6 +37,7 @@ def dfs(grafo, origem):
         ordem_visita.append(u)
         pilha.append((u, iter(grafo.obter_vizinhos_simples(u))))
 
+    cor = {}
     pilha = []
     _push(origem, pilha)
 
