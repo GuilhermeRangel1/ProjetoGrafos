@@ -311,13 +311,11 @@ const REGIONS_LIST = Object.keys(R_COLORS);
 let showingCharts = false;
 let chartInstances = {};
 
-// Variáveis de Controle de Filtro
 let currentAP = AP;
 let currentRegionsList = REGIONS_LIST;
 let activeMapFilterNodes = new Set(Object.keys(AP));
 let activeMapFilterEdges = [...EDGES];
 
-// Autocomplete Datalist
 function setupDatalist() {
     let dt = '<datalist id="iata-list">';
     Object.keys(AP).forEach(k => { dt += '<option value="' + k + '">' + AP[k].cidade + ' (' + k + ')</option>'; });
