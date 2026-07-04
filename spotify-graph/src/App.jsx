@@ -6,7 +6,9 @@ import Controls from './components/Controls'
 import LoadingScreen from './components/LoadingScreen'
 import ChartsPanel from './components/ChartsPanel'
 
-function BackButton({ onClick, side = 'right' }) {
+function BackButton({ onClick, side = 'right', tone = 'light' }) {
+  const isDark = tone === 'dark'
+
   return (
     <button
       onClick={onClick}
@@ -16,19 +18,22 @@ function BackButton({ onClick, side = 'right' }) {
         right: side === 'right' ? 20 : 'auto',
         left: side === 'left' ? 20 : 'auto',
         zIndex: 15,
-        background: 'rgba(255, 249, 235, 0.92)',
-        border: '1px solid rgba(128, 101, 67, 0.18)',
-        color: '#6e6a53',
+        background: isDark ? 'rgba(31, 45, 30, 0.86)' : 'rgba(255, 249, 235, 0.92)',
+        border: isDark ? '1px solid rgba(196, 179, 126, 0.38)' : '1px solid rgba(128, 101, 67, 0.18)',
+        color: isDark ? '#efe6c8' : '#6e6a53',
         fontFamily: "'Nunito', 'Inter', sans-serif",
         fontSize: '0.7rem',
         padding: '8px 15px',
         borderRadius: 999,
         cursor: 'pointer',
         transition: 'all 0.18s',
-        boxShadow: '0 12px 28px rgba(85, 74, 50, 0.16)',
+        boxShadow: isDark ? '0 14px 32px rgba(0, 0, 0, 0.24)' : '0 12px 28px rgba(85, 74, 50, 0.16)',
       }}
-      onMouseEnter={e => { e.target.style.borderColor = '#8cbf99'; e.target.style.color = '#2f5942' }}
-      onMouseLeave={e => { e.target.style.borderColor = 'rgba(128, 101, 67, 0.18)'; e.target.style.color = '#6e6a53' }}
+      onMouseEnter={e => { e.target.style.borderColor = isDark ? '#8fbd8c' : '#8cbf99'; e.target.style.color = isDark ? '#f7efcf' : '#2f5942' }}
+      onMouseLeave={e => {
+        e.target.style.borderColor = isDark ? 'rgba(196, 179, 126, 0.38)' : 'rgba(128, 101, 67, 0.18)'
+        e.target.style.color = isDark ? '#efe6c8' : '#6e6a53'
+      }}
     >
       ← Voltar
     </button>
@@ -184,7 +189,12 @@ function SpotifyApp({ onBack }) {
   const isLoading = loadingStatus === 'loading' || loadingStatus === 'idle'
 
   return (
-    <div className="relative w-screen h-screen overflow-hidden bg-[#0a0a0f]">
+    <div
+      className="relative w-screen h-screen overflow-hidden"
+      style={{
+        background: 'linear-gradient(180deg, #10170f 0%, #182719 48%, #263a2a 100%)',
+      }}
+    >
       {(isLoading || isError) && (
         <LoadingScreen progress={loadingProgress} status={loadingStatus} error={error} />
       )}
@@ -239,27 +249,27 @@ function SpotifyApp({ onBack }) {
             <button
               onClick={() => setShowCharts(true)}
               style={{
-                background: '#13131f',
-                border: '1px solid #00c2a8',
-                color: '#00c2a8',
-                fontFamily: "'Space Mono', monospace",
+                background: 'rgba(31, 45, 30, 0.86)',
+                border: '1px solid rgba(196, 179, 126, 0.38)',
+                color: '#efe6c8',
+                fontFamily: "'Nunito', 'Inter', sans-serif",
                 fontSize: '0.7rem',
-                padding: '5px 12px',
-                borderRadius: '4px',
+                padding: '7px 14px',
+                borderRadius: '999px',
                 cursor: 'pointer',
-                fontWeight: 'bold',
-                letterSpacing: '0.5px',
+                fontWeight: 800,
+                boxShadow: '0 14px 32px rgba(0, 0, 0, 0.24)',
               }}
             >
               Gráficos
             </button>
-            <div className="bg-[#12121c]/80 backdrop-blur border border-slate-700/50 rounded-lg px-3 py-2 flex gap-4 text-xs text-slate-400 pointer-events-none">
+            <div className="bg-[#1f2d1e]/86 backdrop-blur border border-[#c4b37e]/40 rounded-lg px-3 py-2 flex gap-4 text-xs text-[#d9cfad] pointer-events-none shadow-sm">
               <span className="flex items-center gap-1.5">
-                <span className="w-3.5 h-3.5 rounded-full bg-slate-300 inline-block" />
+                <span className="w-3.5 h-3.5 rounded-full bg-[#5c9f79] inline-block" />
                 Nó de gênero
               </span>
               <span className="flex items-center gap-1.5">
-                <span className="w-2 h-2 rounded-full bg-slate-500 inline-block" />
+                <span className="w-2 h-2 rounded-full bg-[#4f8fb8] inline-block" />
                 Nó de artista
               </span>
             </div>
@@ -269,7 +279,7 @@ function SpotifyApp({ onBack }) {
         </>
       )}
 
-      {isDone && !selectedNode && !showCharts && <BackButton onClick={onBack} side="left" />}
+      {isDone && !selectedNode && !showCharts && <BackButton onClick={onBack} side="left" tone="dark" />}
     </div>
   )
 }

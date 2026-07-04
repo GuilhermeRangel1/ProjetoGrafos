@@ -163,12 +163,12 @@ export default function GraphView({
         // Draw the inner dot for vinyl disc look
         ctx.beginPath()
         ctx.arc(node.x, node.y, radius * 0.4, 0, 2 * Math.PI)
-        ctx.fillStyle = dimmed ? 'rgba(255, 255, 255, 0.2)' : '#fff'
+        ctx.fillStyle = dimmed ? 'rgba(239, 230, 200, 0.38)' : '#efe6c8'
         ctx.fill()
       }
 
       if (isSelected || isSearchMatch || isRelatedToSelection) {
-        ctx.strokeStyle = '#fff'
+        ctx.strokeStyle = '#f7efcf'
         ctx.lineWidth = (isSelected || isSearchMatch ? 1.5 : 0.8) / globalScale
         ctx.stroke()
       }
@@ -194,10 +194,10 @@ export default function GraphView({
 
         const yOffset = radius + fontSize * 0.9
 
-        // Text shadow for readability
-        ctx.fillStyle = 'rgba(0,0,0,0.7)'
+        // Text halo for readability on the dark map-like background
+        ctx.fillStyle = 'rgba(10,15,10,0.82)'
         ctx.fillText(displayLabel, node.x + 0.5, node.y + yOffset + 0.5)
-        ctx.fillStyle = isGenre ? '#fff' : '#cbd5e1'
+        ctx.fillStyle = isGenre ? '#f7efcf' : '#efe6c8'
         ctx.fillText(displayLabel, node.x, node.y + yOffset)
         ctx.restore()
       }
@@ -247,19 +247,19 @@ export default function GraphView({
       const isSelectedLink = selectedGraphContext.relatedLinkIds.has(`${sourceId}->${targetId}`)
 
       if (isSelectedLink) {
-        if (link.type === 'track-link') return 'rgba(29, 185, 84, 0.85)'
-        return 'rgba(255, 255, 255, 0.38)'
+        if (link.type === 'track-link') return 'rgba(143, 189, 140, 0.85)'
+        return 'rgba(239, 230, 200, 0.32)'
       }
 
-      if (selectedNode) return 'rgba(255,255,255,0.025)'
+      if (selectedNode) return 'rgba(239,230,200,0.04)'
 
       if (link.type === 'track-link') {
-        return 'rgba(29, 185, 84, 0.08)' // faint Spotify green
+        return 'rgba(143, 189, 140, 0.12)' // faint soft green
       }
       const target = typeof link.target === 'object' ? link.target : null
-      if (!target) return '#ffffff08'
+      if (!target) return 'rgba(239,230,200,0.06)'
       const color = genreColorMap.get(target.label) || '#ffffff'
-      return `${color}18`
+      return `${color}24`
     },
     [genreColorMap, selectedNode, selectedGraphContext]
   )
@@ -293,7 +293,7 @@ export default function GraphView({
       cooldownTime={2200}
       d3AlphaDecay={0.075}
       d3VelocityDecay={0.7}
-      backgroundColor="#0a0a0f"
+      backgroundColor="rgba(16,23,15,0)"
       nodeRelSize={1}
       enableNodeDrag
       enableZoomInteraction

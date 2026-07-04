@@ -40,10 +40,10 @@ export default function Sidebar({ node, genreColorMap, onSelectTrack, onClose })
       : genreColorMap.get(node.genres?.[0]) || '#888'
 
   return (
-    <div className="absolute top-0 right-0 h-full w-[22rem] sm:w-[26rem] max-w-[calc(100vw-1rem)] bg-[#12121c]/95 backdrop-blur border-l border-slate-700/50 flex flex-col z-20 shadow-2xl">
+    <div className="absolute top-0 right-0 h-full w-[22rem] sm:w-[26rem] max-w-[calc(100vw-1rem)] bg-[#1f2d1e]/92 backdrop-blur border-l border-[#c4b37e]/35 flex flex-col z-20 shadow-[0_22px_56px_rgba(0,0,0,0.38)]">
       {/* Header */}
       <div
-        className="flex items-center justify-between px-4 py-3 border-b border-slate-700/50"
+        className="flex items-center justify-between px-4 py-3 border-b border-[#c4b37e]/25"
         style={{ borderTopColor: color, borderTopWidth: 3 }}
       >
         <div>
@@ -53,13 +53,13 @@ export default function Sidebar({ node, genreColorMap, onSelectTrack, onClose })
           >
             {isGenre ? 'Genre' : (isTrack ? 'Música' : 'Artist')}
           </span>
-          <h2 className="text-white font-bold text-base leading-tight mt-0.5 truncate max-w-[200px]" title={node.label}>
+          <h2 className="text-[#f7efcf] font-bold text-base leading-tight mt-0.5 truncate max-w-[260px]" title={node.label}>
             {node.label}
           </h2>
         </div>
         <button
           onClick={onClose}
-          className="text-slate-500 hover:text-white transition-colors text-lg leading-none"
+          className="text-[#a9a080] hover:text-[#f7efcf] transition-colors text-lg leading-none"
         >
           ✕
         </button>
@@ -89,7 +89,7 @@ export default function Sidebar({ node, genreColorMap, onSelectTrack, onClose })
           <section className="space-y-4">
             <div>
               <SectionTitle>Artista</SectionTitle>
-              <div className="text-white font-medium text-sm mt-1">{node.artistLabel}</div>
+              <div className="text-[#f7efcf] font-medium text-sm mt-1">{node.artistLabel}</div>
             </div>
 
             <div className="-mx-4 pt-2">
@@ -137,11 +137,11 @@ export default function Sidebar({ node, genreColorMap, onSelectTrack, onClose })
             <ul className="mt-2 space-y-1.5">
               {node.topTracks.slice(0, 20).map((t, i) => (
                 <li key={i} className="flex items-center gap-2">
-                  <span className="text-slate-600 text-xs w-4 text-right shrink-0">{i + 1}</span>
+                  <span className="text-[#7e866e] text-xs w-4 text-right shrink-0">{i + 1}</span>
                   <button
                     type="button"
                     onClick={() => onSelectTrack?.(t, node)}
-                    className="text-left text-slate-300 hover:text-[#1DB954] text-xs truncate flex-1 transition-colors hover:underline"
+                    className="text-left text-[#efe6c8] hover:text-[#8fbd8c] text-xs truncate flex-1 transition-colors hover:underline"
                     title="Selecionar música no grafo"
                   >
                     {t.name}
@@ -155,48 +155,48 @@ export default function Sidebar({ node, genreColorMap, onSelectTrack, onClose })
 
         {/* Playlist Generator Section */}
         {(!isGenre) && (
-          <section className="pt-2 border-t border-slate-700/50">
+          <section className="pt-2 border-t border-[#c4b37e]/25">
             <SectionTitle>Gerar Playlist Automática</SectionTitle>
-            <p className="text-[10px] text-slate-400 mt-1 mb-3">
+            <p className="text-[10px] text-[#b8ad8b] mt-1 mb-3">
               Baseada na similaridade entre músicas usando os algoritmos de grafos BFS e DFS.
             </p>
             <div className="flex flex-col gap-2">
               <button 
                 onClick={() => handleGeneratePlaylist('bfs')}
                 disabled={loadingPlaylist}
-                className="w-full bg-[#1DB954]/20 hover:bg-[#1DB954]/30 text-[#1DB954] border border-[#1DB954]/50 py-1.5 px-3 rounded-lg text-xs font-semibold transition-colors disabled:opacity-50"
+                className="w-full bg-[#8fbd8c]/20 hover:bg-[#8fbd8c]/30 text-[#eaf3dc] border border-[#8fbd8c]/45 py-1.5 px-3 rounded-lg text-xs font-semibold transition-colors disabled:opacity-50"
               >
                 🎶 Playlist Suave (BFS)
               </button>
               <button 
                 onClick={() => handleGeneratePlaylist('dfs')}
                 disabled={loadingPlaylist}
-                className="w-full bg-purple-500/20 hover:bg-purple-500/30 text-purple-400 border border-purple-500/50 py-1.5 px-3 rounded-lg text-xs font-semibold transition-colors disabled:opacity-50"
+                className="w-full bg-[#c88a9a]/20 hover:bg-[#c88a9a]/30 text-[#f0bdc8] border border-[#c88a9a]/40 py-1.5 px-3 rounded-lg text-xs font-semibold transition-colors disabled:opacity-50"
               >
                 🎸 Mergulho Profundo (DFS)
               </button>
             </div>
 
             {loadingPlaylist && (
-              <div className="text-xs text-[#1DB954] mt-3 animate-pulse">Gerando playlist no backend Python...</div>
+              <div className="text-xs text-[#8fbd8c] mt-3 animate-pulse">Gerando playlist no backend Python...</div>
             )}
 
             {playlistError && (
-              <div className="text-xs text-red-400 mt-3 bg-red-400/10 p-2 rounded border border-red-400/30">
+              <div className="text-xs text-[#f0bdc8] mt-3 bg-[#c88a9a]/20 p-2 rounded border border-[#c88a9a]/30">
                 {playlistError}
                 <div className="text-[9px] mt-1 text-slate-400">Verifique se o backend Python está rodando na porta 5000.</div>
               </div>
             )}
 
             {playlist && (
-              <div className="mt-4 bg-slate-800/40 rounded-lg p-3 border border-slate-700">
+              <div className="mt-4 bg-[#111a12]/58 rounded-lg p-3 border border-[#c4b37e]/30">
                 <div className="flex items-center justify-between mb-2">
-                  <span className="text-xs font-bold text-white">Playlist ({playlist.playlist.length} faixas)</span>
-                  <button onClick={() => setPlaylist(null)} className="text-[10px] text-slate-400 hover:text-white">Fechar</button>
+                  <span className="text-xs font-bold text-[#f7efcf]">Playlist ({playlist.playlist.length} faixas)</span>
+                  <button onClick={() => setPlaylist(null)} className="text-[10px] text-[#a9a080] hover:text-[#f7efcf]">Fechar</button>
                 </div>
                 
                 {playlist.fallback_usado && (
-                  <div className="text-[10px] text-yellow-400 mb-3 bg-yellow-400/10 p-2 rounded">
+                  <div className="text-[10px] text-[#f2d98b] mb-3 bg-[#8a6d2f]/20 p-2 rounded">
                     A música selecionada não estava na nossa amostra processada do grafo. Começamos a playlist a partir de uma música de estilo parecido: <b>{playlist.seed_utilizado.name} - {playlist.seed_utilizado.artist}</b>.
                   </div>
                 )}
@@ -204,10 +204,10 @@ export default function Sidebar({ node, genreColorMap, onSelectTrack, onClose })
                 <div className="space-y-3 mt-3 max-h-64 overflow-y-auto pr-1">
                   {playlist.playlist.map((track, i) => (
                     <div key={i} className="flex flex-col gap-1">
-                      <span className="text-xs font-medium text-slate-200">
+                      <span className="text-xs font-medium text-[#f7efcf]">
                         {i + 1}. {track.name}
                       </span>
-                      <span className="text-[10px] text-slate-500">{track.artist}</span>
+                      <span className="text-[10px] text-[#a9a080]">{track.artist}</span>
                       <iframe
                         src={`https://open.spotify.com/embed/track/${track.id}?utm_source=generator`}
                         width="100%"
@@ -231,22 +231,22 @@ export default function Sidebar({ node, genreColorMap, onSelectTrack, onClose })
 
 function StatCard({ label, value }) {
   return (
-    <div className="bg-slate-800/60 rounded-lg px-3 py-2">
-      <div className="text-slate-500 text-[10px] uppercase tracking-wider">{label}</div>
-      <div className="text-white font-semibold text-lg">{value}</div>
+    <div className="bg-[#293b28]/72 border border-[#8fbd8c]/25 rounded-lg px-3 py-2">
+      <div className="text-[#a9a080] text-[10px] uppercase tracking-wider">{label}</div>
+      <div className="text-[#f7efcf] font-semibold text-lg">{value}</div>
     </div>
   )
 }
 
 function SectionTitle({ children }) {
   return (
-    <h3 className="text-slate-500 text-[10px] uppercase tracking-wider font-semibold">{children}</h3>
+    <h3 className="text-[#d9cfad] text-[10px] uppercase tracking-wider font-semibold">{children}</h3>
   )
 }
 
 function PopularityBar({ value, color }) {
   return (
-    <div className="w-12 h-1.5 bg-slate-700 rounded-full overflow-hidden shrink-0">
+    <div className="w-12 h-1.5 bg-[#111a12] rounded-full overflow-hidden shrink-0">
       <div
         className="h-full rounded-full"
         style={{ width: `${value}%`, background: color }}

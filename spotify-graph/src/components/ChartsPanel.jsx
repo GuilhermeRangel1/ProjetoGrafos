@@ -58,20 +58,20 @@ function buildFilteredCells(tracks, matrix, threshold) {
 }
 
 const C = {
-  bg:     '#0d0d14',
-  surf:   '#13131f',
-  border: '#252535',
-  accent: '#6c63ff',
-  teal:   '#00c2a8',
-  text:   '#e0e0f0',
-  muted:  '#777799',
+  bg:     '#10170f',
+  surf:   'rgba(31, 45, 30, 0.9)',
+  border: 'rgba(196, 179, 126, 0.35)',
+  accent: '#8fbd8c',
+  teal:   '#8fbd8c',
+  text:   '#f7efcf',
+  muted:  '#d9cfad',
 }
 
 const cardTitleStyle = {
   fontFamily: "'Syne', sans-serif",
   fontSize: '0.95rem',
   marginBottom: 8,
-  color: '#00c2a8',
+  color: '#8fbd8c',
   textTransform: 'uppercase',
   letterSpacing: 1,
   textAlign: 'center',
@@ -503,19 +503,20 @@ export default function ChartsPanel({ onClose }) {
   return (
     <div style={{
       position: 'absolute', inset: 0, zIndex: 30,
-      background: '#09090f', overflowY: 'auto',
-      fontFamily: "'Space Mono', monospace",
+      background: 'linear-gradient(180deg, #10170f 0%, #182719 48%, #263a2a 100%)',
+      overflowY: 'auto',
+      fontFamily: "'Nunito', 'Inter', sans-serif",
     }}>
       {/* Header */}
       <div style={{
         display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-        padding: '12px 24px', background: C.surf, borderBottom: `1px solid ${C.border}`,
+        padding: '12px 24px', background: 'rgba(31, 45, 30, 0.92)', borderBottom: `1px solid ${C.border}`,
         position: 'sticky', top: 0, zIndex: 10,
       }}>
         <div>
           <div style={{
             fontFamily: "'Syne', sans-serif", fontSize: '1.1rem',
-            background: 'linear-gradient(90deg,#6c63ff,#00c2a8)',
+            background: 'linear-gradient(90deg,#efe6c8,#8fbd8c)',
             WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent',
           }}>
             🎵 Spotify Artist-Genre Graph
@@ -525,9 +526,9 @@ export default function ChartsPanel({ onClose }) {
           </div>
         </div>
         <button onClick={onClose} style={{
-          background: C.bg, border: `1px solid ${C.teal}`, color: C.teal,
-          fontFamily: 'inherit', fontSize: '0.7rem', padding: '5px 12px',
-          borderRadius: 4, cursor: 'pointer', fontWeight: 'bold',
+          background: 'rgba(16, 23, 15, 0.68)', border: `1px solid rgba(196, 179, 126, 0.38)`, color: '#efe6c8',
+          fontFamily: 'inherit', fontSize: '0.7rem', padding: '7px 14px',
+          borderRadius: 999, cursor: 'pointer', fontWeight: 800,
         }}>
           🕸 Ver Grafo
         </button>
@@ -850,9 +851,9 @@ function PathTrail({ caminho, accent = '#6c63ff' }) {
             key={`s${i}`}
             title={song}
             style={{
-              background: '#111122', border: `1px solid ${accent}44`,
+              background: 'rgba(16, 23, 15, 0.68)', border: `1px solid ${accent}55`,
               borderRadius: 4, padding: '2px 7px',
-              fontSize: '0.67rem', color: '#c0c0e0',
+              fontSize: '0.67rem', color: '#efe6c8',
               maxWidth: 145, overflow: 'hidden', textOverflow: 'ellipsis',
               whiteSpace: 'nowrap', display: 'inline-block', flexShrink: 0,
               cursor: 'default',
@@ -875,7 +876,7 @@ function ChartCard({ title, children }) {
     <div style={{
       background: C.surf, border: `1px solid ${C.border}`, borderRadius: 12,
       padding: 25, display: 'flex', flexDirection: 'column', minHeight: 420,
-      boxShadow: '0 10px 30px rgba(0,0,0,0.4)',
+      boxShadow: '0 22px 52px rgba(0,0,0,0.32)',
     }}>
       <h3 style={cardTitleStyle}>{title}</h3>
       {children}
@@ -888,7 +889,7 @@ function InsightCard({ color, title, children }) {
     <div style={{
       background: C.surf, border: `1px solid ${C.border}`,
       borderTop: `4px solid ${color}`, borderRadius: 12, padding: 25,
-      boxShadow: '0 10px 30px rgba(0,0,0,0.4)',
+      boxShadow: '0 22px 52px rgba(0,0,0,0.32)',
     }}>
       <h3 style={{ color, fontSize: '0.82rem', marginBottom: 14, textTransform: 'uppercase', letterSpacing: 1 }}>
         {title}
@@ -903,11 +904,11 @@ function InsightCard({ color, title, children }) {
 function CtrlBtn({ active, onClick, children }) {
   return (
     <button onClick={onClick} style={{
-      background: active ? C.accent : C.bg,
+      background: active ? C.accent : 'rgba(16, 23, 15, 0.68)',
       border: `1px solid ${active ? C.accent : C.border}`,
-      color: active ? '#fff' : C.muted,
+      color: active ? '#10170f' : C.muted,
       fontFamily: 'inherit', fontSize: '0.68rem',
-      padding: '4px 10px', borderRadius: 4, cursor: 'pointer', transition: 'all 0.2s',
+      padding: '5px 11px', borderRadius: 999, cursor: 'pointer', transition: 'all 0.2s',
     }}>
       {children}
     </button>
