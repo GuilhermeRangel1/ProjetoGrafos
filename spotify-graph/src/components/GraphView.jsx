@@ -1,6 +1,7 @@
 import { useRef, useCallback, useMemo, useEffect } from 'react'
 import ForceGraph2D from 'react-force-graph-2d'
 import { GENRE_NODE_RADIUS, ARTIST_NODE_RADIUS } from '../utils/colors'
+import { displayGenreLabel } from '../utils/genreTranslations'
 
 const MIN_POP = 0
 const MAX_POP = 100
@@ -52,6 +53,7 @@ export default function GraphView({
     (node, ctx, globalScale) => {
       const isGenre = node.type === 'genre'
       const isTrack = node.type === 'track'
+      const displayLabel = isGenre ? displayGenreLabel(node.label) : node.label
 
       let color
       if (isGenre) {
@@ -71,7 +73,8 @@ export default function GraphView({
       let isArtistMatch = false
       if (hasArtistQuery) {
         if (node.type === 'artist' || node.type === 'genre') {
-          isArtistMatch = node.label.toLowerCase().includes(searchLower)
+          isArtistMatch = node.label.toLowerCase().includes(searchLower) ||
+            (node.type === 'genre' && displayGenreLabel(node.label).toLowerCase().includes(searchLower))
         } else if (node.type === 'track') {
           isArtistMatch = node.label.toLowerCase().includes(searchLower) ||
                           (node.artistLabel && node.artistLabel.toLowerCase().includes(searchLower))
@@ -152,9 +155,9 @@ export default function GraphView({
 
         // Text shadow for readability
         ctx.fillStyle = 'rgba(0,0,0,0.7)'
-        ctx.fillText(node.label, node.x + 0.5, node.y + yOffset + 0.5)
+        ctx.fillText(displayLabel, node.x + 0.5, node.y + yOffset + 0.5)
         ctx.fillStyle = isGenre ? '#fff' : '#cbd5e1'
-        ctx.fillText(node.label, node.x, node.y + yOffset)
+        ctx.fillText(displayLabel, node.x, node.y + yOffset)
         ctx.restore()
       }
     },

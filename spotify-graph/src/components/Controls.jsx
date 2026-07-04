@@ -1,4 +1,5 @@
 import { useState, useMemo } from 'react'
+import { displayGenreLabel, normalizeGenreText } from '../utils/genreTranslations'
 
 export default function Controls({
   allGenres,
@@ -28,22 +29,25 @@ export default function Controls({
 
   const filteredGenres = useMemo(() => {
     if (!genreSearch) return allGenres
-    return allGenres.filter((g) => g.toLowerCase().includes(genreSearch.toLowerCase()))
+    const query = genreSearch.toLowerCase()
+    return allGenres.filter((genre) =>
+      genre.toLowerCase().includes(query) || normalizeGenreText(genre).includes(query)
+    )
   }, [allGenres, genreSearch])
 
   const allActive = !activeGenres || activeGenres.size === 0
 
-  const toggleGenre = (g) => {
+  const toggleGenre = (genre) => {
     if (!activeGenres || activeGenres.size === 0) {
       const next = new Set(allGenres)
-      next.delete(g)
+      next.delete(genre)
       setActiveGenres(next)
     } else {
       const next = new Set(activeGenres)
-      if (next.has(g)) {
-        next.delete(g)
+      if (next.has(genre)) {
+        next.delete(genre)
       } else {
-        next.add(g)
+        next.add(genre)
       }
       if (next.size === allGenres.length) {
         setActiveGenres(null)
@@ -53,7 +57,7 @@ export default function Controls({
     }
   }
 
-  const isActive = (g) => allActive || (activeGenres && activeGenres.has(g))
+  const isActive = (genre) => allActive || (activeGenres && activeGenres.has(genre))
 
   return (
     <div className="absolute top-0 left-0 h-full flex flex-col z-20 pointer-events-none">
@@ -92,7 +96,7 @@ export default function Controls({
                 max={100}
                 step={5}
                 onChange={setMinPopularity}
-                format={(v) => v}
+                format={(value) => value}
               />
               <SliderRow
                 label="Mín. gêneros por artista"
@@ -101,16 +105,16 @@ export default function Controls({
                 max={10}
                 step={1}
                 onChange={setMinGenreCount}
-                format={(v) => v}
+                format={(value) => value}
               />
               <SliderRow
-                label="Max. artistas"
+                label="Máx. artistas"
                 value={maxArtists}
                 min={500}
                 max={10000}
                 step={500}
                 onChange={setMaxArtists}
-                format={(v) => v.toLocaleString()}
+                format={(value) => value.toLocaleString('pt-BR')}
               />
             </div>
 
@@ -121,23 +125,33 @@ export default function Controls({
               >
                 Recentrar
               </button>
-              <button
-                onClick={() => setShowLabels((v) => !v)}
-                className={`flex-1 text-xs py-1.5 rounded-lg transition-colors border ${
-                  showLabels
-                    ? 'bg-[#1DB954]/20 border-[#1DB954]/50 text-[#1DB954]'
-                    : 'bg-slate-800 border-slate-700 text-slate-400 hover:text-white'
-                }`}
-              >
-                Labels {showLabels ? 'On' : 'Off'}
-              </button>
+              <div className="flex-1 flex items-center justify-between bg-slate-800 border border-slate-700 rounded-lg px-2 py-1.5">
+                <span className="text-slate-400 text-xs">Rótulos</span>
+                <button
+                  type="button"
+                  aria-label={showLabels ? 'Desativar rótulos' : 'Ativar rótulos'}
+                  title={showLabels ? 'Desativar rótulos' : 'Ativar rótulos'}
+                  onClick={() => setShowLabels((value) => !value)}
+                  className={`relative h-4 w-8 rounded-full border transition-colors ${
+                    showLabels
+                      ? 'bg-[#1DB954]/30 border-[#1DB954]/60'
+                      : 'bg-slate-900 border-slate-600'
+                  }`}
+                >
+                  <span
+                    className={`absolute top-0.5 h-2.5 w-2.5 rounded-full transition-all ${
+                      showLabels ? 'left-4 bg-[#1DB954]' : 'left-0.5 bg-slate-500'
+                    }`}
+                  />
+                </button>
+              </div>
             </div>
 
             <div className="px-3 py-2 border-b border-slate-700/50">
               <div className="flex items-center justify-between">
-              <span className="text-slate-400 text-xs font-medium">Exibir músicas</span>
+                <span className="text-slate-400 text-xs font-medium">Exibir músicas</span>
                 <button
-                  onClick={() => setShowTracks((v) => !v)}
+                  onClick={() => setShowTracks((value) => !value)}
                   className={`px-3 py-1 text-xs font-semibold rounded-lg transition-colors border ${
                     showTracks
                       ? 'bg-[#1DB954]/20 border-[#1DB954]/50 text-[#1DB954]'
@@ -153,8 +167,8 @@ export default function Controls({
             </div>
 
             <div className="px-3 py-2 flex gap-3 border-b border-slate-700/50">
-              <span className="text-slate-500 text-[10px]">{nodeCount.toLocaleString()} nós</span>
-              <span className="text-slate-500 text-[10px]">{linkCount.toLocaleString()} conexões</span>
+              <span className="text-slate-500 text-[10px]">{nodeCount.toLocaleString('pt-BR')} nós</span>
+              <span className="text-slate-500 text-[10px]">{linkCount.toLocaleString('pt-BR')} conexões</span>
             </div>
 
             <div className="px-3 py-2">
@@ -177,13 +191,14 @@ export default function Controls({
                 className="w-full bg-slate-800 text-white text-xs rounded-md px-2 py-1 outline-none border border-slate-600/50 focus:border-[#1DB954]/60 placeholder-slate-500 mb-2"
               />
               <div className="space-y-0.5 max-h-48 overflow-y-auto pr-1">
-                {filteredGenres.map((g) => {
-                  const color = genreColorMap.get(g) || '#888'
-                  const active = isActive(g)
+                {filteredGenres.map((genre) => {
+                  const color = genreColorMap.get(genre) || '#888'
+                  const active = isActive(genre)
                   return (
                     <label
-                      key={g}
+                      key={genre}
                       className="flex items-center gap-2 cursor-pointer py-0.5 group"
+                      title={genre}
                     >
                       <span
                         className="w-2.5 h-2.5 rounded-full shrink-0 transition-opacity"
@@ -193,14 +208,14 @@ export default function Controls({
                         type="checkbox"
                         className="hidden"
                         checked={active}
-                        onChange={() => toggleGenre(g)}
+                        onChange={() => toggleGenre(genre)}
                       />
                       <span
                         className={`text-xs truncate transition-colors ${
                           active ? 'text-slate-300' : 'text-slate-600'
                         } group-hover:text-slate-200`}
                       >
-                        {g}
+                        {displayGenreLabel(genre)}
                       </span>
                     </label>
                   )

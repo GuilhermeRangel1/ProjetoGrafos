@@ -5,10 +5,10 @@ export default function LoadingScreen({ progress, status, error }) {
   if (status === 'error') {
     return (
       <div className="fixed inset-0 flex flex-col items-center justify-center bg-[#0a0a0f] z-50">
-        <div className="text-red-400 text-xl font-semibold mb-2">Failed to load dataset</div>
+        <div className="text-red-400 text-xl font-semibold mb-2">Falha ao carregar o dataset</div>
         <div className="text-red-300 text-sm">{error}</div>
         <div className="mt-4 text-slate-400 text-xs">
-          Make sure <code className="bg-slate-800 px-1 rounded">public/dataset.csv</code> exists.
+          Verifique se <code className="bg-slate-800 px-1 rounded">public/dataset.csv</code> existe.
         </div>
       </div>
     )
@@ -39,9 +39,9 @@ export default function LoadingScreen({ progress, status, error }) {
         </svg>
       </div>
 
-      <h1 className="text-2xl font-bold text-white mb-1 tracking-tight">Spotify Artist-Genre Graph</h1>
+      <h1 className="text-2xl font-bold text-white mb-1 tracking-tight">Grafo de artistas e gêneros do Spotify</h1>
       <p className="text-slate-400 text-sm mb-8">
-        {isStarting ? 'Preparing dataset...' : `Parsing ${(114000).toLocaleString()} tracks...`}
+        {isStarting ? 'Preparando dataset...' : `Processando ${(114000).toLocaleString('pt-BR')} faixas...`}
       </p>
 
       <div className="w-72 bg-slate-800 rounded-full h-2 overflow-hidden">
@@ -52,7 +52,7 @@ export default function LoadingScreen({ progress, status, error }) {
           style={{ width: `${isStarting ? 12 : pct}%` }}
         />
       </div>
-      <p className="text-slate-500 text-xs mt-3">{isStarting ? 'Starting...' : `${pct}%`}</p>
+      <p className="text-slate-500 text-xs mt-3">{isStarting ? 'Iniciando...' : `${pct}%`}</p>
     </div>
   )
 }

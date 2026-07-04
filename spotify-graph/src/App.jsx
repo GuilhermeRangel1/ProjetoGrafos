@@ -233,16 +233,16 @@ function SpotifyApp({ onBack }) {
                 letterSpacing: '0.5px',
               }}
             >
-              📊 Ver Gráficos
+              Gráficos
             </button>
             <div className="bg-[#12121c]/80 backdrop-blur border border-slate-700/50 rounded-lg px-3 py-2 flex gap-4 text-xs text-slate-400 pointer-events-none">
               <span className="flex items-center gap-1.5">
                 <span className="w-3.5 h-3.5 rounded-full bg-slate-300 inline-block" />
-                Genre node
+                Nó de gênero
               </span>
               <span className="flex items-center gap-1.5">
                 <span className="w-2 h-2 rounded-full bg-slate-500 inline-block" />
-                Artist node
+                Nó de artista
               </span>
             </div>
           </div>
