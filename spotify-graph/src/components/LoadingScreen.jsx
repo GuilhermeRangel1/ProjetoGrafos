@@ -1,5 +1,6 @@
 export default function LoadingScreen({ progress, status, error }) {
   const pct = Math.round(progress * 100)
+  const isStarting = pct === 0
 
   if (status === 'error') {
     return (
@@ -15,7 +16,6 @@ export default function LoadingScreen({ progress, status, error }) {
 
   return (
     <div className="fixed inset-0 flex flex-col items-center justify-center bg-[#0a0a0f] z-50">
-      {/* Spotify-ish logo mark */}
       <div className="mb-8">
         <svg width="64" height="64" viewBox="0 0 64 64" fill="none">
           <circle cx="32" cy="32" r="32" fill="#1DB954" opacity="0.15" />
@@ -39,17 +39,20 @@ export default function LoadingScreen({ progress, status, error }) {
         </svg>
       </div>
 
-      <h1 className="text-2xl font-bold text-white mb-1 tracking-tight">Spotify Artist–Genre Graph</h1>
-      <p className="text-slate-400 text-sm mb-8">Parsing {(114000).toLocaleString()} tracks…</p>
+      <h1 className="text-2xl font-bold text-white mb-1 tracking-tight">Spotify Artist-Genre Graph</h1>
+      <p className="text-slate-400 text-sm mb-8">
+        {isStarting ? 'Preparing dataset...' : `Parsing ${(114000).toLocaleString()} tracks...`}
+      </p>
 
-      {/* Progress bar */}
       <div className="w-72 bg-slate-800 rounded-full h-2 overflow-hidden">
         <div
-          className="h-full bg-[#1DB954] rounded-full transition-all duration-200"
-          style={{ width: `${pct}%` }}
+          className={`h-full bg-[#1DB954] rounded-full transition-all duration-200 ${
+            isStarting ? 'animate-pulse' : ''
+          }`}
+          style={{ width: `${isStarting ? 12 : pct}%` }}
         />
       </div>
-      <p className="text-slate-500 text-xs mt-3">{pct}%</p>
+      <p className="text-slate-500 text-xs mt-3">{isStarting ? 'Starting...' : `${pct}%`}</p>
     </div>
   )
 }

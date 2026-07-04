@@ -35,7 +35,6 @@ export default function Controls({
 
   const toggleGenre = (g) => {
     if (!activeGenres || activeGenres.size === 0) {
-      // Start from "all selected", uncheck one means show only others
       const next = new Set(allGenres)
       next.delete(g)
       setActiveGenres(next)
@@ -58,28 +57,26 @@ export default function Controls({
 
   return (
     <div className="absolute top-0 left-0 h-full flex flex-col z-20 pointer-events-none">
-      {/* Toggle button */}
       <button
         className="pointer-events-auto mt-4 ml-4 bg-[#12121c]/90 border border-slate-700/60 rounded-lg px-3 py-1.5 text-slate-300 text-xs hover:text-white hover:border-slate-500 transition-all self-start"
         onClick={() => setPanelOpen((v) => !v)}
       >
-        {panelOpen ? '← Hide' : '→ Filters'}
+        {panelOpen ? '< Ocultar' : '> Filtros'}
       </button>
 
       {panelOpen && (
         <div className="pointer-events-auto ml-4 mt-2 w-64 bg-[#12121c]/95 backdrop-blur border border-slate-700/50 rounded-xl flex flex-col shadow-2xl overflow-hidden max-h-[calc(100vh-100px)]">
-          {/* Search */}
           <div className="px-3 pt-3 pb-2 border-b border-slate-700/50 space-y-2">
             <input
               type="text"
-              placeholder="Search artist…"
+              placeholder="Buscar artista..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="w-full bg-slate-800 text-white text-sm rounded-lg px-3 py-1.5 outline-none border border-slate-600/50 focus:border-[#1DB954]/60 placeholder-slate-500"
             />
             <input
               type="text"
-              placeholder="Search song…"
+              placeholder="Buscar música..."
               value={trackSearchQuery}
               onChange={(e) => setTrackSearchQuery(e.target.value)}
               className="w-full bg-slate-800 text-white text-sm rounded-lg px-3 py-1.5 outline-none border border-slate-600/50 focus:border-[#1DB954]/60 placeholder-slate-500"
@@ -87,10 +84,9 @@ export default function Controls({
           </div>
 
           <div className="flex-1 overflow-y-auto">
-            {/* Sliders */}
             <div className="px-3 py-3 space-y-4 border-b border-slate-700/50">
               <SliderRow
-                label="Min Popularity"
+                label="Popularidade mínima"
                 value={minPopularity}
                 min={0}
                 max={100}
@@ -99,7 +95,7 @@ export default function Controls({
                 format={(v) => v}
               />
               <SliderRow
-                label="Min Genres per Artist"
+                label="Mín. gêneros por artista"
                 value={minGenreCount}
                 min={1}
                 max={10}
@@ -108,23 +104,22 @@ export default function Controls({
                 format={(v) => v}
               />
               <SliderRow
-                label="Max Artists"
+                label="Max. artistas"
                 value={maxArtists}
                 min={500}
-                max={5000}
+                max={10000}
                 step={500}
                 onChange={setMaxArtists}
                 format={(v) => v.toLocaleString()}
               />
             </div>
 
-            {/* Controls row */}
             <div className="px-3 py-2 flex gap-2 border-b border-slate-700/50">
               <button
                 onClick={onResetView}
                 className="flex-1 bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white text-xs py-1.5 rounded-lg transition-colors"
               >
-                Reset View
+                Recentrar
               </button>
               <button
                 onClick={() => setShowLabels((v) => !v)}
@@ -138,43 +133,45 @@ export default function Controls({
               </button>
             </div>
 
-            {/* Show Songs Toggle */}
-            <div className="px-3 py-2 flex items-center justify-between border-b border-slate-700/50">
-              <span className="text-slate-400 text-xs font-medium">Exibir Músicas</span>
-              <button
-                onClick={() => setShowTracks((v) => !v)}
-                className={`px-3 py-1 text-xs font-semibold rounded-lg transition-colors border ${
-                  showTracks
-                    ? 'bg-[#1DB954]/20 border-[#1DB954]/50 text-[#1DB954]'
-                    : 'bg-slate-800 border-slate-700 text-slate-400 hover:text-white'
-                }`}
-              >
-                {showTracks ? 'Sim' : 'Não'}
-              </button>
+            <div className="px-3 py-2 border-b border-slate-700/50">
+              <div className="flex items-center justify-between">
+              <span className="text-slate-400 text-xs font-medium">Exibir músicas</span>
+                <button
+                  onClick={() => setShowTracks((v) => !v)}
+                  className={`px-3 py-1 text-xs font-semibold rounded-lg transition-colors border ${
+                    showTracks
+                      ? 'bg-[#1DB954]/20 border-[#1DB954]/50 text-[#1DB954]'
+                      : 'bg-slate-800 border-slate-700 text-slate-400 hover:text-white'
+                  }`}
+                >
+                  {showTracks ? 'Sim' : 'Não'}
+                </button>
+              </div>
+              <p className="mt-1 text-[10px] leading-snug text-slate-500">
+                Desativado por padrão para manter mais artistas na tela com melhor desempenho.
+              </p>
             </div>
 
-            {/* Stats */}
             <div className="px-3 py-2 flex gap-3 border-b border-slate-700/50">
-              <span className="text-slate-500 text-[10px]">{nodeCount.toLocaleString()} nodes</span>
-              <span className="text-slate-500 text-[10px]">{linkCount.toLocaleString()} links</span>
+              <span className="text-slate-500 text-[10px]">{nodeCount.toLocaleString()} nós</span>
+              <span className="text-slate-500 text-[10px]">{linkCount.toLocaleString()} conexões</span>
             </div>
 
-            {/* Genre filter */}
             <div className="px-3 py-2">
               <div className="flex items-center justify-between mb-2">
                 <span className="text-slate-400 text-[10px] uppercase tracking-wider font-semibold">
-                  Genres ({allGenres.length})
+                  Gêneros ({allGenres.length})
                 </span>
                 <button
                   className="text-[#1DB954] text-[10px] hover:underline"
                   onClick={() => setActiveGenres(null)}
                 >
-                  All
+                  Todos
                 </button>
               </div>
               <input
                 type="text"
-                placeholder="Filter genres…"
+                placeholder="Filtrar gêneros..."
                 value={genreSearch}
                 onChange={(e) => setGenreSearch(e.target.value)}
                 className="w-full bg-slate-800 text-white text-xs rounded-md px-2 py-1 outline-none border border-slate-600/50 focus:border-[#1DB954]/60 placeholder-slate-500 mb-2"

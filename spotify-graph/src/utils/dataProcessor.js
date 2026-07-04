@@ -1,24 +1,37 @@
 import Papa from 'papaparse'
 
-// Parse CSV in streaming mode, building artist/genre data structures
+const PINNED_ARTISTS = ['Billie Eilish']
+const ESTIMATED_ROWS = 114000
+
+const hashString = (value) => {
+  let hash = 2166136261
+  for (let i = 0; i < value.length; i++) {
+    hash ^= value.charCodeAt(i)
+    hash = Math.imul(hash, 16777619)
+  }
+  return hash >>> 0
+}
+
+const polarPoint = (angle, radius, center = { x: 0, y: 0 }) => ({
+  x: center.x + Math.cos(angle) * radius,
+  y: center.y + Math.sin(angle) * radius,
+})
+
 export const parseDataset = (url, onProgress) => {
   return new Promise((resolve, reject) => {
-    // Accumulate: artistId → { popularity[], genres: Set, tracks: [{name, popularity}] }
     const artistMap = new Map()
-    // genreId → { trackCount, totalPopularity }
     const genreMap = new Map()
-    // artistId → genreId pair deduplication
     const pairSet = new Set()
-
     let rowCount = 0
-    let totalBytes = 0
 
-    Papa.parse(url, {
+    onProgress(0.02)
+
+    Papa.parse(`${url}?v=${Date.now()}`, {
       download: true,
       header: true,
       skipEmptyLines: true,
       worker: false,
-      chunk: (results, parser) => {
+      chunk: (results) => {
         for (const row of results.data) {
           rowCount++
           const rawArtists = row.artists || ''
@@ -29,21 +42,18 @@ export const parseDataset = (url, onProgress) => {
 
           if (!genre) continue
 
-          // Split multi-artist entries (separated by ";")
           const artists = rawArtists
             .split(';')
-            .map((a) => a.trim().replace(/^['"\[]+|['"\]]+$/g, ''))
+            .map((artist) => artist.trim().replace(/^['"\[]+|['"\]]+$/g, ''))
             .filter(Boolean)
 
-          // Update genre map
           if (!genreMap.has(genre)) {
             genreMap.set(genre, { trackCount: 0, totalPopularity: 0 })
           }
-          const gd = genreMap.get(genre)
-          gd.trackCount++
-          gd.totalPopularity += popularity
+          const genreData = genreMap.get(genre)
+          genreData.trackCount++
+          genreData.totalPopularity += popularity
 
-          // Update artist map
           for (const artist of artists) {
             if (!artistMap.has(artist)) {
               artistMap.set(artist, {
@@ -53,25 +63,22 @@ export const parseDataset = (url, onProgress) => {
                 topTracks: [],
               })
             }
-            const ad = artistMap.get(artist)
-            ad.popularitySum += popularity
-            ad.trackCount++
-            ad.genres.add(genre)
+            const artistData = artistMap.get(artist)
+            artistData.popularitySum += popularity
+            artistData.trackCount++
+            artistData.genres.add(genre)
+            artistData.topTracks.push({ name: trackName, popularity, id: trackId })
 
-            // Keep up to 5 top tracks
-            ad.topTracks.push({ name: trackName, popularity, id: trackId })
-            if (ad.topTracks.length > 20) {
-              ad.topTracks.sort((a, b) => b.popularity - a.popularity)
-              ad.topTracks.length = 5
+            if (artistData.topTracks.length > 12) {
+              artistData.topTracks.sort((a, b) => b.popularity - a.popularity)
+              artistData.topTracks.length = 4
             }
 
             pairSet.add(`${artist}|||${genre}`)
           }
         }
 
-        // Estimate progress via row count (dataset ~114k rows)
-        totalBytes += results.data.length
-        onProgress(Math.min(0.95, rowCount / 114000))
+        onProgress(Math.min(0.97, 0.02 + (rowCount / ESTIMATED_ROWS) * 0.95))
       },
       complete: () => {
         if (rowCount === 0) {
@@ -93,101 +100,147 @@ export const buildGraphData = (
     maxArtists = 5000,
     minPopularity = 0,
     minGenreCount = 1,
-    activeGenres = null, // Set of genre names, null = all
+    activeGenres = null,
     showTracks = false,
+    tracksPerArtist = 1,
+    maxTrackArtists = 250,
+    pinnedArtists = PINNED_ARTISTS,
   } = {}
 ) => {
-  // Filter and rank artists
   let artists = Array.from(artistMap.entries())
-    .map(([id, d]) => ({
+    .map(([id, data]) => ({
       id: `artist:${id}`,
       rawId: id,
       type: 'artist',
       label: id,
-      trackCount: d.trackCount,
-      popularityAvg: d.trackCount > 0 ? d.popularitySum / d.trackCount : 0,
-      genres: Array.from(d.genres),
-      topTracks: d.topTracks.sort((a, b) => b.popularity - a.popularity).slice(0, 5),
-      genreCount: d.genres.size,
+      trackCount: data.trackCount,
+      popularityAvg: data.trackCount > 0 ? data.popularitySum / data.trackCount : 0,
+      genres: Array.from(data.genres),
+      topTracks: data.topTracks
+        .sort((a, b) => b.popularity - a.popularity)
+        .slice(0, Math.max(1, tracksPerArtist)),
+      genreCount: data.genres.size,
+      pinned: pinnedArtists.some((name) => id.toLowerCase() === name.toLowerCase()),
     }))
-    .filter((a) => a.trackCount >= minTracks)
-    .filter((a) => a.popularityAvg >= minPopularity)
-    .filter((a) => a.genreCount >= minGenreCount)
+    .filter((artist) => artist.trackCount >= minTracks)
+    .filter((artist) => artist.popularityAvg >= minPopularity)
+    .filter((artist) => artist.genreCount >= minGenreCount)
 
-  // Apply genre filter if set
   if (activeGenres && activeGenres.size > 0) {
-    artists = artists.filter((a) => a.genres.some((g) => activeGenres.has(g)))
+    artists = artists.filter((artist) => artist.genres.some((genre) => activeGenres.has(genre)))
   }
 
-  // Limit by top popularity
   if (artists.length > maxArtists) {
-    artists.sort((a, b) => b.popularityAvg - a.popularityAvg)
-    artists = artists.slice(0, maxArtists)
+    const pinned = artists.filter((artist) => artist.pinned)
+    const pinnedIds = new Set(pinned.map((artist) => artist.id))
+    const ranked = artists
+      .filter((artist) => !pinnedIds.has(artist.id))
+      .sort((a, b) => b.popularityAvg - a.popularityAvg)
+      .slice(0, Math.max(0, maxArtists - pinned.length))
+    artists = [...pinned, ...ranked]
   }
 
-  const artistIdSet = new Set(artists.map((a) => a.id))
-
-  // Build genre nodes only for genres that have at least one visible artist
+  const artistIdSet = new Set(artists.map((artist) => artist.id))
   const visibleGenres = new Set()
+
   for (const artist of artists) {
-    for (const g of artist.genres) {
-      if (!activeGenres || activeGenres.has(g)) {
-        visibleGenres.add(g)
+    for (const genre of artist.genres) {
+      if (!activeGenres || activeGenres.has(genre)) {
+        visibleGenres.add(genre)
       }
     }
   }
 
-  const genres = Array.from(visibleGenres).map((g) => {
-    const gd = genreMap.get(g) || { trackCount: 0, totalPopularity: 0 }
+  const orderedVisibleGenres = Array.from(visibleGenres).sort((a, b) => a.localeCompare(b))
+  const genrePositionMap = new Map()
+  const genreRadius = Math.max(480, Math.min(900, orderedVisibleGenres.length * 22))
+
+  const genres = orderedVisibleGenres.map((genre, index) => {
+    const genreData = genreMap.get(genre) || { trackCount: 0, totalPopularity: 0 }
+    const angle = (index / Math.max(1, orderedVisibleGenres.length)) * Math.PI * 2 - Math.PI / 2
+    const position = polarPoint(angle, genreRadius)
+    genrePositionMap.set(genre, position)
+
     return {
-      id: `genre:${g}`,
-      rawId: g,
+      id: `genre:${genre}`,
+      rawId: genre,
       type: 'genre',
-      label: g,
-      trackCount: gd.trackCount,
-      popularityAvg: gd.trackCount > 0 ? gd.totalPopularity / gd.trackCount : 0,
+      label: genre,
+      trackCount: genreData.trackCount,
+      popularityAvg: genreData.trackCount > 0 ? genreData.totalPopularity / genreData.trackCount : 0,
+      x: position.x,
+      y: position.y,
+      fx: position.x,
+      fy: position.y,
     }
   })
 
-  const genreIdSet = new Set(genres.map((g) => g.id))
+  const genreIdSet = new Set(genres.map((genre) => genre.id))
 
-  // Build links
+  artists = artists.map((artist) => {
+    const primaryGenre = artist.genres.find((genre) => visibleGenres.has(genre)) || artist.genres[0]
+    const base = genrePositionMap.get(primaryGenre) || { x: 0, y: 0 }
+    const hash = hashString(artist.rawId)
+    const angle = ((hash % 360) / 360) * Math.PI * 2
+    const ring = 45 + ((Math.floor(hash / 360) % 8) * 24)
+    const jitter = artist.pinned ? 0 : (hash % 17) - 8
+    const position = polarPoint(angle, ring + jitter, base)
+
+    return {
+      ...artist,
+      primaryGenre,
+      x: position.x,
+      y: position.y,
+    }
+  })
+
   const links = []
   for (const key of pairSet) {
     const [rawArtist, rawGenre] = key.split('|||')
     const artistId = `artist:${rawArtist}`
     const genreId = `genre:${rawGenre}`
-    if (artistIdSet.has(artistId) && genreIdSet.has(genreId)) {
-      if (!activeGenres || activeGenres.has(rawGenre)) {
-        links.push({ source: artistId, target: genreId })
-      }
+    if (artistIdSet.has(artistId) && genreIdSet.has(genreId) && (!activeGenres || activeGenres.has(rawGenre))) {
+      links.push({ source: artistId, target: genreId })
     }
   }
 
-  // Build track nodes and links if requested
   const nodes = [...genres, ...artists]
   if (showTracks) {
-    for (const artist of artists) {
-      if (artist.topTracks) {
-        for (const track of artist.topTracks) {
-          const trackNodeId = `track:${artist.id}:${track.id}`
-          nodes.push({
-            id: trackNodeId,
-            rawId: track.id,
-            type: 'track',
-            label: track.name,
-            popularity: track.popularity,
-            spotifyUrl: `https://open.spotify.com/track/${track.id}`,
-            artistId: artist.id,
-            artistLabel: artist.label,
-            genre: artist.genres?.[0] || '',
-          })
-          links.push({
-            source: artist.id,
-            target: trackNodeId,
-            type: 'track-link',
-          })
-        }
+    const artistsWithTracks = artists
+      .slice()
+      .sort((a, b) => {
+        if (a.pinned && !b.pinned) return -1
+        if (!a.pinned && b.pinned) return 1
+        return b.popularityAvg - a.popularityAvg
+      })
+      .slice(0, maxTrackArtists)
+
+    for (const artist of artistsWithTracks) {
+      if (!artist.topTracks) continue
+
+      for (const track of artist.topTracks) {
+        const trackNodeId = `track:${artist.id}:${track.id}`
+        const trackAngle = ((hashString(trackNodeId) % 360) / 360) * Math.PI * 2
+        const trackPosition = polarPoint(trackAngle, 22, artist)
+
+        nodes.push({
+          id: trackNodeId,
+          rawId: track.id,
+          type: 'track',
+          label: track.name,
+          popularity: track.popularity,
+          spotifyUrl: `https://open.spotify.com/track/${track.id}`,
+          artistId: artist.id,
+          artistLabel: artist.label,
+          genre: artist.genres?.[0] || '',
+          x: trackPosition.x,
+          y: trackPosition.y,
+        })
+        links.push({
+          source: artist.id,
+          target: trackNodeId,
+          type: 'track-link',
+        })
       }
     }
   }

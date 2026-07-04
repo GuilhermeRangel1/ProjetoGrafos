@@ -12,8 +12,8 @@ export const useGraphData = () => {
   const [minPopularity, setMinPopularity] = useState(0)
   const [minGenreCount, setMinGenreCount] = useState(1)
   const [activeGenres, setActiveGenres] = useState(null) // null = all
-  const [maxArtists, setMaxArtists] = useState(1000)
-  const [showTracks, setShowTracks] = useState(true)
+  const [maxArtists, setMaxArtists] = useState(5000)
+  const [showTracks, setShowTracks] = useState(false)
 
   const load = useCallback(async () => {
     setLoadingStatus('loading')
@@ -48,12 +48,14 @@ export const useGraphData = () => {
   const graphData = useMemo(() => {
     if (!rawData) return { nodes: [], links: [] }
     return buildGraphData(rawData, {
-      minTracks: 3,
+      minTracks: 2,
       maxArtists,
       minPopularity,
       minGenreCount,
       activeGenres: activeGenres && activeGenres.size > 0 ? activeGenres : null,
       showTracks,
+      tracksPerArtist: 1,
+      maxTrackArtists: 250,
     })
   }, [rawData, minPopularity, minGenreCount, activeGenres, maxArtists, showTracks])
 

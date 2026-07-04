@@ -33,11 +33,17 @@ export default function GraphView({
     return 2.5 + t * 4 // 2.5px to 6.5px based on popularity
   }, [])
 
-  // Memoize data shape — ForceGraph re-runs simulation when this changes
-  const stableData = useMemo(() => ({
-    nodes: graphData.nodes.map((n) => ({ ...n })),
-    links: graphData.links.map((l) => ({ ...l })),
-  }), [graphData])
+  // Avoid cloning thousands of nodes/links on every graph update.
+  const stableData = useMemo(() => graphData, [graphData])
+
+  useEffect(() => {
+    const graph = fgRef.current
+    if (!graph) return
+
+    graph.d3Force('charge')?.strength(-14)
+    graph.d3Force('link')?.distance((link) => (link.type === 'track-link' ? 14 : 34)).strength(0.28)
+    graph.d3ReheatSimulation()
+  }, [fgRef, stableData])
 
   const searchLower = searchQuery ? searchQuery.toLowerCase() : ''
   const trackSearchLower = trackSearchQuery ? trackSearchQuery.toLowerCase() : ''
@@ -223,10 +229,10 @@ export default function GraphView({
       onNodeClick={handleNodeClick}
       onBackgroundClick={handleBackgroundClick}
       warmupTicks={0}
-      cooldownTicks={150}
-      cooldownTime={8000}
-      d3AlphaDecay={0.03}
-      d3VelocityDecay={0.5}
+      cooldownTicks={55}
+      cooldownTime={2200}
+      d3AlphaDecay={0.075}
+      d3VelocityDecay={0.7}
       backgroundColor="#0a0a0f"
       nodeRelSize={1}
       enableNodeDrag
