@@ -8,69 +8,69 @@
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
-<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@800&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;700;800&family=Space+Mono:wght@400;700&family=Syne:wght@800&display=swap" rel="stylesheet"/>
 <style>
-:root{--bg:#0d0d14;--surf:#13131f;--border:#252535;--accent:#6c63ff;--text:#e0e0f0;--muted:#777799}
+:root{--bg:#f6edcf;--surf:rgba(255,250,235,.9);--panel:rgba(255,249,235,.76);--border:rgba(122,98,68,.18);--accent:#5c9f79;--accent-2:#4f8fb8;--text:#334332;--muted:#746f5a;--line:#9db49b}
 *{box-sizing:border-box;margin:0;padding:0}
-body{background:var(--bg);color:var(--text);font-family:'Space Mono',monospace;
+body{background:linear-gradient(180deg,#f7edcf 0%,#d8e8c6 48%,#a9d0bf 100%);color:var(--text);font-family:'Nunito','Inter',sans-serif;
       display:flex;flex-direction:column;height:100vh;overflow:hidden}
 header{display:flex;align-items:center;justify-content:space-between;
-        padding:12px 18px;background:var(--surf);border-bottom:1px solid var(--border);flex-shrink:0}
+        padding:14px 20px;background:rgba(255,249,235,.86);border-bottom:1px solid var(--border);flex-shrink:0;
+        box-shadow:0 14px 36px rgba(80,91,61,.14);backdrop-filter:blur(14px)}
 .logo{font-family:'Syne',sans-serif;font-size:1.1rem;
-       background:linear-gradient(90deg,#6c63ff,#00c2a8);
-       -webkit-background-clip:text;-webkit-text-fill-color:transparent}
-.sub{font-size:.65rem;color:var(--muted);margin-top:2px;transition: color 0.2s;}
+       color:#2f5942;letter-spacing:.2px}
+.sub{font-size:.72rem;color:var(--muted);margin-top:3px;transition: color 0.2s;}
 .toolbar{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
-.toolbar input, .toolbar select {background:var(--bg);border:1px solid var(--border);color:var(--text);
-                font-family:inherit;font-size:.75rem;padding:4px 9px;border-radius:4px;
-                outline:none;transition:border .2s}
+.toolbar input, .toolbar select {background:rgba(255,255,248,.72);border:1px solid var(--border);color:var(--text);
+                font-family:inherit;font-size:.76rem;padding:7px 11px;border-radius:999px;
+                outline:none;transition:border .2s, box-shadow .2s}
 .toolbar input:focus, .toolbar select:focus {border-color:var(--accent)}
 .toolbar select { cursor: pointer; }
-.toolbar button{background:var(--bg);border:1px solid var(--border);color:var(--text);
-                 font-family:inherit;font-size:.7rem;padding:4px 10px;border-radius:4px;
+.toolbar button{background:rgba(255,255,248,.72);border:1px solid var(--border);color:var(--text);
+                 font-family:inherit;font-size:.72rem;padding:7px 12px;border-radius:999px;
                  cursor:pointer;transition: all .2s}
-.toolbar button:hover{background:var(--border)}
-.toolbar button.active{background:var(--accent);border-color:var(--accent);color:#fff}
+.toolbar button:hover{background:#fff9eb;border-color:#8cbf99;box-shadow:0 8px 20px rgba(92,159,121,.15)}
+.toolbar button.active{background:#5c9f79;border-color:#5c9f79;color:#fff}
 main{display:flex;flex:1;overflow:hidden; width: 100%;}
 
 #map-container {display:flex;flex:1; width:100%;}
 #map{flex:1}
-#sidebar{width:235px;background:var(--surf);border-left:1px solid var(--border);
-          overflow-y:auto;flex-shrink:0;padding:12px 10px;
+#sidebar{width:272px;background:rgba(255,249,235,.84);border-left:1px solid var(--border);
+          overflow-y:auto;flex-shrink:0;padding:16px 14px;
           display:flex;flex-direction:column;gap:13px}
 
-.dash-panel { display: flex; flex-direction: column; background: var(--bg); border: 1px solid var(--border); border-radius: 5px; padding: 9px; margin-bottom: 5px;}
-.metric-box { background: var(--surf); padding: 8px; border-radius: 4px; border-left: 3px solid var(--accent); margin-bottom: 5px; }
+.dash-panel { display: flex; flex-direction: column; background: var(--panel); border: 1px solid var(--border); border-radius: 16px; padding: 12px; margin-bottom: 5px; box-shadow:0 14px 32px rgba(80,91,61,.10);}
+.metric-box { background: rgba(255,255,248,.7); padding: 10px; border-radius: 12px; border-left: 4px solid var(--accent); margin-bottom: 6px; }
 .metric-box:last-child { margin-bottom: 0; }
-.metric-title { font-size: 0.6rem; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; }
-.metric-value { font-size: 1.1rem; font-family: 'Syne', sans-serif; font-weight: 800; color: #fff; margin-top: 3px;}
+.metric-title { font-size: 0.62rem; color: var(--muted); text-transform: uppercase; letter-spacing: .8px; }
+.metric-value { font-size: 1.16rem; font-family: 'Syne', sans-serif; font-weight: 800; color: #2f5942; margin-top: 3px;}
 
 .ptitle{font-family:'Syne',sans-serif;font-size:.67rem;text-transform:uppercase;
-         letter-spacing:2px;color:var(--muted);margin-bottom:4px}
+         letter-spacing:1.4px;color:#5e7f62;margin-bottom:6px}
 .leg-item{display:flex;align-items:center;gap:7px;font-size:.68rem;margin-bottom:3px}
-.leg-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
-.ibox{background:var(--bg);border:1px solid var(--border);border-radius:5px;
-       padding:9px;font-size:.68rem;line-height:1.65;min-height:80px;color:var(--muted)}
+.leg-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0;box-shadow:0 0 0 3px rgba(255,255,248,.7)}
+.ibox{background:rgba(255,255,248,.66);border:1px solid var(--border);border-radius:14px;
+       padding:11px;font-size:.72rem;line-height:1.65;min-height:80px;color:var(--muted)}
 .ibox b{color:var(--text)}
-.pbox{background:var(--bg);border:1px solid var(--border);border-radius:5px;
+.pbox{background:rgba(255,255,248,.66);border:1px solid var(--border);border-radius:14px;
        padding:7px;font-size:.64rem;line-height:1.75;word-break:break-all}
-.pr{color:#ff7070} .pm{color:#70b8ff}
-#statusbar{padding:3px 14px;font-size:.62rem;color:var(--muted);
-            background:var(--surf);border-top:1px solid var(--border);flex-shrink:0}
-.rota-input{background:var(--bg);border:1px solid var(--border);color:var(--text);
-             font-family:inherit;font-size:.75rem;padding:5px 8px;border-radius:4px;
+.pr{color:#c95b50} .pm{color:#4f8fb8}
+#statusbar{padding:6px 16px;font-size:.68rem;color:var(--muted);
+            background:rgba(255,249,235,.86);border-top:1px solid var(--border);flex-shrink:0}
+.rota-input{background:rgba(255,255,248,.72);border:1px solid var(--border);color:var(--text);
+             font-family:inherit;font-size:.75rem;padding:8px 10px;border-radius:999px;
              width:100%;outline:none;text-transform:uppercase;transition:border .2s}
 .rota-input:focus{border-color:var(--accent)}
-.leaflet-tile{filter:brightness(.42) saturate(.55) hue-rotate(195deg)}
-.leaflet-container{background:#0d0d14}
+.leaflet-tile{filter:saturate(.72) sepia(.12) brightness(1.04) hue-rotate(18deg)}
+.leaflet-container{background:#d6e5c8}
 .ap-dot{border-radius:50%;border:2px solid #fff;display:flex;align-items:center;
-         justify-content:center;font-family:'Space Mono',monospace;font-weight:700;
-         color:#fff;cursor:pointer;box-shadow:0 0 10px rgba(0,0,0,.8);
+         justify-content:center;font-family:'Nunito',sans-serif;font-weight:800;
+         color:#fff;cursor:pointer;box-shadow:0 8px 18px rgba(61,78,49,.22), inset 0 0 0 1px rgba(255,255,255,.36);
          transition:transform .15s, box-shadow .15s;}
-.ap-dot:hover{transform:scale(1.3);box-shadow:0 0 16px rgba(255,255,255,.3)}
+.ap-dot:hover{transform:scale(1.25);box-shadow:0 12px 28px rgba(61,78,49,.28), inset 0 0 0 1px rgba(255,255,255,.7)}
 
 #charts-container {
-    display: none; flex: 1; width: 100%; overflow-y: auto; padding: 30px 40px; background: #09090f;
+    display: none; flex: 1; width: 100%; overflow-y: auto; padding: 30px 40px; background:linear-gradient(180deg,#f7edcf 0%,#d8e8c6 100%);
 }
 
 .charts-grid {
@@ -81,7 +81,7 @@ main{display:flex;flex:1;overflow:hidden; width: 100%;}
     margin: 0 auto;
 }
 .chart-card {
-    background: var(--surf); border: 1px solid var(--border); border-radius: 12px; padding: 25px; box-shadow: 0 10px 30px rgba(0,0,0,0.4);
+    background: var(--surf); border: 1px solid var(--border); border-radius: 18px; padding: 25px; box-shadow: 0 16px 36px rgba(80,91,61,.13);
     display: flex; flex-direction: column; justify-content: space-between; min-height: 400px;
 }
 .col-span-2 { grid-column: span 2; }
@@ -98,11 +98,11 @@ main{display:flex;flex:1;overflow:hidden; width: 100%;}
     .col-span-2, .col-span-3, .col-span-6 { grid-column: 1 / -1; }
 }
 
-.chart-card h3 { font-family: 'Syne', sans-serif; font-size: 0.95rem; margin-bottom: 8px; color: #00c2a8; text-transform: uppercase; letter-spacing: 1px; text-align: center; }
+.chart-card h3 { font-family: 'Syne', sans-serif; font-size: 0.95rem; margin-bottom: 8px; color: #2f5942; text-transform: uppercase; letter-spacing: 1px; text-align: center; }
 .chart-controls { display: flex; gap: 8px; justify-content: center; margin-bottom: 15px; flex-wrap: wrap; }
 .chart-controls button, .chart-controls select {
-    background: var(--bg); border: 1px solid var(--border); color: var(--text); padding: 4px 10px; font-size: 0.68rem;
-    font-family: inherit; border-radius: 4px; cursor: pointer; outline: none; transition: all 0.2s;
+    background: rgba(255,255,248,.72); border: 1px solid var(--border); color: var(--text); padding: 6px 12px; font-size: 0.68rem;
+    font-family: inherit; border-radius: 999px; cursor: pointer; outline: none; transition: all 0.2s;
 }
 .chart-controls button:hover, .chart-controls select:hover { border-color: var(--accent); }
 .chart-controls button.active { background: var(--accent); border-color: var(--accent); color: white; }
@@ -116,15 +116,15 @@ main{display:flex;flex:1;overflow:hidden; width: 100%;}
 <body>
 <header>
   <div>
-    <div class="logo">✈ AeroBrasil Graph</div>
-    <div id="app-subtitle" class="sub">Rede de Aeroportos — Grafo Interativo</div>
+    <div class="logo">DataGraph Aeroportos</div>
+    <div id="app-subtitle" class="sub">Rede de Aeroportos â€” Grafo Interativo</div>
   </div>
   <div class="toolbar">
-    <button id="btn-tab" onclick="toggleView()" style="border-color:#00c2a8; color:#00c2a8; font-weight:bold; padding: 5px 12px;">📊 Ver Gráficos</button>
+    <button id="btn-tab" onclick="toggleView()" style="border-color:#5c9f79; color:#2f5942; font-weight:bold;">Ver Graficos</button>
     <div class="map-ui" style="width: 1px; height: 16px; background: var(--border); margin: 0 4px;"></div>
     
     <select id="ux-regiao" class="map-ui" onchange="applyFilters()">
-        <option value="Todas">Todas Regiões</option>
+        <option value="Todas">Todas RegiÃµes</option>
         <option value="Norte">Norte</option><option value="Nordeste">Nordeste</option>
         <option value="Centro-Oeste">Centro-Oeste</option><option value="Sudeste">Sudeste</option><option value="Sul">Sul</option>
     </select>
@@ -133,10 +133,10 @@ main{display:flex;flex:1;overflow:hidden; width: 100%;}
         <option value="10">Grau > 10 (Hubs)</option><option value="15">Grau > 15</option>
     </select>
 
-    <input id="search-box" list="iata-list" class="map-ui" placeholder="Buscar IATA…" oninput="searchNode()" style="width:130px;"/>
-    <button class="map-ui" onclick="resetView()">↺ Reset</button>
-    <button id="btn-rpo" class="map-ui" onclick="highlightPath('rpo')">REC → POA</button>
-    <button id="btn-msp" class="map-ui" onclick="highlightPath('msp')">MAO → GRU</button>
+    <input id="search-box" list="iata-list" class="map-ui" placeholder="Buscar IATAâ€¦" oninput="searchNode()" style="width:130px;"/>
+    <button class="map-ui" onclick="resetView()">â†º Reset</button>
+    <button id="btn-rpo" class="map-ui" onclick="highlightPath('rpo')">REC â†’ POA</button>
+    <button id="btn-msp" class="map-ui" onclick="highlightPath('msp')">MAO â†’ GRU</button>
     <button class="map-ui" onclick="limparRota()">Limpar Rota</button>
   </div>
 </header>
@@ -146,34 +146,34 @@ main{display:flex;flex:1;overflow:hidden; width: 100%;}
     <div id="sidebar">
       
       <div class="dash-panel">
-          <div class="ptitle" style="margin-bottom: 8px;">Painel de Métricas (Ego)</div>
+          <div class="ptitle" style="margin-bottom: 8px;">Painel de MÃ©tricas (Ego)</div>
           <div style="display:flex; gap:5px; margin-bottom: 5px;">
-              <div class="metric-box" style="flex:1; border-left-color: #00c2a8;">
-                  <div class="metric-title">Nós</div>
+              <div class="metric-box" style="flex:1; border-left-color: #5c9f79;">
+                  <div class="metric-title">NÃ³s</div>
                   <div class="metric-value" id="metric-ordem">--</div>
               </div>
-              <div class="metric-box" style="flex:1; border-left-color: #e84393;">
+              <div class="metric-box" style="flex:1; border-left-color: #c9767d;">
                   <div class="metric-title">Dens.</div>
                   <div class="metric-value" id="metric-densidade">--</div>
               </div>
           </div>
-          <div class="metric-box" style="border-left-color: #6c63ff;">
-              <div class="metric-title">Arestas (Conexões)</div>
+          <div class="metric-box" style="border-left-color: #4f8fb8;">
+              <div class="metric-title">Arestas (ConexÃµes)</div>
               <div class="metric-value" id="metric-arestas">--</div>
           </div>
       </div>
 
       <div>
-        <div class="ptitle">Legenda — Regiões</div>
+        <div class="ptitle">Legenda â€” RegiÃµes</div>
         <div id="legend"></div>
       </div>
       <div>
-        <div class="ptitle">Buscar Rota Mínima</div>
+        <div class="ptitle">Buscar Rota MÃ­nima</div>
         <div style="display:flex;flex-direction:column;gap:5px">
           <input id="rota-origem" list="iata-list" class="rota-input" placeholder="Origem (ex: REC)" maxlength="3"/>
           <input id="rota-destino" list="iata-list" class="rota-input" placeholder="Destino (ex: POA)" maxlength="3"/>
-          <button onclick="buscarRota()" style="margin-top:2px;padding:5px;background:var(--accent);border:none;color:#fff;border-radius:4px;cursor:pointer;font-family:inherit;font-size:.72rem;font-weight:700">🔍 Calcular Rota</button>
-          <button onclick="limparRota()" style="padding:4px;background:var(--bg);border:1px solid var(--border);color:var(--muted);border-radius:4px;cursor:pointer;font-family:inherit;font-size:.68rem">✕ Limpar tudo</button>
+          <button onclick="buscarRota()" style="margin-top:2px;padding:8px;background:var(--accent);border:none;color:#fff;border-radius:999px;cursor:pointer;font-family:inherit;font-size:.72rem;font-weight:800">Calcular rota</button>
+          <button onclick="limparRota()" style="padding:7px;background:rgba(255,255,248,.72);border:1px solid var(--border);color:var(--muted);border-radius:999px;cursor:pointer;font-family:inherit;font-size:.68rem">Limpar tudo</button>
         </div>
         <div class="ibox" id="rota-result" style="margin-top:6px;min-height:60px">Digite origem e destino para calcular.</div>
       </div>
@@ -187,8 +187,8 @@ main{display:flex;flex:1;overflow:hidden; width: 100%;}
   <div id="charts-container">
     <div class="charts-grid">
       <div class="col-span-6" style="margin-bottom: 5px; border-bottom: 1px solid var(--border); padding-bottom: 15px;">
-         <h2 style="font-family: 'Syne', sans-serif; color: var(--text); font-size: 1.4rem;">Análise Topológica Interativa (Módulo AVD)</h2>
-         <p style="color: var(--muted); font-size: 0.8rem; margin-top: 6px;">Visualizações geradas dinamicamente com base nas leis de Gestalt aplicadas aos dados do Grafo.</p>
+         <h2 style="font-family: 'Syne', sans-serif; color: var(--text); font-size: 1.4rem;">AnÃ¡lise TopolÃ³gica Interativa (MÃ³dulo AVD)</h2>
+         <p style="color: var(--muted); font-size: 0.8rem; margin-top: 6px;">VisualizaÃ§Ãµes geradas dinamicamente com base nas leis de Gestalt aplicadas aos dados do Grafo.</p>
       </div>
 
       <div class="chart-card col-span-2">
@@ -206,10 +206,10 @@ main{display:flex;flex:1;overflow:hidden; width: 100%;}
       </div>
 
       <div class="chart-card col-span-2">
-          <h3>Distribuição de Graus</h3>
+          <h3>DistribuiÃ§Ã£o de Graus</h3>
           <div class="chart-controls">
-              <button id="dist-line-btn" class="active" onclick="updateDistributionType('line')">Visão em Linha</button>
-              <button id="dist-bar-btn" onclick="updateDistributionType('bar')">Visão em Histograma</button>
+              <button id="dist-line-btn" class="active" onclick="updateDistributionType('line')">VisÃ£o em Linha</button>
+              <button id="dist-bar-btn" onclick="updateDistributionType('bar')">VisÃ£o em Histograma</button>
           </div>
           <div class="chart-wrapper">
               <canvas id="chart-distribuicao"></canvas>
@@ -218,27 +218,27 @@ main{display:flex;flex:1;overflow:hidden; width: 100%;}
       </div>
 
       <div class="chart-card col-span-2">
-          <h3>Perfil e Análise Multivariada das Regiões</h3>
+          <h3>Perfil e AnÃ¡lise Multivariada das RegiÃµes</h3>
           <div class="chart-controls">
-              <span style="font-size:0.65rem; color:var(--muted); align-self:center;">Métrica:</span>
+              <span style="font-size:0.65rem; color:var(--muted); align-self:center;">MÃ©trica:</span>
               <select id="region-var-select" onchange="updateRegionsChart(this.value)">
                   <option value="count">Volume de Aeroportos (Contagem)</option>
-                  <option value="avg_degree">Grau Médio Regional</option>
-                  <option value="max_degree">Grau Máximo Encontrado</option>
+                  <option value="avg_degree">Grau MÃ©dio Regional</option>
+                  <option value="max_degree">Grau MÃ¡ximo Encontrado</option>
               </select>
           </div>
           <div class="chart-wrapper">
               <canvas id="chart-regioes-multi"></canvas>
           </div>
-          <p>Alternância dinâmica de variáveis estruturais agrupadas por macrorregião geográfica.</p>
+          <p>AlternÃ¢ncia dinÃ¢mica de variÃ¡veis estruturais agrupadas por macrorregiÃ£o geogrÃ¡fica.</p>
       </div>
 
       <div class="chart-card col-span-3">
-          <h3>Dispersão Interna: Boxplot de Graus</h3>
+          <h3>DispersÃ£o Interna: Boxplot de Graus</h3>
           <div class="chart-wrapper">
               <canvas id="chart-boxplot"></canvas>
           </div>
-          <p>Análise estatística descritiva (Mín, Q1, Mediana, Q3, Máx) mapeando assimetrias internas.</p>
+          <p>AnÃ¡lise estatÃ­stica descritiva (MÃ­n, Q1, Mediana, Q3, MÃ¡x) mapeando assimetrias internas.</p>
       </div>
 
       <div class="chart-card col-span-3">
@@ -246,72 +246,72 @@ main{display:flex;flex:1;overflow:hidden; width: 100%;}
           <div class="chart-wrapper">
               <canvas id="chart-bubbles"></canvas>
           </div>
-          <p>Tamanho da bolha = Quantidade de Aeroportos. Identifica a eficiência estrutural média por macro-região.</p>
+          <p>Tamanho da bolha = Quantidade de Aeroportos. Identifica a eficiÃªncia estrutural mÃ©dia por macro-regiÃ£o.</p>
       </div>
 
       <div class="chart-card col-span-3">
-          <h3>Heatmap: Perfil Regional da Rede Aérea</h3>
+          <h3>Heatmap: Perfil Regional da Rede AÃ©rea</h3>
           <div class="chart-wrapper" id="chart-heatmap-wrapper" style="display:flex; align-items:center; justify-content:center; padding: 10px;">
               
           </div>
-          <p>Avaliação das métricas da Rede Ego (Ordem, Tamanho e Densidade) agregadas pela mediana de cada macrorregião.</p>
+          <p>AvaliaÃ§Ã£o das mÃ©tricas da Rede Ego (Ordem, Tamanho e Densidade) agregadas pela mediana de cada macrorregiÃ£o.</p>
       </div>
 
       <div class="chart-card col-span-3">
-          <h3>Dispersão: Grau do Vértice vs Densidade Ego</h3>
+          <h3>DispersÃ£o: Grau do VÃ©rtice vs Densidade Ego</h3>
           <div class="chart-wrapper">
               <canvas id="chart-scatter"></canvas>
           </div>
-          <p>Correlação Grau x Densidade. <b style="color:#e0e0f0;">Dica: Clique em um ponto para ver no mapa!</b></p>
+          <p>CorrelaÃ§Ã£o Grau x Densidade. <b style="color:#e0e0f0;">Dica: Clique em um ponto para ver no mapa!</b></p>
       </div>
 
       <div class="col-span-6" style="margin-top: 30px; border-bottom: 1px solid var(--border); padding-bottom: 15px;">
-         <h2 style="font-family: 'Syne', sans-serif; color: var(--text); font-size: 1.4rem;">📖 Storytelling Analítico & Insights do Grafo</h2>
-         <p style="color: var(--muted); font-size: 0.8rem; margin-top: 6px;">Discussão Crítica e Conclusões Acionáveis baseadas nas métricas e leis da Gestalt.</p>
+         <h2 style="font-family: 'Syne', sans-serif; color: var(--text); font-size: 1.4rem;">ðŸ“– Storytelling AnalÃ­tico & Insights do Grafo</h2>
+         <p style="color: var(--muted); font-size: 0.8rem; margin-top: 6px;">DiscussÃ£o CrÃ­tica e ConclusÃµes AcionÃ¡veis baseadas nas mÃ©tricas e leis da Gestalt.</p>
       </div>
 
       <div class="chart-card col-span-3" style="min-height: auto; border-top: 4px solid var(--accent);">
-          <h3 style="text-align: left; color: var(--accent); margin-bottom: 10px;">1. Exploração Visual & Topologia</h3>
+          <h3 style="text-align: left; color: var(--accent); margin-bottom: 10px;">1. ExploraÃ§Ã£o Visual & Topologia</h3>
           <div id="insight-1" style="font-size: 0.8rem; line-height: 1.6; color: var(--text); text-align: justify;"></div>
       </div>
 
-      <div class="chart-card col-span-3" style="min-height: auto; border-top: 4px solid #f5a623;">
-          <h3 style="text-align: left; color: #f5a623; margin-bottom: 10px;">2. Modelagem & Leis da Gestalt</h3>
+      <div class="chart-card col-span-3" style="min-height: auto; border-top: 4px solid #d9a84e;">
+          <h3 style="text-align: left; color: #d9a84e; margin-bottom: 10px;">2. Modelagem & Leis da Gestalt</h3>
           <div id="insight-2" style="font-size: 0.8rem; line-height: 1.6; color: var(--text); text-align: justify;"></div>
       </div>
 
       <div class="chart-card col-span-3" style="min-height: auto; border-top: 4px solid #ff7070;">
-          <h3 style="text-align: left; color: #ff7070; margin-bottom: 10px;">3. Discussão Crítica & Limitações</h3>
+          <h3 style="text-align: left; color: #ff7070; margin-bottom: 10px;">3. DiscussÃ£o CrÃ­tica & LimitaÃ§Ãµes</h3>
           <div id="insight-3" style="font-size: 0.8rem; line-height: 1.6; color: var(--text); text-align: justify;"></div>
       </div>
 
-      <div class="chart-card col-span-3" style="min-height: auto; border-top: 4px solid #00c2a8;">
-          <h3 style="text-align: left; color: #00c2a8; margin-bottom: 10px;">4. Conclusão & Insights Acionáveis</h3>
+      <div class="chart-card col-span-3" style="min-height: auto; border-top: 4px solid #5c9f79;">
+          <h3 style="text-align: left; color: #5c9f79; margin-bottom: 10px;">4. ConclusÃ£o & Insights AcionÃ¡veis</h3>
           <div id="insight-4" style="font-size: 0.8rem; line-height: 1.6; color: var(--text); text-align: justify;"></div>
       </div>
 
     </div>
   </div>
 </main>
-<div id="statusbar">Carregando mapa…</div>
+<div id="statusbar">Carregando mapaâ€¦</div>
 
 <script>
-const AP       = {"REC": {"cidade": "Recife", "regiao": "Nordeste", "lat": -8.1264, "lon": -34.9236, "color": "#f5a623", "grau": "16", "ordem_ego": "17", "tamanho_ego": "16", "densidade_ego": "0.118"}, "SSA": {"cidade": "Salvador", "regiao": "Nordeste", "lat": -12.9086, "lon": -38.3225, "color": "#f5a623", "grau": "14", "ordem_ego": "15", "tamanho_ego": "14", "densidade_ego": "0.133"}, "FOR": {"cidade": "Fortaleza", "regiao": "Nordeste", "lat": -3.7763, "lon": -38.5326, "color": "#f5a623", "grau": "11", "ordem_ego": "12", "tamanho_ego": "11", "densidade_ego": "0.167"}, "NAT": {"cidade": "Natal", "regiao": "Nordeste", "lat": -5.9114, "lon": -35.2477, "color": "#f5a623", "grau": "8", "ordem_ego": "9", "tamanho_ego": "8", "densidade_ego": "0.222"}, "JPA": {"cidade": "João Pessoa", "regiao": "Nordeste", "lat": -7.1458, "lon": -34.9508, "color": "#f5a623", "grau": "7", "ordem_ego": "8", "tamanho_ego": "7", "densidade_ego": "0.25"}, "GRU": {"cidade": "São Paulo", "regiao": "Sudeste", "lat": -23.4356, "lon": -46.4731, "color": "#e84393", "grau": "18", "ordem_ego": "19", "tamanho_ego": "18", "densidade_ego": "0.105"}, "CGH": {"cidade": "São Paulo", "regiao": "Sudeste", "lat": -23.6261, "lon": -46.6564, "color": "#e84393", "grau": "14", "ordem_ego": "15", "tamanho_ego": "14", "densidade_ego": "0.133"}, "GIG": {"cidade": "Rio de Janeiro", "regiao": "Sudeste", "lat": -22.8099, "lon": -43.2505, "color": "#e84393", "grau": "17", "ordem_ego": "18", "tamanho_ego": "17", "densidade_ego": "0.111"}, "CNF": {"cidade": "Belo Horizonte", "regiao": "Sudeste", "lat": -19.6244, "lon": -43.9719, "color": "#e84393", "grau": "19", "ordem_ego": "20", "tamanho_ego": "19", "densidade_ego": "0.1"}, "VIX": {"cidade": "Vitória", "regiao": "Sudeste", "lat": -20.2581, "lon": -40.2864, "color": "#e84393", "grau": "7", "ordem_ego": "8", "tamanho_ego": "7", "densidade_ego": "0.25"}, "BSB": {"cidade": "Brasília", "regiao": "Centro-Oeste", "lat": -15.8711, "lon": -47.9186, "color": "#ff6b35", "grau": "19", "ordem_ego": "20", "tamanho_ego": "19", "densidade_ego": "0.1"}, "GYN": {"cidade": "Goiânia", "regiao": "Centro-Oeste", "lat": -16.6319, "lon": -49.2206, "color": "#ff6b35", "grau": "7", "ordem_ego": "8", "tamanho_ego": "7", "densidade_ego": "0.25"}, "CWB": {"cidade": "Curitiba", "regiao": "Sul", "lat": -25.5285, "lon": -49.1758, "color": "#6c63ff", "grau": "7", "ordem_ego": "8", "tamanho_ego": "7", "densidade_ego": "0.25"}, "FLN": {"cidade": "Florianópolis", "regiao": "Sul", "lat": -27.6703, "lon": -48.5478, "color": "#6c63ff", "grau": "7", "ordem_ego": "8", "tamanho_ego": "7", "densidade_ego": "0.25"}, "POA": {"cidade": "Porto Alegre", "regiao": "Sul", "lat": -29.9939, "lon": -51.1714, "color": "#6c63ff", "grau": "9", "ordem_ego": "10", "tamanho_ego": "9", "densidade_ego": "0.2"}, "MAO": {"cidade": "Manaus", "regiao": "Norte", "lat": -3.0386, "lon": -60.0497, "color": "#00c2a8", "grau": "9", "ordem_ego": "10", "tamanho_ego": "9", "densidade_ego": "0.2"}, "BEL": {"cidade": "Belém", "regiao": "Norte", "lat": -1.3792, "lon": -48.4761, "color": "#00c2a8", "grau": "7", "ordem_ego": "8", "tamanho_ego": "7", "densidade_ego": "0.25"}, "PVH": {"cidade": "Porto Velho", "regiao": "Norte", "lat": -8.7093, "lon": -63.9023, "color": "#00c2a8", "grau": "4", "ordem_ego": "5", "tamanho_ego": "4", "densidade_ego": "0.4"}, "RBR": {"cidade": "Rio Branco", "regiao": "Norte", "lat": -9.8688, "lon": -67.8981, "color": "#00c2a8", "grau": "4", "ordem_ego": "5", "tamanho_ego": "4", "densidade_ego": "0.4"}, "THE": {"cidade": "Teresina", "regiao": "Nordeste", "lat": -5.06, "lon": -42.8236, "color": "#f5a623", "grau": "8", "ordem_ego": "9", "tamanho_ego": "8", "densidade_ego": "0.222"}};
-const EDGES    = [{"from": "REC", "to": "SSA", "tipo": "regional", "just": "mesma região", "peso": 649.0}, {"from": "REC", "to": "FOR", "tipo": "regional", "just": "mesma região", "peso": 626.0}, {"from": "REC", "to": "NAT", "tipo": "regional", "just": "mesma região", "peso": 266.0}, {"from": "REC", "to": "JPA", "tipo": "regional", "just": "mesma região", "peso": 108.0}, {"from": "REC", "to": "GRU", "tipo": "hub", "just": "conexão via hub nacional", "peso": 2099.0}, {"from": "REC", "to": "CGH", "tipo": "hub", "just": "conexão via hub nacional", "peso": 2128.0}, {"from": "REC", "to": "GIG", "tipo": "hub", "just": "conexão via hub nacional", "peso": 1857.0}, {"from": "REC", "to": "CNF", "tipo": "hub", "just": "conexão via hub nacional", "peso": 1606.0}, {"from": "REC", "to": "VIX", "tipo": "ponto a ponto", "just": "conexão ponto a ponto", "peso": 1466.0}, {"from": "REC", "to": "BSB", "tipo": "hub", "just": "conexão via hub nacional", "peso": 1653.0}, {"from": "REC", "to": "GYN", "tipo": "inter-regional", "just": "conexão média entre regiões", "peso": 1815.0}, {"from": "REC", "to": "FLN", "tipo": "inter-regional", "just": "conexão média entre regiões", "peso": 2601.0}, {"from": "REC", "to": "POA", "tipo": "inter-regional", "just": "conexão média entre regiões", "peso": 2961.0}, {"from": "REC", "to": "MAO", "tipo": "inter-regional", "just": "conexão média entre regiões", "peso": 2834.0}, {"from": "REC", "to": "BEL", "tipo": "inter-regional", "just": "conexão média entre regiões", "peso": 1677.0}, {"from": "REC", "to": "THE", "tipo": "regional", "just": "mesma região", "peso": 935.0}, {"from": "SSA", "to": "FOR", "tipo": "regional", "just": "mesma região", "peso": 1014.0}, {"from": "SSA", "to": "NAT", "tipo": "regional", "just": "mesma região", "peso": 856.0}, {"from": "SSA", "to": "JPA", "tipo": "regional", "just": "mesma região", "peso": 739.0}, {"from": "SSA", "to": "GRU", "tipo": "hub", "just": "conexão via hub nacional", "peso": 1450.0}, {"from": "SSA", "to": "CGH", "tipo": "hub", "just": "conexão via hub nacional", "peso": 1479.0}, {"from": "SSA", "to": "GIG", "tipo": "hub", "just": "conexão via hub nacional", "peso": 1217.0}, {"from": "SSA", "to": "CNF", "tipo": "hub", "just": "conexão via hub nacional", "peso": 958.0}, {"from": "SSA", "to": "VIX", "tipo": "ponto a ponto", "just": "conexão ponto a ponto", "peso": 842.0}, {"from": "SSA", "to": "BSB", "tipo": "inter-regional", "just": "conexão média entre regiões", "peso": 1083.0}, {"from": "SSA", "to": "GYN", "tipo": "inter-regional", "just": "conexão média entre regiões", "peso": 1241.0}, {"from": "SSA", "to": "CWB", "tipo": "inter-regional", "just": "conexão média entre regiões", "peso": 1802.0}, {"from": "SSA", "to": "POA", "tipo": "inter-regional", "just": "conexão média entre regiões", "peso": 2313.0}, {"from": "SSA", "to": "THE", "tipo": "regional", "just": "mesma região", "peso": 1001.0}, {"from": "FOR", "to": "NAT", "tipo": "regional", "just": "mesma região", "peso": 414.0}, {"from": "FOR", "to": "GRU", "tipo": "hub", "just": "conexão via hub nacional", "peso": 2345.0}, {"from": "FOR", "to": "CGH", "tipo": "hub", "just": "conexão via hub nacional", "peso": 2372.0}, {"from": "FOR", "to": "GIG", "tipo": "hub", "just": "conexão via hub nacional", "peso": 2174.0}, {"from": "FOR", "to": "CNF", "tipo": "hub", "just": "conexão via hub nacional", "peso": 1857.0}, {"from": "FOR", "to": "BSB", "tipo": "hub", "just": "conexão via hub nacional", "peso": 1690.0}, {"from": "FOR", "to": "MAO", "tipo": "inter-regional", "just": "conexão média entre regiões", "peso": 2388.0}, {"from": "FOR", "to": "BEL", "tipo": "inter-regional", "just": "conexão média entre regiões", "peso": 1135.0}, {"from": "FOR", "to": "THE", "tipo": "regional", "just": "mesma região", "peso": 496.0}, {"from": "NAT", "to": "BSB", "tipo": "hub", "just": "conexão via hub nacional", "peso": 1769.0}, {"from": "NAT", "to": "CNF", "tipo": "hub", "just": "conexão via hub nacional", "peso": 1799.0}, {"from": "NAT", "to": "GRU", "tipo": "hub", "just": "conexão via hub nacional", "peso": 2293.0}, {"from": "NAT", "to": "CGH", "tipo": "hub", "just": "conexão via hub nacional", "peso": 2322.0}, {"from": "NAT", "to": "GIG", "tipo": "hub", "just": "conexão via hub nacional", "peso": 2073.0}, {"from": "JPA", "to": "GRU", "tipo": "hub", "just": "conexão via hub nacional", "peso": 2187.0}, {"from": "JPA", "to": "CGH", "tipo": "hub", "just": "conexão via hub nacional", "peso": 2216.0}, {"from": "JPA", "to": "GIG", "tipo": "hub", "just": "conexão via hub nacional", "peso": 1954.0}, {"from": "JPA", "to": "CNF", "tipo": "hub", "just": "conexão via hub nacional", "peso": 1695.0}, {"from": "JPA", "to": "BSB", "tipo": "hub", "just": "conexão via hub nacional", "peso": 1711.0}, {"from": "GRU", "to": "GIG", "tipo": "hub", "just": "conexão via hub nacional", "peso": 336.0}, {"from": "GRU", "to": "CNF", "tipo": "hub", "just": "conexão via hub nacional", "peso": 494.0}, {"from": "GRU", "to": "VIX", "tipo": "regional", "just": "mesma região", "peso": 727.0}, {"from": "GRU", "to": "BSB", "tipo": "hub", "just": "conexão via hub nacional", "peso": 853.0}, {"from": "GRU", "to": "GYN", "tipo": "inter-regional", "just": "conexão média entre regiões", "peso": 808.0}, {"from": "GRU", "to": "CWB", "tipo": "inter-regional", "just": "conexão média entre regiões", "peso": 359.0}, {"from": "GRU", "to": "FLN", "tipo": "inter-regional", "just": "conexão média entre regiões", "peso": 515.0}, {"from": "GRU", "to": "POA", "tipo": "inter-regional", "just": "conexão média entre regiões", "peso": 864.0}, {"from": "GRU", "to": "MAO", "tipo": "inter-regional", "just": "conexão média entre regiões", "peso": 2696.0}, {"from": "GRU", "to": "BEL", "tipo": "inter-regional", "just": "conexão média entre regiões", "peso": 2459.0}, {"from": "GRU", "to": "PVH", "tipo": "inter-regional", "just": "conexão média entre regiões", "peso": 2472.0}, {"from": "GRU", "to": "RBR", "tipo": "inter-regional", "just": "conexão média entre regiões", "peso": 2726.0}, {"from": "GRU", "to": "THE", "tipo": "inter-regional", "just": "conexão média entre regiões", "peso": 2078.0}, {"from": "CGH", "to": "GIG", "tipo": "hub", "just": "conexão via hub nacional", "peso": 359.0}, {"from": "CGH", "to": "CNF", "tipo": "hub", "just": "conexão via hub nacional", "peso": 523.0}, {"from": "CGH", "to": "VIX", "tipo": "regional", "just": "mesma região", "peso": 755.0}, {"from": "CGH", "to": "BSB", "tipo": "hub", "just": "conexão via hub nacional", "peso": 871.0}, {"from": "CGH", "to": "GYN", "tipo": "inter-regional", "just": "conexão média entre regiões", "peso": 821.0}, {"from": "CGH", "to": "CWB", "tipo": "inter-regional", "just": "conexão média entre regiões", "peso": 330.0}, {"from": "CGH", "to": "FLN", "tipo": "inter-regional", "just": "conexão média entre regiões", "peso": 488.0}, {"from": "CGH", "to": "POA", "tipo": "inter-regional", "just": "conexão média entre regiões", "peso": 837.0}, {"from": "CGH", "to": "THE", "tipo": "inter-regional", "just": "conexão média entre regiões", "peso": 2103.0}, {"from": "GIG", "to": "CNF", "tipo": "hub", "just": "conexão via hub nacional", "peso": 360.0}, {"from": "GIG", "to": "VIX", "tipo": "regional", "just": "mesma região", "peso": 417.0}, {"from": "GIG", "to": "BSB", "tipo": "hub", "just": "conexão via hub nacional", "peso": 912.0}, {"from": "GIG", "to": "GYN", "tipo": "inter-regional", "just": "conexão média entre regiões", "peso": 927.0}, {"from": "GIG", "to": "CWB", "tipo": "inter-regional", "just": "conexão média entre regiões", "peso": 671.0}, {"from": "GIG", "to": "FLN", "tipo": "inter-regional", "just": "conexão média entre regiões", "peso": 758.0}, {"from": "GIG", "to": "POA", "tipo": "inter-regional", "just": "conexão média entre regiões", "peso": 1120.0}, {"from": "GIG", "to": "MAO", "tipo": "inter-regional", "just": "conexão média entre regiões", "peso": 2845.0}, {"from": "GIG", "to": "BEL", "tipo": "inter-regional", "just": "conexão média entre regiões", "peso": 2448.0}, {"from": "GIG", "to": "THE", "tipo": "inter-regional", "just": "conexão média entre regiões", "peso": 1973.0}, {"from": "CNF", "to": "VIX", "tipo": "regional", "just": "mesma região", "peso": 389.0}, {"from": "CNF", "to": "BSB", "tipo": "hub", "just": "conexão via hub nacional", "peso": 591.0}, {"from": "CNF", "to": "GYN", "tipo": "inter_regional", "just": "conexão média entre regiões", "peso": 647.0}, {"from": "CNF", "to": "CWB", "tipo": "inter_regional", "just": "conexão média entre regiões", "peso": 845.0}, {"from": "CNF", "to": "FLN", "tipo": "inter_regional", "just": "conexão média entre regiões", "peso": 1006.0}, {"from": "CNF", "to": "POA", "tipo": "inter_regional", "just": "conexão média entre regiões", "peso": 1360.0}, {"from": "CNF", "to": "MAO", "tipo": "inter_regional", "just": "conexão média entre regiões", "peso": 2538.0}, {"from": "CNF", "to": "BEL", "tipo": "inter_regional", "just": "conexão média entre regiões", "peso": 2086.0}, {"from": "CNF", "to": "PVH", "tipo": "inter_regional", "just": "conexão média entre regiões", "peso": 2462.0}, {"from": "CNF", "to": "RBR", "tipo": "inter_regional", "just": "conexão média entre regiões", "peso": 2786.0}, {"from": "CNF", "to": "THE", "tipo": "inter_regional", "just": "conexão média entre regiões", "peso": 1624.0}, {"from": "VIX", "to": "BSB", "tipo": "hub", "just": "conexão via hub nacional", "peso": 941.0}, {"from": "BSB", "to": "GYN", "tipo": "regional", "just": "mesma região", "peso": 163.0}, {"from": "BSB", "to": "CWB", "tipo": "inter_regional", "just": "conexão média entre regiões", "peso": 1080.0}, {"from": "BSB", "to": "FLN", "tipo": "inter_regional", "just": "conexão média entre regiões", "peso": 1312.0}, {"from": "BSB", "to": "POA", "tipo": "inter_regional", "just": "conexão média entre regiões", "peso": 1603.0}, {"from": "BSB", "to": "MAO", "tipo": "inter_regional", "just": "conexão média entre regiões", "peso": 1947.0}, {"from": "BSB", "to": "BEL", "tipo": "inter_regional", "just": "conexão média entre regiões", "peso": 1611.0}, {"from": "BSB", "to": "PVH", "tipo": "inter_regional", "just": "conexão média entre regiões", "peso": 1907.0}, {"from": "BSB", "to": "RBR", "tipo": "inter_regional", "just": "conexão média entre regiões", "peso": 2263.0}, {"from": "BSB", "to": "THE", "tipo": "inter_regional", "just": "conexão média entre regiões", "peso": 1323.0}, {"from": "CWB", "to": "POA", "tipo": "regional", "just": "mesma região", "peso": 533.0}, {"from": "FLN", "to": "POA", "tipo": "regional", "just": "mesma região", "peso": 362.0}, {"from": "MAO", "to": "BEL", "tipo": "regional", "just": "mesma região", "peso": 1297.0}, {"from": "MAO", "to": "PVH", "tipo": "regional", "just": "mesma região", "peso": 760.0}, {"from": "MAO", "to": "RBR", "tipo": "regional", "just": "mesma região", "peso": 1151.0}];
-const LEGEND   = [{"color": "#00c2a8", "label": "Norte"}, {"color": "#f5a623", "label": "Nordeste"}, {"color": "#e84393", "label": "Sudeste"}, {"color": "#6c63ff", "label": "Sul"}, {"color": "#ff6b35", "label": "Centro-Oeste"}];
+const AP       = {"REC": {"cidade": "Recife", "regiao": "Nordeste", "lat": -8.1264, "lon": -34.9236, "color": "#d9a84e", "grau": "16", "ordem_ego": "17", "tamanho_ego": "16", "densidade_ego": "0.118"}, "SSA": {"cidade": "Salvador", "regiao": "Nordeste", "lat": -12.9086, "lon": -38.3225, "color": "#d9a84e", "grau": "14", "ordem_ego": "15", "tamanho_ego": "14", "densidade_ego": "0.133"}, "FOR": {"cidade": "Fortaleza", "regiao": "Nordeste", "lat": -3.7763, "lon": -38.5326, "color": "#d9a84e", "grau": "11", "ordem_ego": "12", "tamanho_ego": "11", "densidade_ego": "0.167"}, "NAT": {"cidade": "Natal", "regiao": "Nordeste", "lat": -5.9114, "lon": -35.2477, "color": "#d9a84e", "grau": "8", "ordem_ego": "9", "tamanho_ego": "8", "densidade_ego": "0.222"}, "JPA": {"cidade": "JoÃ£o Pessoa", "regiao": "Nordeste", "lat": -7.1458, "lon": -34.9508, "color": "#d9a84e", "grau": "7", "ordem_ego": "8", "tamanho_ego": "7", "densidade_ego": "0.25"}, "GRU": {"cidade": "SÃ£o Paulo", "regiao": "Sudeste", "lat": -23.4356, "lon": -46.4731, "color": "#c9767d", "grau": "18", "ordem_ego": "19", "tamanho_ego": "18", "densidade_ego": "0.105"}, "CGH": {"cidade": "SÃ£o Paulo", "regiao": "Sudeste", "lat": -23.6261, "lon": -46.6564, "color": "#c9767d", "grau": "14", "ordem_ego": "15", "tamanho_ego": "14", "densidade_ego": "0.133"}, "GIG": {"cidade": "Rio de Janeiro", "regiao": "Sudeste", "lat": -22.8099, "lon": -43.2505, "color": "#c9767d", "grau": "17", "ordem_ego": "18", "tamanho_ego": "17", "densidade_ego": "0.111"}, "CNF": {"cidade": "Belo Horizonte", "regiao": "Sudeste", "lat": -19.6244, "lon": -43.9719, "color": "#c9767d", "grau": "19", "ordem_ego": "20", "tamanho_ego": "19", "densidade_ego": "0.1"}, "VIX": {"cidade": "VitÃ³ria", "regiao": "Sudeste", "lat": -20.2581, "lon": -40.2864, "color": "#c9767d", "grau": "7", "ordem_ego": "8", "tamanho_ego": "7", "densidade_ego": "0.25"}, "BSB": {"cidade": "BrasÃ­lia", "regiao": "Centro-Oeste", "lat": -15.8711, "lon": -47.9186, "color": "#d28a55", "grau": "19", "ordem_ego": "20", "tamanho_ego": "19", "densidade_ego": "0.1"}, "GYN": {"cidade": "GoiÃ¢nia", "regiao": "Centro-Oeste", "lat": -16.6319, "lon": -49.2206, "color": "#d28a55", "grau": "7", "ordem_ego": "8", "tamanho_ego": "7", "densidade_ego": "0.25"}, "CWB": {"cidade": "Curitiba", "regiao": "Sul", "lat": -25.5285, "lon": -49.1758, "color": "#4f8fb8", "grau": "7", "ordem_ego": "8", "tamanho_ego": "7", "densidade_ego": "0.25"}, "FLN": {"cidade": "FlorianÃ³polis", "regiao": "Sul", "lat": -27.6703, "lon": -48.5478, "color": "#4f8fb8", "grau": "7", "ordem_ego": "8", "tamanho_ego": "7", "densidade_ego": "0.25"}, "POA": {"cidade": "Porto Alegre", "regiao": "Sul", "lat": -29.9939, "lon": -51.1714, "color": "#4f8fb8", "grau": "9", "ordem_ego": "10", "tamanho_ego": "9", "densidade_ego": "0.2"}, "MAO": {"cidade": "Manaus", "regiao": "Norte", "lat": -3.0386, "lon": -60.0497, "color": "#5c9f79", "grau": "9", "ordem_ego": "10", "tamanho_ego": "9", "densidade_ego": "0.2"}, "BEL": {"cidade": "BelÃ©m", "regiao": "Norte", "lat": -1.3792, "lon": -48.4761, "color": "#5c9f79", "grau": "7", "ordem_ego": "8", "tamanho_ego": "7", "densidade_ego": "0.25"}, "PVH": {"cidade": "Porto Velho", "regiao": "Norte", "lat": -8.7093, "lon": -63.9023, "color": "#5c9f79", "grau": "4", "ordem_ego": "5", "tamanho_ego": "4", "densidade_ego": "0.4"}, "RBR": {"cidade": "Rio Branco", "regiao": "Norte", "lat": -9.8688, "lon": -67.8981, "color": "#5c9f79", "grau": "4", "ordem_ego": "5", "tamanho_ego": "4", "densidade_ego": "0.4"}, "THE": {"cidade": "Teresina", "regiao": "Nordeste", "lat": -5.06, "lon": -42.8236, "color": "#d9a84e", "grau": "8", "ordem_ego": "9", "tamanho_ego": "8", "densidade_ego": "0.222"}};
+const EDGES    = [{"from": "REC", "to": "SSA", "tipo": "regional", "just": "mesma regiÃ£o", "peso": 649.0}, {"from": "REC", "to": "FOR", "tipo": "regional", "just": "mesma regiÃ£o", "peso": 626.0}, {"from": "REC", "to": "NAT", "tipo": "regional", "just": "mesma regiÃ£o", "peso": 266.0}, {"from": "REC", "to": "JPA", "tipo": "regional", "just": "mesma regiÃ£o", "peso": 108.0}, {"from": "REC", "to": "GRU", "tipo": "hub", "just": "conexÃ£o via hub nacional", "peso": 2099.0}, {"from": "REC", "to": "CGH", "tipo": "hub", "just": "conexÃ£o via hub nacional", "peso": 2128.0}, {"from": "REC", "to": "GIG", "tipo": "hub", "just": "conexÃ£o via hub nacional", "peso": 1857.0}, {"from": "REC", "to": "CNF", "tipo": "hub", "just": "conexÃ£o via hub nacional", "peso": 1606.0}, {"from": "REC", "to": "VIX", "tipo": "ponto a ponto", "just": "conexÃ£o ponto a ponto", "peso": 1466.0}, {"from": "REC", "to": "BSB", "tipo": "hub", "just": "conexÃ£o via hub nacional", "peso": 1653.0}, {"from": "REC", "to": "GYN", "tipo": "inter-regional", "just": "conexÃ£o mÃ©dia entre regiÃµes", "peso": 1815.0}, {"from": "REC", "to": "FLN", "tipo": "inter-regional", "just": "conexÃ£o mÃ©dia entre regiÃµes", "peso": 2601.0}, {"from": "REC", "to": "POA", "tipo": "inter-regional", "just": "conexÃ£o mÃ©dia entre regiÃµes", "peso": 2961.0}, {"from": "REC", "to": "MAO", "tipo": "inter-regional", "just": "conexÃ£o mÃ©dia entre regiÃµes", "peso": 2834.0}, {"from": "REC", "to": "BEL", "tipo": "inter-regional", "just": "conexÃ£o mÃ©dia entre regiÃµes", "peso": 1677.0}, {"from": "REC", "to": "THE", "tipo": "regional", "just": "mesma regiÃ£o", "peso": 935.0}, {"from": "SSA", "to": "FOR", "tipo": "regional", "just": "mesma regiÃ£o", "peso": 1014.0}, {"from": "SSA", "to": "NAT", "tipo": "regional", "just": "mesma regiÃ£o", "peso": 856.0}, {"from": "SSA", "to": "JPA", "tipo": "regional", "just": "mesma regiÃ£o", "peso": 739.0}, {"from": "SSA", "to": "GRU", "tipo": "hub", "just": "conexÃ£o via hub nacional", "peso": 1450.0}, {"from": "SSA", "to": "CGH", "tipo": "hub", "just": "conexÃ£o via hub nacional", "peso": 1479.0}, {"from": "SSA", "to": "GIG", "tipo": "hub", "just": "conexÃ£o via hub nacional", "peso": 1217.0}, {"from": "SSA", "to": "CNF", "tipo": "hub", "just": "conexÃ£o via hub nacional", "peso": 958.0}, {"from": "SSA", "to": "VIX", "tipo": "ponto a ponto", "just": "conexÃ£o ponto a ponto", "peso": 842.0}, {"from": "SSA", "to": "BSB", "tipo": "inter-regional", "just": "conexÃ£o mÃ©dia entre regiÃµes", "peso": 1083.0}, {"from": "SSA", "to": "GYN", "tipo": "inter-regional", "just": "conexÃ£o mÃ©dia entre regiÃµes", "peso": 1241.0}, {"from": "SSA", "to": "CWB", "tipo": "inter-regional", "just": "conexÃ£o mÃ©dia entre regiÃµes", "peso": 1802.0}, {"from": "SSA", "to": "POA", "tipo": "inter-regional", "just": "conexÃ£o mÃ©dia entre regiÃµes", "peso": 2313.0}, {"from": "SSA", "to": "THE", "tipo": "regional", "just": "mesma regiÃ£o", "peso": 1001.0}, {"from": "FOR", "to": "NAT", "tipo": "regional", "just": "mesma regiÃ£o", "peso": 414.0}, {"from": "FOR", "to": "GRU", "tipo": "hub", "just": "conexÃ£o via hub nacional", "peso": 2345.0}, {"from": "FOR", "to": "CGH", "tipo": "hub", "just": "conexÃ£o via hub nacional", "peso": 2372.0}, {"from": "FOR", "to": "GIG", "tipo": "hub", "just": "conexÃ£o via hub nacional", "peso": 2174.0}, {"from": "FOR", "to": "CNF", "tipo": "hub", "just": "conexÃ£o via hub nacional", "peso": 1857.0}, {"from": "FOR", "to": "BSB", "tipo": "hub", "just": "conexÃ£o via hub nacional", "peso": 1690.0}, {"from": "FOR", "to": "MAO", "tipo": "inter-regional", "just": "conexÃ£o mÃ©dia entre regiÃµes", "peso": 2388.0}, {"from": "FOR", "to": "BEL", "tipo": "inter-regional", "just": "conexÃ£o mÃ©dia entre regiÃµes", "peso": 1135.0}, {"from": "FOR", "to": "THE", "tipo": "regional", "just": "mesma regiÃ£o", "peso": 496.0}, {"from": "NAT", "to": "BSB", "tipo": "hub", "just": "conexÃ£o via hub nacional", "peso": 1769.0}, {"from": "NAT", "to": "CNF", "tipo": "hub", "just": "conexÃ£o via hub nacional", "peso": 1799.0}, {"from": "NAT", "to": "GRU", "tipo": "hub", "just": "conexÃ£o via hub nacional", "peso": 2293.0}, {"from": "NAT", "to": "CGH", "tipo": "hub", "just": "conexÃ£o via hub nacional", "peso": 2322.0}, {"from": "NAT", "to": "GIG", "tipo": "hub", "just": "conexÃ£o via hub nacional", "peso": 2073.0}, {"from": "JPA", "to": "GRU", "tipo": "hub", "just": "conexÃ£o via hub nacional", "peso": 2187.0}, {"from": "JPA", "to": "CGH", "tipo": "hub", "just": "conexÃ£o via hub nacional", "peso": 2216.0}, {"from": "JPA", "to": "GIG", "tipo": "hub", "just": "conexÃ£o via hub nacional", "peso": 1954.0}, {"from": "JPA", "to": "CNF", "tipo": "hub", "just": "conexÃ£o via hub nacional", "peso": 1695.0}, {"from": "JPA", "to": "BSB", "tipo": "hub", "just": "conexÃ£o via hub nacional", "peso": 1711.0}, {"from": "GRU", "to": "GIG", "tipo": "hub", "just": "conexÃ£o via hub nacional", "peso": 336.0}, {"from": "GRU", "to": "CNF", "tipo": "hub", "just": "conexÃ£o via hub nacional", "peso": 494.0}, {"from": "GRU", "to": "VIX", "tipo": "regional", "just": "mesma regiÃ£o", "peso": 727.0}, {"from": "GRU", "to": "BSB", "tipo": "hub", "just": "conexÃ£o via hub nacional", "peso": 853.0}, {"from": "GRU", "to": "GYN", "tipo": "inter-regional", "just": "conexÃ£o mÃ©dia entre regiÃµes", "peso": 808.0}, {"from": "GRU", "to": "CWB", "tipo": "inter-regional", "just": "conexÃ£o mÃ©dia entre regiÃµes", "peso": 359.0}, {"from": "GRU", "to": "FLN", "tipo": "inter-regional", "just": "conexÃ£o mÃ©dia entre regiÃµes", "peso": 515.0}, {"from": "GRU", "to": "POA", "tipo": "inter-regional", "just": "conexÃ£o mÃ©dia entre regiÃµes", "peso": 864.0}, {"from": "GRU", "to": "MAO", "tipo": "inter-regional", "just": "conexÃ£o mÃ©dia entre regiÃµes", "peso": 2696.0}, {"from": "GRU", "to": "BEL", "tipo": "inter-regional", "just": "conexÃ£o mÃ©dia entre regiÃµes", "peso": 2459.0}, {"from": "GRU", "to": "PVH", "tipo": "inter-regional", "just": "conexÃ£o mÃ©dia entre regiÃµes", "peso": 2472.0}, {"from": "GRU", "to": "RBR", "tipo": "inter-regional", "just": "conexÃ£o mÃ©dia entre regiÃµes", "peso": 2726.0}, {"from": "GRU", "to": "THE", "tipo": "inter-regional", "just": "conexÃ£o mÃ©dia entre regiÃµes", "peso": 2078.0}, {"from": "CGH", "to": "GIG", "tipo": "hub", "just": "conexÃ£o via hub nacional", "peso": 359.0}, {"from": "CGH", "to": "CNF", "tipo": "hub", "just": "conexÃ£o via hub nacional", "peso": 523.0}, {"from": "CGH", "to": "VIX", "tipo": "regional", "just": "mesma regiÃ£o", "peso": 755.0}, {"from": "CGH", "to": "BSB", "tipo": "hub", "just": "conexÃ£o via hub nacional", "peso": 871.0}, {"from": "CGH", "to": "GYN", "tipo": "inter-regional", "just": "conexÃ£o mÃ©dia entre regiÃµes", "peso": 821.0}, {"from": "CGH", "to": "CWB", "tipo": "inter-regional", "just": "conexÃ£o mÃ©dia entre regiÃµes", "peso": 330.0}, {"from": "CGH", "to": "FLN", "tipo": "inter-regional", "just": "conexÃ£o mÃ©dia entre regiÃµes", "peso": 488.0}, {"from": "CGH", "to": "POA", "tipo": "inter-regional", "just": "conexÃ£o mÃ©dia entre regiÃµes", "peso": 837.0}, {"from": "CGH", "to": "THE", "tipo": "inter-regional", "just": "conexÃ£o mÃ©dia entre regiÃµes", "peso": 2103.0}, {"from": "GIG", "to": "CNF", "tipo": "hub", "just": "conexÃ£o via hub nacional", "peso": 360.0}, {"from": "GIG", "to": "VIX", "tipo": "regional", "just": "mesma regiÃ£o", "peso": 417.0}, {"from": "GIG", "to": "BSB", "tipo": "hub", "just": "conexÃ£o via hub nacional", "peso": 912.0}, {"from": "GIG", "to": "GYN", "tipo": "inter-regional", "just": "conexÃ£o mÃ©dia entre regiÃµes", "peso": 927.0}, {"from": "GIG", "to": "CWB", "tipo": "inter-regional", "just": "conexÃ£o mÃ©dia entre regiÃµes", "peso": 671.0}, {"from": "GIG", "to": "FLN", "tipo": "inter-regional", "just": "conexÃ£o mÃ©dia entre regiÃµes", "peso": 758.0}, {"from": "GIG", "to": "POA", "tipo": "inter-regional", "just": "conexÃ£o mÃ©dia entre regiÃµes", "peso": 1120.0}, {"from": "GIG", "to": "MAO", "tipo": "inter-regional", "just": "conexÃ£o mÃ©dia entre regiÃµes", "peso": 2845.0}, {"from": "GIG", "to": "BEL", "tipo": "inter-regional", "just": "conexÃ£o mÃ©dia entre regiÃµes", "peso": 2448.0}, {"from": "GIG", "to": "THE", "tipo": "inter-regional", "just": "conexÃ£o mÃ©dia entre regiÃµes", "peso": 1973.0}, {"from": "CNF", "to": "VIX", "tipo": "regional", "just": "mesma regiÃ£o", "peso": 389.0}, {"from": "CNF", "to": "BSB", "tipo": "hub", "just": "conexÃ£o via hub nacional", "peso": 591.0}, {"from": "CNF", "to": "GYN", "tipo": "inter_regional", "just": "conexÃ£o mÃ©dia entre regiÃµes", "peso": 647.0}, {"from": "CNF", "to": "CWB", "tipo": "inter_regional", "just": "conexÃ£o mÃ©dia entre regiÃµes", "peso": 845.0}, {"from": "CNF", "to": "FLN", "tipo": "inter_regional", "just": "conexÃ£o mÃ©dia entre regiÃµes", "peso": 1006.0}, {"from": "CNF", "to": "POA", "tipo": "inter_regional", "just": "conexÃ£o mÃ©dia entre regiÃµes", "peso": 1360.0}, {"from": "CNF", "to": "MAO", "tipo": "inter_regional", "just": "conexÃ£o mÃ©dia entre regiÃµes", "peso": 2538.0}, {"from": "CNF", "to": "BEL", "tipo": "inter_regional", "just": "conexÃ£o mÃ©dia entre regiÃµes", "peso": 2086.0}, {"from": "CNF", "to": "PVH", "tipo": "inter_regional", "just": "conexÃ£o mÃ©dia entre regiÃµes", "peso": 2462.0}, {"from": "CNF", "to": "RBR", "tipo": "inter_regional", "just": "conexÃ£o mÃ©dia entre regiÃµes", "peso": 2786.0}, {"from": "CNF", "to": "THE", "tipo": "inter_regional", "just": "conexÃ£o mÃ©dia entre regiÃµes", "peso": 1624.0}, {"from": "VIX", "to": "BSB", "tipo": "hub", "just": "conexÃ£o via hub nacional", "peso": 941.0}, {"from": "BSB", "to": "GYN", "tipo": "regional", "just": "mesma regiÃ£o", "peso": 163.0}, {"from": "BSB", "to": "CWB", "tipo": "inter_regional", "just": "conexÃ£o mÃ©dia entre regiÃµes", "peso": 1080.0}, {"from": "BSB", "to": "FLN", "tipo": "inter_regional", "just": "conexÃ£o mÃ©dia entre regiÃµes", "peso": 1312.0}, {"from": "BSB", "to": "POA", "tipo": "inter_regional", "just": "conexÃ£o mÃ©dia entre regiÃµes", "peso": 1603.0}, {"from": "BSB", "to": "MAO", "tipo": "inter_regional", "just": "conexÃ£o mÃ©dia entre regiÃµes", "peso": 1947.0}, {"from": "BSB", "to": "BEL", "tipo": "inter_regional", "just": "conexÃ£o mÃ©dia entre regiÃµes", "peso": 1611.0}, {"from": "BSB", "to": "PVH", "tipo": "inter_regional", "just": "conexÃ£o mÃ©dia entre regiÃµes", "peso": 1907.0}, {"from": "BSB", "to": "RBR", "tipo": "inter_regional", "just": "conexÃ£o mÃ©dia entre regiÃµes", "peso": 2263.0}, {"from": "BSB", "to": "THE", "tipo": "inter_regional", "just": "conexÃ£o mÃ©dia entre regiÃµes", "peso": 1323.0}, {"from": "CWB", "to": "POA", "tipo": "regional", "just": "mesma regiÃ£o", "peso": 533.0}, {"from": "FLN", "to": "POA", "tipo": "regional", "just": "mesma regiÃ£o", "peso": 362.0}, {"from": "MAO", "to": "BEL", "tipo": "regional", "just": "mesma regiÃ£o", "peso": 1297.0}, {"from": "MAO", "to": "PVH", "tipo": "regional", "just": "mesma regiÃ£o", "peso": 760.0}, {"from": "MAO", "to": "RBR", "tipo": "regional", "just": "mesma regiÃ£o", "peso": 1151.0}];
+const LEGEND   = [{"color": "#5c9f79", "label": "Norte"}, {"color": "#d9a84e", "label": "Nordeste"}, {"color": "#c9767d", "label": "Sudeste"}, {"color": "#4f8fb8", "label": "Sul"}, {"color": "#d28a55", "label": "Centro-Oeste"}];
 const PATH_RPO = ["REC", "POA"];
 const PATH_MSP = ["MAO", "GRU"];
 
 const R_COLORS = {
-    "Norte": "#00c2a8", "Nordeste": "#f5a623", "Sudeste": "#e84393",
-    "Sul": "#6c63ff", "Centro-Oeste": "#ff6b35"
+    "Norte": "#5c9f79", "Nordeste": "#d9a84e", "Sudeste": "#c9767d",
+    "Sul": "#4f8fb8", "Centro-Oeste": "#d28a55"
 };
 const REGIONS_LIST = Object.keys(R_COLORS);
 
 let showingCharts = false;
 let chartInstances = {};
 
-// Variáveis de Controle de Filtro
+// VariÃ¡veis de Controle de Filtro
 let currentAP = AP;
 let currentRegionsList = REGIONS_LIST;
 let activeMapFilterNodes = new Set(Object.keys(AP));
@@ -361,14 +361,14 @@ function applyFilters() {
         if (!ln) return;
         if (activeMapFilterNodes.has(e.from) && activeMapFilterNodes.has(e.to)) {
             const calcWeight = Math.max(0.5, 3.5 - (parseFloat(e.peso) / 1000));
-            ln.setStyle({color: '#3a3a55', weight: calcWeight, opacity: 0.6, dashArray: null});
+            ln.setStyle({color: '#8aa489', weight: calcWeight, opacity: 0.6, dashArray: null});
         } else {
-            ln.setStyle({color: '#1e1e2e', weight: 1, opacity: 0.05, dashArray: '4,8'});
+            ln.setStyle({color: '#b6b99b', weight: 1, opacity: 0.05, dashArray: '4,8'});
         }
     });
 
     updateMetricsPanel();
-    document.getElementById('statusbar').textContent = 'Filtros Dinâmicos Aplicados — ' + activeMapFilterNodes.size + ' nós visíveis.';
+    document.getElementById('statusbar').textContent = 'Filtros DinÃ¢micos Aplicados â€” ' + activeMapFilterNodes.size + ' nÃ³s visÃ­veis.';
     
     if (showingCharts) renderAllCharts();
 }
@@ -398,17 +398,17 @@ function toggleView() {
   const subtitle = document.getElementById('app-subtitle');
   
   if (showingCharts) {
-      btn.innerHTML = '← Voltar ao Mapa';
+      btn.innerHTML = 'â† Voltar ao Mapa';
       btn.style.borderColor = 'var(--border)';
       btn.style.color = 'var(--text)';
-      subtitle.innerHTML = 'Análise Estatística & Distribuição Estatística do Grafo';
-      subtitle.style.color = '#00c2a8';
+      subtitle.innerHTML = 'AnÃ¡lise EstatÃ­stica & DistribuiÃ§Ã£o EstatÃ­stica do Grafo';
+      subtitle.style.color = '#5c9f79';
       renderAllCharts();
   } else {
-      btn.innerHTML = '📊 Ver Gráficos';
-      btn.style.borderColor = '#00c2a8';
-      btn.style.color = '#00c2a8';
-      subtitle.innerHTML = 'Rede de Aeroportos — Grafo Interativo';
+      btn.innerHTML = 'ðŸ“Š Ver GrÃ¡ficos';
+      btn.style.borderColor = '#5c9f79';
+      btn.style.color = '#5c9f79';
+      subtitle.innerHTML = 'Rede de Aeroportos â€” Grafo Interativo';
       subtitle.style.color = 'var(--muted)';
       setTimeout(() => map.invalidateSize(), 50);
   }
@@ -443,13 +443,13 @@ function generateInsights() {
     let regiaoDominante = Object.keys(regiaoCount).length > 0 ? Object.keys(regiaoCount).reduce((a, b) => regiaoCount[a] > regiaoCount[b] ? a : b) : "Nenhuma";
     let countDominante = regiaoCount[regiaoDominante] || 0;
 
-    document.getElementById('insight-1').innerHTML = `A análise exploratória das <b>${totalEdges} arestas mapeadas</b> entre os <b>${totalNodes} vértices ativos</b> evidencia que a malha aérea nacional se comporta como uma rede Livre de Escala (Scale-Free). O aeroporto <b>${maiorHub} (${maiorHubRegiao})</b> polariza o ecossistema atual atuando como o hub primário (grau máximo de <b>${maxGrau}</b>). A região <b>${regiaoDominante}</b> domina a concentração com <b>${countDominante}</b> nós. A baixa densidade ego média (<b>${densidadeMedia}</b>) indica que, fora grandes centros, a rede é esparsa.`;
+    document.getElementById('insight-1').innerHTML = `A anÃ¡lise exploratÃ³ria das <b>${totalEdges} arestas mapeadas</b> entre os <b>${totalNodes} vÃ©rtices ativos</b> evidencia que a malha aÃ©rea nacional se comporta como uma rede Livre de Escala (Scale-Free). O aeroporto <b>${maiorHub} (${maiorHubRegiao})</b> polariza o ecossistema atual atuando como o hub primÃ¡rio (grau mÃ¡ximo de <b>${maxGrau}</b>). A regiÃ£o <b>${regiaoDominante}</b> domina a concentraÃ§Ã£o com <b>${countDominante}</b> nÃ³s. A baixa densidade ego mÃ©dia (<b>${densidadeMedia}</b>) indica que, fora grandes centros, a rede Ã© esparsa.`;
 
-    document.getElementById('insight-2').innerHTML = `Para mitigar a severa carga cognitiva da visualização e evitar o efeito "hairball", o design foi construído sobre princípios estritos da Gestalt. A <b>Lei da Similaridade</b> foi aplicada no mapeamento semântico de cores (categorical colormap) associando nós à sua macrorregião. A <b>Lei da Continuidade e Figura-Fundo</b> é empregada na resposta interativa: filtros e cálculos (como Dijkstra) ganham destaque (figura), enquanto a matriz subjacente entra em estado de opacidade (fundo), isolando o ruído analítico.`;
+    document.getElementById('insight-2').innerHTML = `Para mitigar a severa carga cognitiva da visualizaÃ§Ã£o e evitar o efeito "hairball", o design foi construÃ­do sobre princÃ­pios estritos da Gestalt. A <b>Lei da Similaridade</b> foi aplicada no mapeamento semÃ¢ntico de cores (categorical colormap) associando nÃ³s Ã  sua macrorregiÃ£o. A <b>Lei da Continuidade e Figura-Fundo</b> Ã© empregada na resposta interativa: filtros e cÃ¡lculos (como Dijkstra) ganham destaque (figura), enquanto a matriz subjacente entra em estado de opacidade (fundo), isolando o ruÃ­do analÃ­tico.`;
 
-    document.getElementById('insight-3').innerHTML = `Apesar da modelagem visual, o modelo topológico fixo atrelado à projeção geográfica possui limitações claras. A métrica de proximidade real induz a uma <b>oclusão visual severa</b> no Sudeste (ex: a tríade CGH-GRU-VCP), onde a superposição geométrica dos nós mascara a verdadeira conectividade estrutural. Adicionalmente, o grafo estático apresenta um <i>"falso viés de eficiência"</i>: ao omitir variáveis temporais (frequência diária), o Dijkstra elege o caminho "mais barato" em peso numérico, ignorando fluxos logísticos da vida real.`;
+    document.getElementById('insight-3').innerHTML = `Apesar da modelagem visual, o modelo topolÃ³gico fixo atrelado Ã  projeÃ§Ã£o geogrÃ¡fica possui limitaÃ§Ãµes claras. A mÃ©trica de proximidade real induz a uma <b>oclusÃ£o visual severa</b> no Sudeste (ex: a trÃ­ade CGH-GRU-VCP), onde a superposiÃ§Ã£o geomÃ©trica dos nÃ³s mascara a verdadeira conectividade estrutural. Adicionalmente, o grafo estÃ¡tico apresenta um <i>"falso viÃ©s de eficiÃªncia"</i>: ao omitir variÃ¡veis temporais (frequÃªncia diÃ¡ria), o Dijkstra elege o caminho "mais barato" em peso numÃ©rico, ignorando fluxos logÃ­sticos da vida real.`;
 
-    document.getElementById('insight-4').innerHTML = `<b>Insight Logístico Estratégico:</b> A leitura combinada dos gráficos de distribuição revela uma vulnerabilidade crítica de projeto: a baixa resiliência topológica a falhas em cascata. O excesso de dependência estrutural do vértice <b>${maiorHub}</b> faz com que interrupções climáticas colapsem sub-rotas. A resposta acionável exige a <b>descentralização arquitetural</b> estimulando "Vértices de Corte" secundários no Nordeste e Norte, achatando a curva de centralidade de grau e melhorando a capacidade de recuperação de toda a rede.`;
+    document.getElementById('insight-4').innerHTML = `<b>Insight LogÃ­stico EstratÃ©gico:</b> A leitura combinada dos grÃ¡ficos de distribuiÃ§Ã£o revela uma vulnerabilidade crÃ­tica de projeto: a baixa resiliÃªncia topolÃ³gica a falhas em cascata. O excesso de dependÃªncia estrutural do vÃ©rtice <b>${maiorHub}</b> faz com que interrupÃ§Ãµes climÃ¡ticas colapsem sub-rotas. A resposta acionÃ¡vel exige a <b>descentralizaÃ§Ã£o arquitetural</b> estimulando "VÃ©rtices de Corte" secundÃ¡rios no Nordeste e Norte, achatando a curva de centralidade de grau e melhorando a capacidade de recuperaÃ§Ã£o de toda a rede.`;
 }
 
 function renderAllCharts() {
@@ -521,7 +521,7 @@ function updateHubsChart(limit) {
         data: {
             labels: sortedHubs.map(h => h.iata),
             datasets: [{
-                label: 'Conexões Diretas',
+                label: 'ConexÃµes Diretas',
                 data: sortedHubs.map(h => h.grau),
                 backgroundColor: sortedHubs.map(h => h.color),
                 borderWidth: 1, borderColor: '#13131f'
@@ -569,7 +569,7 @@ function updateDistributionType(type) {
                 label: 'Aeroportos',
                 data: datasetData,
                 backgroundColor: 'rgba(0, 194, 168, 0.25)',
-                borderColor: '#00c2a8', borderWidth: 2,
+                borderColor: '#5c9f79', borderWidth: 2,
                 fill: type === 'line', tension: 0.3
             }]
         },
@@ -600,8 +600,8 @@ function updateRegionsChart(metric) {
     let labelText = "";
 
     if (metric === 'count') { chartData = labels.map(r => regiaoDados[r].count); labelText = "Volume de Aeroportos"; }
-    else if (metric === 'avg_degree') { chartData = labels.map(r => parseFloat((regiaoDados[r].sum_degree / regiaoDados[r].count).toFixed(2))); labelText = "Grau Médio Regional"; }
-    else if (metric === 'max_degree') { chartData = labels.map(r => regiaoDados[r].max_degree); labelText = "Grau Máximo (Maior Hub)"; }
+    else if (metric === 'avg_degree') { chartData = labels.map(r => parseFloat((regiaoDados[r].sum_degree / regiaoDados[r].count).toFixed(2))); labelText = "Grau MÃ©dio Regional"; }
+    else if (metric === 'max_degree') { chartData = labels.map(r => regiaoDados[r].max_degree); labelText = "Grau MÃ¡ximo (Maior Hub)"; }
 
     if (chartInstances.regMulti) chartInstances.regMulti.destroy();
     const ctx = document.getElementById('chart-regioes-multi').getContext('2d');
@@ -771,11 +771,11 @@ function initBubbleRegions() {
             responsive: true, maintainAspectRatio: false,
             plugins: {
                 legend: { labels: { color: '#e0e0f0' } },
-                tooltip: { callbacks: { label: (ctx) => `${ctx.dataset.label}: Grau Médio ${ctx.raw.x.toFixed(1)} | Densidade Média ${ctx.raw.y.toFixed(2)}` } }
+                tooltip: { callbacks: { label: (ctx) => `${ctx.dataset.label}: Grau MÃ©dio ${ctx.raw.x.toFixed(1)} | Densidade MÃ©dia ${ctx.raw.y.toFixed(2)}` } }
             },
             scales: {
-                x: { title: { display: true, text: 'Grau Médio Regional', color: '#777799' }, grid: { color: '#252535' }, ticks: { color: '#777799' } },
-                y: { title: { display: true, text: 'Densidade Ego Média', color: '#777799' }, grid: { color: '#252535' }, ticks: { color: '#777799' } }
+                x: { title: { display: true, text: 'Grau MÃ©dio Regional', color: '#777799' }, grid: { color: '#252535' }, ticks: { color: '#777799' } },
+                y: { title: { display: true, text: 'Densidade Ego MÃ©dia', color: '#777799' }, grid: { color: '#252535' }, ticks: { color: '#777799' } }
             }
         }
     });
@@ -870,7 +870,7 @@ function initScatterChart() {
             },
             scales: {
                 y: { grid: { color: '#252535' }, ticks: { color: '#777799' }, title: { display: true, text: 'Densidade da Rede Ego', color: '#777799' } },
-                x: { grid: { color: '#252535' }, ticks: { color: '#777799' }, title: { display: true, text: 'Grau do Vértice (Conexões)', color: '#777799' } }
+                x: { grid: { color: '#252535' }, ticks: { color: '#777799' }, title: { display: true, text: 'Grau do VÃ©rtice (ConexÃµes)', color: '#777799' } }
             },
             onClick: (event, elements) => {
                 if (elements.length > 0) {
@@ -891,8 +891,8 @@ LEGEND.forEach(it => {
 });
 
 const map = L.map('map', {center:[-15,-53], zoom:4, zoomControl:true});
-L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-  attribution:'© OpenStreetMap contributors', maxZoom:12
+L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
+  attribution:'Â© OpenStreetMap contributors Â© CARTO', maxZoom:12
 }).addTo(map);
 
 function ekey(a, b) { return [a, b].sort().join('|'); }
@@ -903,9 +903,9 @@ EDGES.forEach(e => {
   const calcWeight = Math.max(0.5, 3.5 - (parseFloat(e.peso) / 1000));
   const ln = L.polyline(
     [[a.lat, a.lon], [b.lat, b.lon]],
-    {color:'#3a3a55', weight: calcWeight, opacity:0.4}
+    {color:'#8aa489', weight: calcWeight, opacity:0.38}
   ).addTo(map);
-  ln.bindTooltip(`${e.from} ↔ ${e.to} | ${e.tipo} | peso ${parseFloat(e.peso).toFixed(2)}`, {sticky:true});
+  ln.bindTooltip(`${e.from} â†” ${e.to} | ${e.tipo} | peso ${parseFloat(e.peso).toFixed(2)}`, {sticky:true});
   lineMap[ekey(e.from, e.to)] = ln;
 });
 
@@ -918,10 +918,10 @@ Object.entries(AP).forEach(([iata, info]) => {
     iconSize: [sz, sz], iconAnchor: [sz/2, sz/2]
   });
   const mk = L.marker([info.lat, info.lon], {icon}).addTo(map);
-  mk.bindTooltip(`<b>${iata}</b> — ${info.cidade}<br>Região: ${info.regiao}<br>Grau: ${info.grau}`, {direction:'top'});
+  mk.bindTooltip(`<b>${iata}</b> â€” ${info.cidade}<br>RegiÃ£o: ${info.regiao}<br>Grau: ${info.grau}`, {direction:'top'});
   mk.on('click', () => {
     document.getElementById('node-info').innerHTML =
-      `<b>${iata}</b> — ${info.cidade}<br>Região: ${info.regiao}<br>`+
+      `<b>${iata}</b> â€” ${info.cidade}<br>RegiÃ£o: ${info.regiao}<br>`+
       `Grau: ${info.grau}<br>Ordem ego: ${info.ordem_ego}<br>`+
       `Tam. ego: ${info.tamanho_ego}<br>Dens. ego: ${info.densidade_ego}`;
     highlightVertex(iata);
@@ -952,7 +952,7 @@ function highlightVertex(iata) {
       ln.setStyle({color:nColor, weight:4, opacity:1, dashArray:null});
       ln.bringToFront();
     } else {
-      ln.setStyle({color:'#1e1e2e', weight:1, opacity:0.12, dashArray:'4,8'});
+      ln.setStyle({color:'#b6b99b', weight:1, opacity:0.12, dashArray:'4,8'});
     }
   });
 
@@ -969,7 +969,7 @@ function highlightVertex(iata) {
           mk.setOpacity(neighbors.has(id) ? 1 : 0.15);
       }
   });
-  document.getElementById('statusbar').textContent = `${iata} (${AP[iata]?.cidade}) — Analisando ego-network.`;
+  document.getElementById('statusbar').textContent = `${iata} (${AP[iata]?.cidade}) â€” Analisando ego-network.`;
 }
 
 map.on('click', () => {
@@ -993,15 +993,15 @@ function highlightPath(which) {
 
   EDGES.forEach(e => {
     const ln = lineMap[ekey(e.from, e.to)]; if (!ln) return;
-    ln.setStyle({color:'#1e1e2e', weight:1, opacity:0.15, dashArray:'4,8'});
+    ln.setStyle({color:'#b6b99b', weight:1, opacity:0.15, dashArray:'4,8'});
   });
 
   const path  = which === 'rpo' ? PATH_RPO : PATH_MSP;
-  const color = which === 'rpo' ? '#ff4444' : '#44aaff';
-  const label = which === 'rpo' ? 'Recife → Porto Alegre' : 'Manaus → São Paulo';
+  const color = which === 'rpo' ? '#c95b50' : '#4f8fb8';
+  const label = which === 'rpo' ? 'Recife â†’ Porto Alegre' : 'Manaus â†’ SÃ£o Paulo';
 
   if (path.length < 2) {
-    document.getElementById('statusbar').textContent = 'Caminho não encontrado.'; return;
+    document.getElementById('statusbar').textContent = 'Caminho nÃ£o encontrado.'; return;
   }
 
   const latlngs = path.map(iata => [AP[iata].lat, AP[iata].lon]);
@@ -1011,18 +1011,18 @@ function highlightPath(which) {
   if(allNodesInFilter) {
       const pathLine = L.polyline(latlngs, { color: color, weight: 5, opacity: 1, dashArray: '12, 12', className: 'animated-path' }).addTo(map);
       pathLine.bringToFront();
-      pathLine.bindTooltip(`${path.join(' → ')} | ${label}`, {sticky:true, direction:'top'});
+      pathLine.bindTooltip(`${path.join(' â†’ ')} | ${label}`, {sticky:true, direction:'top'});
     
       if (which === 'rpo') rpoLine = pathLine; else mspLine = pathLine;
     
       const pathSet = new Set(path);
       Object.entries(mkMap).forEach(([iata, mk]) => { mk.setOpacity(pathSet.has(iata) ? 1 : 0.2); });
       map.fitBounds(pathLine.getBounds(), { padding: [50, 50], maxZoom: 7, animate: true, duration: 1.2 });
-      document.getElementById('statusbar').textContent = `${which === 'rpo' ? 'REC → POA' : 'MAO → GRU'}: ${path.join(' → ')} (${path.length - 1} trecho(s))`;
+      document.getElementById('statusbar').textContent = `${which === 'rpo' ? 'REC â†’ POA' : 'MAO â†’ GRU'}: ${path.join(' â†’ ')} (${path.length - 1} trecho(s))`;
   } else {
       document.getElementById('btn-rpo').classList.remove('active');
       document.getElementById('btn-msp').classList.remove('active');
-      document.getElementById('statusbar').textContent = `Impossível exibir rota ${label}: Nós filtrados/escondidos.`;
+      document.getElementById('statusbar').textContent = `ImpossÃ­vel exibir rota ${label}: NÃ³s filtrados/escondidos.`;
       applyFilters(); 
   }
 }
@@ -1075,9 +1075,9 @@ function buscarRota() {
   const box     = document.getElementById('rota-result');
 
   if (!origem || !destino) { box.innerHTML = '<span style="color:#ff7070">Preencha origem e destino.</span>'; return; }
-  if (!AP[origem])  { box.innerHTML = `<span style="color:#ff7070">Aeroporto "${origem}" não encontrado.</span>`;  return; }
-  if (!AP[destino]) { box.innerHTML = `<span style="color:#ff7070">Aeroporto "${destino}" não encontrado.</span>`; return; }
-  if (origem === destino) { box.innerHTML = '<span style="color:#ff7070">Origem e destino são iguais.</span>'; return; }
+  if (!AP[origem])  { box.innerHTML = `<span style="color:#ff7070">Aeroporto "${origem}" nÃ£o encontrado.</span>`;  return; }
+  if (!AP[destino]) { box.innerHTML = `<span style="color:#ff7070">Aeroporto "${destino}" nÃ£o encontrado.</span>`; return; }
+  if (origem === destino) { box.innerHTML = '<span style="color:#ff7070">Origem e destino sÃ£o iguais.</span>'; return; }
 
   const {custo, caminho} = dijkstraJS(origem, destino);
   if (rotaLine) { map.removeLayer(rotaLine); rotaLine = null; }
@@ -1085,16 +1085,16 @@ function buscarRota() {
 
   const direto  = EDGES.some(e => (e.from===origem&&e.to===destino)||(e.from===destino&&e.to===origem));
   const escalas = caminho.length - 2;
-  const tipo    = direto ? '✅ Voo direto' : `🔁 Com ${escalas} escala(s)`;
+  const tipo    = direto ? 'âœ… Voo direto' : `ðŸ” Com ${escalas} escala(s)`;
 
   const corOrigem = AP[origem].color;
 
-  box.innerHTML = `<b style="color:#e0e0f0">${origem} → ${destino}</b><br>${tipo}<br>`+
-    `Distância: <b style="color:${corOrigem}">${custo.toFixed(0)} km</b><br>Percurso:<br><span style="color:${corOrigem}">${caminho.join(' → ')}</span>`;
+  box.innerHTML = `<b style="color:#e0e0f0">${origem} â†’ ${destino}</b><br>${tipo}<br>`+
+    `DistÃ¢ncia: <b style="color:${corOrigem}">${custo.toFixed(0)} km</b><br>Percurso:<br><span style="color:${corOrigem}">${caminho.join(' â†’ ')}</span>`;
 
   EDGES.forEach(e => {
     const ln = lineMap[ekey(e.from, e.to)]; if (!ln) return;
-    ln.setStyle({color:'#1e1e2e', weight:1, opacity:0.15, dashArray:'4,8'});
+    ln.setStyle({color:'#b6b99b', weight:1, opacity:0.15, dashArray:'4,8'});
   });
 
   const latlngs = caminho.map(iata => [AP[iata].lat, AP[iata].lon]);
@@ -1106,7 +1106,7 @@ function buscarRota() {
   Object.entries(mkMap).forEach(([iata, mk]) => { mk.setOpacity(pathSet.has(iata) ? 1 : 0.2); });
   
   map.fitBounds(rotaLine.getBounds(), {padding:[40,40], maxZoom:7, animate:true, duration:1});
-  document.getElementById('statusbar').textContent = `Rota ${origem} → ${destino}: ${custo.toFixed(0)} km | ${caminho.length-1} trecho(s) | ${tipo}`;
+  document.getElementById('statusbar').textContent = `Rota ${origem} â†’ ${destino}: ${custo.toFixed(0)} km | ${caminho.length-1} trecho(s) | ${tipo}`;
 }
 
 document.getElementById('rota-origem').addEventListener('keydown', e => { if(e.key==='Enter') buscarRota(); });

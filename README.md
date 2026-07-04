@@ -1,6 +1,6 @@
-# Rede de Aeroportos do Brasil + Comparação de Algoritmos
+# DataGraph
 
-Projeto final de Teoria dos Grafos — modelagem da malha aérea brasileira (Parte 1) e comparação de algoritmos em dataset maior do Spotify (Parte 2), com interface web interativa unificada.
+DataGraph - modelagem da malha aerea brasileira (Parte 1) e comparacao de algoritmos em dataset maior do Spotify (Parte 2), com interface web interativa unificada.
 
 ## Requisitos
 

@@ -15,18 +15,19 @@ function BackButton({ onClick }) {
         bottom: 20,
         right: 20,
         zIndex: 9999,
-        background: '#13131f',
-        border: '1px solid #252535',
-        color: '#777799',
-        fontFamily: "'Space Mono', monospace",
+        background: 'rgba(255, 249, 235, 0.92)',
+        border: '1px solid rgba(128, 101, 67, 0.18)',
+        color: '#6e6a53',
+        fontFamily: "'Nunito', 'Inter', sans-serif",
         fontSize: '0.7rem',
-        padding: '6px 14px',
-        borderRadius: 4,
+        padding: '8px 15px',
+        borderRadius: 999,
         cursor: 'pointer',
-        transition: 'all 0.15s',
+        transition: 'all 0.18s',
+        boxShadow: '0 12px 28px rgba(85, 74, 50, 0.16)',
       }}
-      onMouseEnter={e => { e.target.style.borderColor = '#6c63ff'; e.target.style.color = '#fff' }}
-      onMouseLeave={e => { e.target.style.borderColor = '#252535'; e.target.style.color = '#777799' }}
+      onMouseEnter={e => { e.target.style.borderColor = '#8cbf99'; e.target.style.color = '#2f5942' }}
+      onMouseLeave={e => { e.target.style.borderColor = 'rgba(128, 101, 67, 0.18)'; e.target.style.color = '#6e6a53' }}
     >
       ← Voltar
     </button>
@@ -40,14 +41,14 @@ function LandingPage({ onSelect }) {
       icon: '✈',
       title: 'Aeroportos do Brasil',
       desc: 'Rede de aeroportos brasileiros com rotas, algoritmos de caminho e estatísticas regionais.',
-      accent: '#6c63ff',
+      accent: '#5c9f79',
     },
     {
       id: 'spotify',
       icon: '🎵',
       title: 'Grafo Spotify',
       desc: 'Grafo interativo de artistas e gêneros musicais com geração de playlists via BFS e DFS.',
-      accent: '#00c2a8',
+      accent: '#4f8fb8',
     },
   ]
 
@@ -55,56 +56,57 @@ function LandingPage({ onSelect }) {
     <div style={{
       width: '100vw',
       height: '100vh',
-      background: '#0d0d14',
+      background: 'linear-gradient(180deg, #f7edcf 0%, #cfe3c2 54%, #a8cfbf 100%)',
       display: 'flex',
       flexDirection: 'column',
       alignItems: 'center',
       justifyContent: 'center',
-      fontFamily: "'Space Mono', monospace",
+      fontFamily: "'Nunito', 'Inter', sans-serif",
       gap: 48,
+      color: '#354733',
     }}>
       <div style={{ textAlign: 'center' }}>
         <div style={{
           fontFamily: "'Syne', sans-serif",
           fontWeight: 800,
-          fontSize: '2rem',
-          background: 'linear-gradient(90deg,#6c63ff,#00c2a8)',
-          WebkitBackgroundClip: 'text',
-          WebkitTextFillColor: 'transparent',
+          fontSize: '2.35rem',
+          color: '#2f5942',
           marginBottom: 8,
         }}>
-          ProjetoGrafos
+          DataGraph
         </div>
-        <div style={{ color: '#777799', fontSize: '0.75rem', letterSpacing: 2 }}>
+        <div style={{ color: '#6e6a53', fontSize: '0.75rem', letterSpacing: 1.4, fontWeight: 800 }}>
           SELECIONE UMA VISUALIZAÇÃO
         </div>
       </div>
 
-      <div style={{ display: 'flex', gap: 28 }}>
+      <div style={{ display: 'flex', gap: 28, flexWrap: 'wrap', justifyContent: 'center' }}>
         {cards.map(card => (
           <button
             key={card.id}
             onClick={() => onSelect(card.id)}
             style={{
-              background: '#13131f',
-              border: `1px solid #252535`,
-              borderRadius: 12,
+              background: 'rgba(255, 249, 235, 0.82)',
+              border: `1px solid rgba(128, 101, 67, 0.16)`,
+              borderRadius: 18,
               padding: '36px 40px',
               width: 260,
               cursor: 'pointer',
               textAlign: 'left',
               transition: 'all 0.2s',
-              color: '#e0e0f0',
+              color: '#354733',
+              boxShadow: '0 18px 40px rgba(72, 92, 61, 0.16)',
+              backdropFilter: 'blur(10px)',
             }}
             onMouseEnter={e => {
               e.currentTarget.style.borderColor = card.accent
               e.currentTarget.style.transform = 'translateY(-4px)'
-              e.currentTarget.style.boxShadow = `0 8px 32px ${card.accent}22`
+              e.currentTarget.style.boxShadow = `0 22px 46px ${card.accent}35`
             }}
             onMouseLeave={e => {
-              e.currentTarget.style.borderColor = '#252535'
+              e.currentTarget.style.borderColor = 'rgba(128, 101, 67, 0.16)'
               e.currentTarget.style.transform = 'translateY(0)'
-              e.currentTarget.style.boxShadow = 'none'
+              e.currentTarget.style.boxShadow = '0 18px 40px rgba(72, 92, 61, 0.16)'
             }}
           >
             <div style={{ fontSize: '2.2rem', marginBottom: 16 }}>{card.icon}</div>
@@ -117,7 +119,7 @@ function LandingPage({ onSelect }) {
             }}>
               {card.title}
             </div>
-            <div style={{ fontSize: '0.68rem', color: '#777799', lineHeight: 1.7 }}>
+            <div style={{ fontSize: '0.76rem', color: '#6e6a53', lineHeight: 1.65 }}>
               {card.desc}
             </div>
           </button>
