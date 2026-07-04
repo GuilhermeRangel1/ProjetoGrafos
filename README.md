@@ -46,6 +46,14 @@ projeto-grafos/
 
 A interface unifica os dois grafos em uma página de entrada com navegação entre eles.
 
+### Rodando com Docker
+
+```bash
+docker compose up --build
+```
+
+Acesse `http://localhost:5173`. O Compose sobe a API Flask em `http://localhost:5000` e o frontend Vite em `http://localhost:5173`.
+
 **Terminal 1 — backend (necessário para a Parte 2):**
 
 ```bash

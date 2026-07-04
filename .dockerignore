@@ -1,0 +1,8 @@
+.git
+__pycache__/
+*.pyc
+.pytest_cache/
+out/
+spotify-graph/node_modules/
+spotify-graph/dist/
+Relatorio Projeto Grafos 2026.1 Turma A.pdf

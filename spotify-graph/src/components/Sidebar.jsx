@@ -1,5 +1,7 @@
 import { useState } from 'react'
 
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000'
+
 export default function Sidebar({ node, genreColorMap, onClose }) {
   const [playlist, setPlaylist] = useState(null)
   const [loadingPlaylist, setLoadingPlaylist] = useState(false)
@@ -23,7 +25,7 @@ export default function Sidebar({ node, genreColorMap, onClose }) {
     try {
       // Usar node.rawId ou node.label como seed (track id ou nome de artista)
       const seed = node.type === 'track' ? node.rawId : node.label
-      const res = await fetch(`http://localhost:5000/api/playlist?seed=${encodeURIComponent(seed)}&algorithm=${algorithm}`)
+      const res = await fetch(`${API_URL}/api/playlist?seed=${encodeURIComponent(seed)}&algorithm=${algorithm}`)
       const data = await res.json()
       
       if (!res.ok) {
