@@ -1,8 +1,18 @@
 import { useEffect, useRef, useState, useMemo } from 'react'
 import { GENRES, POP_DIST, KPI_STATS, BFS_LAYERS } from '../data/spotifyChartData'
+import { displayGenreLabel } from '../utils/genreTranslations'
 
 const RADAR_GENRES = ['pop-film', 'k-pop', 'chill', 'forro', 'death-metal', 'acoustic', 'sertanejo']
 const RADAR_COLORS = ['#6c63ff', '#FF6B6B', '#4D96FF', '#FFD93D', '#6BCB77', '#a29bfe', '#00c2a8']
+
+const displayMetricText = (text = '') =>
+  text
+    .replace(/danceability/gi, 'dançabilidade')
+    .replace(/energy/gi, 'energia')
+    .replace(/valence/gi, 'valência')
+    .replace(/pop\./gi, 'popularidade')
+
+const displayKpiValue = (value = '') => displayGenreLabel(value)
 
 // YlOrRd color stops (matches Python matplotlib colormap)
 const YL_OR_RD = [
@@ -141,7 +151,7 @@ export default function ChartsPanel({ onClose }) {
       })
   }, [])
 
-  // ── Dados derivados para o Storytelling ──────────────────────────────────
+  // ── Dados derivados para a narrativa analítica ───────────────────────────
   const insights = useMemo(() => {
     // BFS (sempre disponível via import)
     const bfsTotalVisited = BFS_LAYERS.nos.reduce((s, n) => s + n, 0)
@@ -199,7 +209,7 @@ export default function ChartsPanel({ onClose }) {
     const topPct  = ((POP_DIST[4] / totalTracks) * 100).toFixed(1)
     const lowPct  = (((POP_DIST[0] + POP_DIST[1]) / totalTracks) * 100).toFixed(1)
 
-    // Heatmap: par mais próximo e mais distante
+    // Mapa de calor: par mais próximo e mais distante
     let mostSimilar = null, mostDistant = null
     if (heatData) {
       heatData.cells.forEach(c => {
@@ -265,7 +275,7 @@ export default function ChartsPanel({ onClose }) {
     const chart = new Chart(barCanvasRef.current.getContext('2d'), {
       type: 'bar',
       data: {
-        labels: topN.map(g => g.genre),
+        labels: topN.map(g => displayGenreLabel(g.genre)),
         datasets: [{
           data: topN.map(g => g.avg_pop),
           backgroundColor: topN.map((_, i) => `rgba(108,99,255,${1 - i * 0.055})`),
@@ -276,7 +286,7 @@ export default function ChartsPanel({ onClose }) {
         responsive: true, maintainAspectRatio: false,
         plugins: {
           legend: { display: false },
-          tooltip: { callbacks: { label: c => ` ${c.raw} pop. média` } },
+          tooltip: { callbacks: { label: c => ` ${c.raw} de popularidade média` } },
         },
         scales: {
           x: { ticks: { color: C.muted, font: { size: 10 } }, grid: { display: false } },
@@ -328,7 +338,7 @@ export default function ChartsPanel({ onClose }) {
       const ci = RADAR_GENRES.indexOf(g)
       const color = RADAR_COLORS[ci >= 0 ? ci : 0]
       return {
-        label: g,
+        label: displayGenreLabel(g),
         data: [d.avg_dance * 100, d.avg_energy * 100, d.avg_valence * 100, Math.min(100, d.avg_tempo / 1.6), d.avg_pop],
         backgroundColor: color + '22', borderColor: color, borderWidth: 2,
         pointBackgroundColor: color, pointRadius: 4,
@@ -336,7 +346,7 @@ export default function ChartsPanel({ onClose }) {
     })
     const chart = new Chart(radarCanvasRef.current.getContext('2d'), {
       type: 'radar',
-      data: { labels: ['Danceability', 'Energia', 'Valência', 'Tempo', 'Popularidade'], datasets },
+      data: { labels: ['Dançabilidade', 'Energia', 'Valência', 'Tempo', 'Popularidade'], datasets },
       options: {
         responsive: true, maintainAspectRatio: false,
         plugins: { legend: { display: false } },
@@ -519,7 +529,7 @@ export default function ChartsPanel({ onClose }) {
             background: 'linear-gradient(90deg,#efe6c8,#8fbd8c)',
             WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent',
           }}>
-            🎵 Spotify Artist-Genre Graph
+            Grafo Spotify de Artistas e Gêneros
           </div>
           <div style={{ fontSize: '0.65rem', color: C.muted, marginTop: 2 }}>
             Análise Interativa Parte 2
@@ -542,7 +552,7 @@ export default function ChartsPanel({ onClose }) {
             Análise Interativa
           </h2>
           <p style={{ color: C.muted, fontSize: '0.8rem', marginTop: 6 }}>
-            Visualizações geradas a partir dos dados de áudio do dataset Spotify Tracks (114 gêneros · 114.000 músicas).
+            Visualizações geradas a partir da base Spotify Tracks (114 gêneros · 114.000 músicas).
           </p>
         </div>
 
@@ -554,8 +564,8 @@ export default function ChartsPanel({ onClose }) {
           {KPI_STATS.map(kpi => (
             <div key={kpi.label} style={{ background: C.surf, padding: '1.1rem 1rem' }}>
               <div style={{ fontSize: '0.62rem', textTransform: 'uppercase', letterSpacing: '2px', color: C.muted, marginBottom: '0.4rem' }}>{kpi.label}</div>
-              <div style={{ fontSize: '1.15rem', fontWeight: 700, color: C.text, lineHeight: 1 }}>{kpi.val}</div>
-              <div style={{ fontSize: '0.68rem', color: C.muted, marginTop: '0.35rem' }}>{kpi.sub}</div>
+              <div style={{ fontSize: '1.15rem', fontWeight: 700, color: C.text, lineHeight: 1 }}>{displayKpiValue(kpi.val)}</div>
+              <div style={{ fontSize: '0.68rem', color: C.muted, marginTop: '0.35rem' }}>{displayMetricText(kpi.sub)}</div>
             </div>
           ))}
         </div>
@@ -563,11 +573,11 @@ export default function ChartsPanel({ onClose }) {
         {/* Row 1: genre charts */}
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 25, marginBottom: 25 }}>
 
-          <ChartCard title="Top Gêneros — Popularidade">
+          <ChartCard title="Principais Gêneros — Popularidade">
             <div style={{ display: 'flex', gap: 6, justifyContent: 'center', marginBottom: 14, flexWrap: 'wrap' }}>
               <span style={{ fontSize: '0.63rem', color: C.muted, alignSelf: 'center' }}>Mostrar:</span>
               {[5, 10, 15].map(n => (
-                <CtrlBtn key={n} active={hubCount === n} onClick={() => setHubCount(n)}>Top {n}</CtrlBtn>
+                <CtrlBtn key={n} active={hubCount === n} onClick={() => setHubCount(n)}>Ver {n}</CtrlBtn>
               ))}
             </div>
             <div style={{ position: 'relative', flex: 1, minHeight: 260 }}>
@@ -599,7 +609,7 @@ export default function ChartsPanel({ onClose }) {
                     fontFamily: 'inherit', fontSize: '0.62rem',
                     padding: '3px 7px', borderRadius: 4, cursor: 'pointer', transition: 'all 0.15s',
                   }}>
-                    {g}
+                    {displayGenreLabel(g)}
                   </button>
                 )
               })}
@@ -608,7 +618,7 @@ export default function ChartsPanel({ onClose }) {
               <canvas ref={radarCanvasRef} />
             </div>
             <p style={{ fontSize: '0.72rem', color: C.muted, marginTop: 12, textAlign: 'center' }}>
-              Danceability, Energia, Valência, Tempo e Popularidade. Selecione até 4 gêneros.
+              Dançabilidade, energia, valência, tempo e popularidade. Selecione até 4 gêneros.
             </p>
           </ChartCard>
         </div>
@@ -631,7 +641,7 @@ export default function ChartsPanel({ onClose }) {
             </p>
           </ChartCard>
 
-          <ChartCard title="Heatmap de Distâncias">
+          <ChartCard title="Mapa de Calor de Distâncias">
             {!rawHeat ? (
               <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', color: C.muted, fontSize: '0.8rem' }}>
                 Carregando…
@@ -664,7 +674,7 @@ export default function ChartsPanel({ onClose }) {
                       borderRadius: 4, cursor: 'pointer',
                     }}
                   >
-                    reset
+                    reiniciar
                   </button>
                 </div>
                 <div style={{ fontSize: '0.62rem', color: C.muted, textAlign: 'center', marginBottom: 6 }}>
@@ -684,7 +694,7 @@ export default function ChartsPanel({ onClose }) {
               </>
             )}
             <p style={{ fontSize: '0.72rem', color: C.muted, marginTop: 12, textAlign: 'center' }}>
-              Distância euclidiana (9 features de áudio). Diminua o limiar para focar nas músicas mais próximas — a matriz encolhe e as células ficam maiores.
+              Distância euclidiana (9 atributos de áudio). Diminua o limiar para focar nas músicas mais próximas — a matriz encolhe e as células ficam maiores.
             </p>
           </ChartCard>
 
@@ -702,10 +712,10 @@ export default function ChartsPanel({ onClose }) {
 
         </div>
 
-        {/* ── Storytelling Analítico & Insights ── */}
+        {/* ── Narrativa Analítica e Leituras ── */}
         <div style={{ marginTop: 50, borderBottom: `1px solid ${C.border}`, paddingBottom: 15, marginBottom: 28 }}>
           <h2 style={{ fontFamily: "'Syne', sans-serif", color: C.text, fontSize: '1.4rem' }}>
-            📖 Storytelling Analítico & Insights
+            Narrativa Analítica e Leituras
           </h2>
           <p style={{ color: C.muted, fontSize: '0.8rem', marginTop: 6 }}>
             O que os algoritmos de grafos revelam sobre o espaço musical — análise crítica com evidências dos dados reais.
@@ -715,29 +725,29 @@ export default function ChartsPanel({ onClose }) {
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 25, marginBottom: 25 }}>
 
           <InsightCard color="#6c63ff" title="1. O Iceberg da Popularidade">
-            De <b>{insights.totalTracks.toLocaleString('pt-BR')}</b> faixas no dataset,{' '}
+            De <b>{insights.totalTracks.toLocaleString('pt-BR')}</b> faixas na base,{' '}
             <b>{insights.obscurePct}%</b> vivem abaixo de 60 de popularidade, nunca chegando ao
-            mainstream. A distribuição é quase plana até esse ponto: cada faixa de 20 pontos
+            circuito principal. A distribuição é quase plana até esse ponto: cada faixa de 20 pontos
             concentra cerca de 30 mil músicas. Depois, o precipício: apenas{' '}
             <b>{POP_DIST[3].toLocaleString('pt-BR')} faixas (11.9%)</b> entram no intervalo 61–80,
             e míseras <b>{POP_DIST[4].toLocaleString('pt-BR')} ({insights.viralPct}%)</b> alcançam a
             elite 81–100. Cruzar 60 de popularidade não é evolução gradual, é um{' '}
-            <b>salto de classe</b>. O gênero campeão, <b>{insights.mostPopular.genre}</b> (média{' '}
+            <b>salto de classe</b>. O gênero campeão, <b>{displayGenreLabel(insights.mostPopular.genre)}</b> (média{' '}
             {insights.mostPopular.avg_pop}), ainda fica abaixo desse limiar: nem o gênero de topo
             escapa do "iceberg". A maior parte de suas faixas permanece invisível ao algoritmo
             de descoberta do Spotify.
           </InsightCard>
 
-          <InsightCard color="#f5a623" title="2. A DNA Sonora: Tensão entre Energia e Alegria">
+          <InsightCard color="#f5a623" title="2. DNA Sonoro: Tensão entre Energia e Alegria">
             O radar revela uma <b>tensão universal</b>: energia e valência raramente coexistem em
-            valores extremos. <b>{insights.mostEnergetic.genre}</b> domina energia ({' '}
+            valores extremos. <b>{displayGenreLabel(insights.mostEnergetic.genre)}</b> domina energia ({' '}
             <b>{insights.mostEnergetic.avg_energy}</b>) mas tem valência de apenas{' '}
             <b>{insights.mostEnergetic.avg_valence}</b>, adrenalina sem euforia, o perfil clássico
             do metal extremo. A exceção que quebra a regra:{' '}
-            <b>{insights.mostCheerful.genre}</b> (valência <b>{insights.mostCheerful.avg_valence}</b>,
+            <b>{displayGenreLabel(insights.mostCheerful.genre)}</b> (valência <b>{insights.mostCheerful.avg_valence}</b>,
             energia <b>{insights.mostCheerful.avg_energy}</b>), único gênero que combina intensidade
             e alegria ao mesmo tempo. O insight mais revelador:{' '}
-            <b>{insights.mostPopular.genre}</b> (gênero mais popular) não vence em nenhum eixo do
+            <b>{displayGenreLabel(insights.mostPopular.genre)}</b> (gênero mais popular) não vence em nenhum eixo do
             radar. Traça um hexágono perfeitamente mediano.{' '}
             <b>Popularidade é ausência de extremos</b>: trilha sonora de filmes funciona exatamente
             porque não intimida nem provoca ninguém.
@@ -745,7 +755,7 @@ export default function ChartsPanel({ onClose }) {
 
           <InsightCard color="#ff7070" title="3. Seis Graus de Similaridade — Dijkstra no Espaço Sonoro">
             Dijkstra prova que qualquer música está a apenas <b>{insights.avgSaltos} saltos</b> de
-            qualquer outra via features de áudio. O caminho mais revelador (
+            qualquer outra via atributos de áudio. O caminho mais revelador (
             {insights.bonjoviPath?.saltos ?? 4} saltos, custo{' '}
             {typeof insights.bonjoviPath?.custo === 'number'
               ? insights.bonjoviPath.custo.toFixed(3) : '0.861'}):
@@ -754,7 +764,7 @@ export default function ChartsPanel({ onClose }) {
               accent="#ff7070"
             />
             Indie/progressivo → rock → folk irlandês → canção alemã → Bon Jovi.
-            Cada salto maximiza sobreposição de features de áudio, nenhum "impõe" gênero.
+            Cada salto maximiza sobreposição de atributos de áudio, nenhum "impõe" gênero.
             Um segundo caminho (6 saltos) conecta <b>"Naranjo en Flor"</b> (tango argentino) a{' '}
             <b>"Tumhare Siva"</b> (música indiana) passando por{' '}
             "Riders on the Storm" (The Doors) e "Blue Moon of Kentucky" (country).
@@ -762,12 +772,12 @@ export default function ChartsPanel({ onClose }) {
             contínuos de distância euclidiana.</b>
           </InsightCard>
 
-          <InsightCard color="#00c2a8" title="4. Small-World Musical & o Corredor Sonoro Ótimo">
-            <b>BFS confirma small-world</b>: de qualquer origem, TODAS as{' '}
+          <InsightCard color="#00c2a8" title="4. Mundo Pequeno Musical e o Corredor Sonoro Ótimo">
+            <b>BFS confirma uma rede de mundo pequeno</b>: de qualquer origem, TODAS as{' '}
             {insights.totalNos.toLocaleString('pt-BR')} músicas são alcançadas em apenas{' '}
             {insights.minCamadas}–{insights.maxCamadas} camadas. Camada 1: exatamente 30 nós
             (= K do KNN). Pico na Camada 4 com 649 nós. O sino assimétrico
-            1→30→130→550→649→… é a assinatura do small-world: crescimento exponencial
+            1→30→130→550→649→… é a assinatura de mundo pequeno: crescimento exponencial
             até saturar, depois retração. O <b>Bellman-Ford com pesos negativos</b> revela o
             "corredor ótimo" onde cada salto é acima da média de similaridade. Melhor caminho
             encontrado ({insights.bestBfPath?.saltos ?? 9} saltos, custo{' '}
@@ -816,7 +826,7 @@ export default function ChartsPanel({ onClose }) {
               <p style={{ fontSize: '0.77rem', color: C.muted, lineHeight: 1.75, margin: 0 }}>
                 <b style={{ color: C.text }}>Gênero é uma convenção social, não uma fronteira
                 acústica.</b> Dijkstra atravessa de indie a Bon Jovi, de tango argentino a música
-                indiana, sempre por features de áudio contínuas, nunca por saltos bruscos.
+                indiana, sempre por atributos de áudio contínuos, nunca por saltos bruscos.
                 O espaço sonoro é um contínuo: fronteiras de gênero são rótulos humanos
                 impostos sobre uma geometria sem paredes.
               </p>
@@ -827,7 +837,7 @@ export default function ChartsPanel({ onClose }) {
               </div>
               <p style={{ fontSize: '0.77rem', color: C.muted, lineHeight: 1.75, margin: 0 }}>
                 Um sistema de recomendação baseado em{' '}
-                <b style={{ color: C.text }}>distância euclidiana sobre features de áudio</b> replicaria
+                <b style={{ color: C.text }}>distância euclidiana sobre atributos de áudio</b> replicaria
                 a percepção de "músicas parecidas" sem nenhum dado de gênero, só geometria sonora.
                 Qualquer música é descoberta em ≤{insights.maxCamadas} saltos. O BF com pesos
                 negativos seria o algoritmo ideal para o "corredor sonoro ótimo" de playlists.
