@@ -4,11 +4,13 @@
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1"/>
 <title>Aeroportos do Brasil</title>
+<link rel="icon" href="/favicon.ico?v=2" sizes="any"/>
+<link rel="icon" type="image/svg+xml" href="/favicon.svg?v=2"/>
 <link  rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
-<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;700;800&family=Space+Mono:wght@400;700&family=Syne:wght@800&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;700;800;900&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet"/>
 <style>
 :root{--bg:#f6edcf;--surf:rgba(255,250,235,.9);--panel:rgba(255,249,235,.76);--border:rgba(122,98,68,.18);--accent:#5c9f79;--accent-2:#4f8fb8;--text:#334332;--muted:#746f5a;--line:#9db49b}
 *{box-sizing:border-box;margin:0;padding:0}
@@ -17,8 +19,8 @@ body{background:linear-gradient(180deg,#f7edcf 0%,#d8e8c6 48%,#a9d0bf 100%);colo
 header{display:flex;align-items:center;justify-content:space-between;
         padding:14px 20px;background:rgba(255,249,235,.86);border-bottom:1px solid var(--border);flex-shrink:0;
         box-shadow:0 14px 36px rgba(80,91,61,.14);backdrop-filter:blur(14px)}
-.logo{font-family:'Syne',sans-serif;font-size:1.1rem;
-       color:#2f5942;letter-spacing:.2px}
+.logo{font-family:'Nunito','Inter',sans-serif;font-size:1.1rem;font-weight:900;
+       color:#2f5942;letter-spacing:0}
 .sub{font-size:.72rem;color:var(--muted);margin-top:3px;transition: color 0.2s;}
 .toolbar{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
 .toolbar input, .toolbar select {background:rgba(255,255,248,.72);border:1px solid var(--border);color:var(--text);
@@ -43,10 +45,10 @@ main{display:flex;flex:1;overflow:hidden; width: 100%;}
 .metric-box { background: rgba(255,255,248,.7); padding: 10px; border-radius: 12px; border-left: 4px solid var(--accent); margin-bottom: 6px; }
 .metric-box:last-child { margin-bottom: 0; }
 .metric-title { font-size: 0.62rem; color: var(--muted); text-transform: uppercase; letter-spacing: .8px; }
-.metric-value { font-size: 1.16rem; font-family: 'Syne', sans-serif; font-weight: 800; color: #2f5942; margin-top: 3px;}
+.metric-value { font-size: 1.16rem; font-family:'Nunito','Inter',sans-serif; font-weight: 900; color: #2f5942; margin-top: 3px;}
 
-.ptitle{font-family:'Syne',sans-serif;font-size:.67rem;text-transform:uppercase;
-         letter-spacing:1.4px;color:#5e7f62;margin-bottom:6px}
+.ptitle{font-family:'Nunito','Inter',sans-serif;font-size:.7rem;font-weight:900;text-transform:uppercase;
+         letter-spacing:.6px;color:#5e7f62;margin-bottom:6px}
 .leg-item{display:flex;align-items:center;gap:7px;font-size:.68rem;margin-bottom:3px}
 .leg-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0;box-shadow:0 0 0 3px rgba(255,255,248,.7)}
 .ibox{background:rgba(255,255,248,.66);border:1px solid var(--border);border-radius:14px;
@@ -98,7 +100,7 @@ main{display:flex;flex:1;overflow:hidden; width: 100%;}
     .col-span-2, .col-span-3, .col-span-6 { grid-column: 1 / -1; }
 }
 
-.chart-card h3 { font-family: 'Syne', sans-serif; font-size: 0.95rem; margin-bottom: 8px; color: #2f5942; text-transform: uppercase; letter-spacing: 1px; text-align: center; }
+.chart-card h3 { font-family:'Nunito','Inter',sans-serif; font-size: 1rem; font-weight:900; margin-bottom: 8px; color: #2f5942; text-transform: uppercase; letter-spacing: .4px; text-align: center; }
 .chart-controls { display: flex; gap: 8px; justify-content: center; margin-bottom: 15px; flex-wrap: wrap; }
 .chart-controls button, .chart-controls select {
     background: rgba(255,255,248,.72); border: 1px solid var(--border); color: var(--text); padding: 6px 12px; font-size: 0.68rem;
@@ -109,6 +111,119 @@ main{display:flex;flex:1;overflow:hidden; width: 100%;}
 .chart-wrapper { position: relative; flex: 1; width: 100%; min-height: 260px; }
 .chart-card p { font-size: 0.75rem; color: var(--muted); margin-top: 14px; line-height: 1.5; text-align: center; }
 .chart-card p b { color: #2f5942 !important; }
+.story-hero {
+    grid-column: 1 / -1;
+    background: linear-gradient(135deg, rgba(255,249,235,.96), rgba(218,232,198,.88));
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 28px;
+    box-shadow: 0 18px 38px rgba(80,91,61,.12);
+}
+.story-eyebrow {
+    font-size: .68rem;
+    color: #5e7f62;
+    font-weight: 800;
+    letter-spacing: .7px;
+    text-transform: uppercase;
+    margin-bottom: 8px;
+}
+.story-title {
+    font-family:'Nunito','Inter',sans-serif;
+    font-weight: 900;
+    color: #2f5942;
+    font-size: 1.7rem;
+    line-height: 1.15;
+    margin-bottom: 10px;
+}
+.story-summary {
+    color: #5f6854;
+    line-height: 1.65;
+    max-width: 980px;
+    font-size: .92rem;
+}
+.story-stats {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(140px, 1fr));
+    gap: 12px;
+    margin-top: 22px;
+}
+.story-stat {
+    background: rgba(255,255,248,.68);
+    border: 1px solid rgba(122,98,68,.14);
+    border-radius: 14px;
+    padding: 13px 14px;
+}
+.story-stat span {
+    display: block;
+    color: #746f5a;
+    font-size: .66rem;
+    font-weight: 800;
+    letter-spacing: .8px;
+    text-transform: uppercase;
+    margin-bottom: 5px;
+}
+.story-stat strong {
+    color: #2f5942;
+    font-family:'Nunito','Inter',sans-serif;
+    font-weight: 900;
+    font-size: 1.05rem;
+}
+.insight-card {
+    min-height: auto;
+    border-top: 4px solid var(--accent);
+    justify-content: flex-start;
+    gap: 12px;
+}
+.insight-card h3 {
+    text-align: left;
+    margin-bottom: 10px;
+}
+.insight-card div {
+    font-size: .82rem;
+    line-height: 1.7;
+    color: var(--text);
+    text-align: left;
+}
+.insight-card b {
+    color: #2f5942;
+}
+.insight-card ul {
+    margin: 10px 0 0 0;
+    padding: 0;
+    list-style: none;
+}
+.insight-card li {
+    position: relative;
+    margin-top: 8px;
+    padding-left: 16px;
+}
+.insight-card li::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: .72em;
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: currentColor;
+    opacity: .55;
+}
+.insight-note {
+    display: block;
+    margin-top: 10px;
+    padding: 10px 12px;
+    border-radius: 12px;
+    background: rgba(92,159,121,.10);
+    color: #3f5f49;
+    font-weight: 700;
+}
+@media (max-width: 900px) {
+    .story-stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 560px) {
+    .story-stats { grid-template-columns: 1fr; }
+    .story-hero { padding: 20px; }
+}
 
 .animated-path { animation: dash-flow 15s linear infinite; }
 @keyframes dash-flow { from { stroke-dashoffset: 1000; } to { stroke-dashoffset: 0; } }
@@ -188,7 +303,7 @@ main{display:flex;flex:1;overflow:hidden; width: 100%;}
   <div id="charts-container">
     <div class="charts-grid">
       <div class="col-span-6" style="margin-bottom: 5px; border-bottom: 1px solid var(--border); padding-bottom: 15px;">
-         <h2 style="font-family: 'Syne', sans-serif; color: var(--text); font-size: 1.4rem;">Análise Topológica Interativa (Módulo AVD)</h2>
+         <h2 style="font-family:'Nunito','Inter',sans-serif; font-weight:900; color: var(--text); font-size: 1.45rem; letter-spacing:0;">Análise Topológica Interativa (Módulo AVD)</h2>
          <p style="color: var(--muted); font-size: 0.8rem; margin-top: 6px;">Visualizações geradas dinamicamente com base nas leis de Gestalt aplicadas aos dados do Grafo.</p>
       </div>
 
@@ -266,29 +381,48 @@ main{display:flex;flex:1;overflow:hidden; width: 100%;}
           <p>Correlação Grau x Densidade. <b style="color:#2f5942;">Dica: Clique em um ponto para ver no mapa!</b></p>
       </div>
 
-      <div class="col-span-6" style="margin-top: 30px; border-bottom: 1px solid var(--border); padding-bottom: 15px;">
-         <h2 style="font-family: 'Syne', sans-serif; color: var(--text); font-size: 1.4rem;">📖 Storytelling Analítico & Insights do Grafo</h2>
-         <p style="color: var(--muted); font-size: 0.8rem; margin-top: 6px;">Discussão Crítica e Conclusões Acionáveis baseadas nas métricas e leis da Gestalt.</p>
+      <section class="story-hero">
+          <div class="story-eyebrow">Leitura interpretativa da rede</div>
+          <h2 class="story-title">O que a malha aérea revela quando vira grafo</h2>
+          <p class="story-summary" id="insight-summary"></p>
+          <div class="story-stats">
+              <div class="story-stat">
+                  <span>Hub dominante</span>
+                  <strong id="stat-hub">--</strong>
+              </div>
+              <div class="story-stat">
+                  <span>Grau do hub</span>
+                  <strong id="stat-hub-degree">--</strong>
+              </div>
+              <div class="story-stat">
+                  <span>Densidade média</span>
+                  <strong id="stat-density">--</strong>
+              </div>
+              <div class="story-stat">
+                  <span>Região mais presente</span>
+                  <strong id="stat-region">--</strong>
+              </div>
+          </div>
+      </section>
+
+      <div class="chart-card col-span-3 insight-card" style="border-top-color: var(--accent);">
+          <h3 style="color: var(--accent);">1. Concentração e acesso</h3>
+          <div id="insight-1"></div>
       </div>
 
-      <div class="chart-card col-span-3" style="min-height: auto; border-top: 4px solid var(--accent);">
-          <h3 style="text-align: left; color: var(--accent); margin-bottom: 10px;">1. Exploração Visual & Topologia</h3>
-          <div id="insight-1" style="font-size: 0.8rem; line-height: 1.6; color: var(--text); text-align: justify;"></div>
+      <div class="chart-card col-span-3 insight-card" style="border-top-color: #d9a84e;">
+          <h3 style="color: #9a6b18;">2. Integração nacional</h3>
+          <div id="insight-2"></div>
       </div>
 
-      <div class="chart-card col-span-3" style="min-height: auto; border-top: 4px solid #d9a84e;">
-          <h3 style="text-align: left; color: #d9a84e; margin-bottom: 10px;">2. Modelagem & Leis da Gestalt</h3>
-          <div id="insight-2" style="font-size: 0.8rem; line-height: 1.6; color: var(--text); text-align: justify;"></div>
+      <div class="chart-card col-span-3 insight-card" style="border-top-color: #c9767d;">
+          <h3 style="color: #9a4a54;">3. Risco operacional</h3>
+          <div id="insight-3"></div>
       </div>
 
-      <div class="chart-card col-span-3" style="min-height: auto; border-top: 4px solid #ff7070;">
-          <h3 style="text-align: left; color: #ff7070; margin-bottom: 10px;">3. Discussão Crítica & Limitações</h3>
-          <div id="insight-3" style="font-size: 0.8rem; line-height: 1.6; color: var(--text); text-align: justify;"></div>
-      </div>
-
-      <div class="chart-card col-span-3" style="min-height: auto; border-top: 4px solid #5c9f79;">
-          <h3 style="text-align: left; color: #5c9f79; margin-bottom: 10px;">4. Conclusão & Insights Acionáveis</h3>
-          <div id="insight-4" style="font-size: 0.8rem; line-height: 1.6; color: var(--text); text-align: justify;"></div>
+      <div class="chart-card col-span-3 insight-card" style="border-top-color: #4f8fb8;">
+          <h3 style="color: #346b8c;">4. O que isso sugere</h3>
+          <div id="insight-4"></div>
       </div>
 
     </div>
@@ -308,6 +442,15 @@ const R_COLORS = {
     "Sul": "#4f8fb8", "Centro-Oeste": "#d28a55"
 };
 const REGIONS_LIST = Object.keys(R_COLORS);
+
+Chart.defaults.color = '#5f6854';
+Chart.defaults.font.family = 'Nunito, sans-serif';
+Chart.defaults.font.size = 11;
+Chart.defaults.plugins.tooltip.backgroundColor = 'rgba(47, 89, 66, 0.94)';
+Chart.defaults.plugins.tooltip.titleColor = '#fff6df';
+Chart.defaults.plugins.tooltip.bodyColor = '#fff6df';
+Chart.defaults.plugins.tooltip.borderColor = '#d8cfb8';
+Chart.defaults.plugins.tooltip.borderWidth = 1;
 
 let showingCharts = false;
 let chartInstances = {};
@@ -427,30 +570,113 @@ function voltarParaMapaEDestacar(iata) {
 }
 
 function generateInsights() {
-    let maxGrau = 0; let maiorHub = ""; let maiorHubRegiao = "";
-    let regiaoCount = {}; let sumDensidade = 0; let qtd = 0;
-    let totalEdges = activeMapFilterEdges.length;
-    let totalNodes = activeMapFilterNodes.size;
+    const nodes = Object.entries(currentAP);
+    const totalEdges = activeMapFilterEdges.length;
+    const totalNodes = activeMapFilterNodes.size;
+    const regiaoCount = {};
+    const tipoCount = {};
+    const regionDegree = {};
+    let sumDensidade = 0;
+    let totalDistance = 0;
+    let longEdges = 0;
 
-    Object.entries(currentAP).forEach(([iata, info]) => {
-        const grau = parseInt(info.grau) || 0;
-        if (grau > maxGrau) { maxGrau = grau; maiorHub = iata; maiorHubRegiao = info.regiao; }
-        regiaoCount[info.regiao] = (regiaoCount[info.regiao] || 0) + 1;
-        sumDensidade += parseFloat(info.densidade_ego) || 0;
-        qtd++;
+    const hubs = nodes
+        .map(([iata, info]) => ({
+            iata,
+            cidade: info.cidade,
+            regiao: info.regiao,
+            grau: parseInt(info.grau) || 0,
+            densidade: parseFloat(info.densidade_ego) || 0
+        }))
+        .sort((a, b) => b.grau - a.grau);
+
+    hubs.forEach(h => {
+        regiaoCount[h.regiao] = (regiaoCount[h.regiao] || 0) + 1;
+        regionDegree[h.regiao] = (regionDegree[h.regiao] || 0) + h.grau;
+        sumDensidade += h.densidade;
     });
 
-    let densidadeMedia = qtd > 0 ? (sumDensidade / qtd).toFixed(3) : 0;
-    let regiaoDominante = Object.keys(regiaoCount).length > 0 ? Object.keys(regiaoCount).reduce((a, b) => regiaoCount[a] > regiaoCount[b] ? a : b) : "Nenhuma";
-    let countDominante = regiaoCount[regiaoDominante] || 0;
+    activeMapFilterEdges.forEach(e => {
+        const tipo = (e.tipo || 'sem tipo').replace('_', '-');
+        tipoCount[tipo] = (tipoCount[tipo] || 0) + 1;
+        const peso = parseFloat(e.peso) || 0;
+        totalDistance += peso;
+        if (peso >= 1500) longEdges++;
+    });
 
-    document.getElementById('insight-1').innerHTML = `A análise exploratória das <b>${totalEdges} arestas mapeadas</b> entre os <b>${totalNodes} vértices ativos</b> evidencia que a malha aérea nacional se comporta como uma rede Livre de Escala (Scale-Free). O aeroporto <b>${maiorHub} (${maiorHubRegiao})</b> polariza o ecossistema atual atuando como o hub primário (grau máximo de <b>${maxGrau}</b>). A região <b>${regiaoDominante}</b> domina a concentração com <b>${countDominante}</b> nós. A baixa densidade ego média (<b>${densidadeMedia}</b>) indica que, fora grandes centros, a rede é esparsa.`;
+    const maiorHub = hubs[0] || { iata: '--', cidade: '', regiao: '--', grau: 0 };
+    const topHubs = hubs.slice(0, 3).map(h => `${h.iata} (${h.grau})`).join(', ');
+    const densidadeMedia = hubs.length > 0 ? (sumDensidade / hubs.length).toFixed(3) : '0.000';
+    const regiaoDominante = Object.keys(regiaoCount).length > 0
+        ? Object.keys(regiaoCount).reduce((a, b) => regiaoCount[a] > regiaoCount[b] ? a : b)
+        : 'Nenhuma';
+    const countDominante = regiaoCount[regiaoDominante] || 0;
+    const tipoDominante = Object.keys(tipoCount).length > 0
+        ? Object.keys(tipoCount).reduce((a, b) => tipoCount[a] > tipoCount[b] ? a : b)
+        : 'sem tipo';
+    const regiaoMaisConectada = Object.keys(regionDegree).length > 0
+        ? Object.keys(regionDegree).reduce((a, b) => regionDegree[a] > regionDegree[b] ? a : b)
+        : 'Nenhuma';
+    const periferalNodes = hubs
+        .filter(h => h.grau <= 7)
+        .slice()
+        .sort((a, b) => a.grau - b.grau)
+        .slice(0, 4)
+        .map(h => `${h.iata} (${h.regiao})`)
+        .join(', ');
+    const avgDistance = totalEdges > 0 ? Math.round(totalDistance / totalEdges) : 0;
+    const longEdgePct = totalEdges > 0 ? Math.round((longEdges / totalEdges) * 100) : 0;
+    const totalDegree = hubs.reduce((acc, h) => acc + h.grau, 0);
+    const concentrationRatio = totalDegree > 0
+        ? Math.round((hubs.slice(0, 3).reduce((acc, h) => acc + h.grau, 0) / totalDegree) * 100)
+        : 0;
 
-    document.getElementById('insight-2').innerHTML = `Para mitigar a severa carga cognitiva da visualização e evitar o efeito "hairball", o design foi construído sobre princípios estritos da Gestalt. A <b>Lei da Similaridade</b> foi aplicada no mapeamento semântico de cores (categorical colormap) associando nós à sua macrorregião. A <b>Lei da Continuidade e Figura-Fundo</b> é empregada na resposta interativa: filtros e cálculos (como Dijkstra) ganham destaque (figura), enquanto a matriz subjacente entra em estado de opacidade (fundo), isolando o ruído analítico.`;
+    document.getElementById('stat-hub').textContent = `${maiorHub.iata} · ${maiorHub.regiao}`;
+    document.getElementById('stat-hub-degree').textContent = maiorHub.grau;
+    document.getElementById('stat-density').textContent = densidadeMedia;
+    document.getElementById('stat-region').textContent = `${regiaoDominante} (${countDominante})`;
 
-    document.getElementById('insight-3').innerHTML = `Apesar da modelagem visual, o modelo topológico fixo atrelado à projeção geográfica possui limitações claras. A métrica de proximidade real induz a uma <b>oclusão visual severa</b> no Sudeste (ex: a tríade CGH-GRU-VCP), onde a superposição geométrica dos nós mascara a verdadeira conectividade estrutural. Adicionalmente, o grafo estático apresenta um <i>"falso viés de eficiência"</i>: ao omitir variáveis temporais (frequência diária), o Dijkstra elege o caminho "mais barato" em peso numérico, ignorando fluxos logísticos da vida real.`;
+    document.getElementById('insight-summary').innerHTML =
+        `A leitura do grafo mostra uma malha com <b>${totalNodes} aeroportos</b> e <b>${totalEdges} conexões</b>, ` +
+        `na qual acesso, integração regional e vulnerabilidade operacional aparecem juntos. O aeroporto <b>${maiorHub.iata}</b> ` +
+        `atua como principal articulador, enquanto a região <b>${regiaoMaisConectada}</b> concentra a maior soma de conexões. ` +
+        `Na prática, isso ajuda a discutir como passageiros, cargas e atrasos tendem a circular pela rede.`;
 
-    document.getElementById('insight-4').innerHTML = `<b>Insight Logístico Estratégico:</b> A leitura combinada dos gráficos de distribuição revela uma vulnerabilidade crítica de projeto: a baixa resiliência topológica a falhas em cascata. O excesso de dependência estrutural do vértice <b>${maiorHub}</b> faz com que interrupções climáticas colapsem sub-rotas. A resposta acionável exige a <b>descentralização arquitetural</b> estimulando "Vértices de Corte" secundários no Nordeste e Norte, achatando a curva de centralidade de grau e melhorando a capacidade de recuperação de toda a rede.`;
+    document.getElementById('insight-1').innerHTML =
+        `A malha não distribui conexões de forma uniforme. Os maiores hubs da amostra são <b>${topHubs || 'sem dados'}</b>, ` +
+        `e eles concentram cerca de <b>${concentrationRatio}%</b> da soma de graus observada no filtro atual.` +
+        `<ul>` +
+        `<li><b>Na vida real:</b> isso sugere que muitas viagens dependem de poucos aeroportos para conexão, escala ou redistribuição de fluxo.</li>` +
+        `<li><b>Para cidades menores:</b> aeroportos como ${periferalNodes || 'os de menor grau'} tendem a ter menor redundância de rota e menos alternativas quando há cancelamentos.</li>` +
+        `</ul>` +
+        `<span class="insight-note">Leitura principal: boa conectividade nacional, mas com acesso desigual entre centros e periferias da rede.</span>`;
+
+    document.getElementById('insight-2').innerHTML =
+        `O tipo de ligação mais frequente no filtro atual é <b>${tipoDominante}</b>, e a distância média das conexões exibidas é de aproximadamente <b>${avgDistance} km</b>. ` +
+        `Além disso, <b>${longEdgePct}%</b> das arestas têm 1.500 km ou mais, indicando trechos que fazem papel de costura territorial.` +
+        `<ul>` +
+        `<li><b>Conexões regionais</b> sustentam deslocamentos de proximidade, especialmente onde a malha rodoviária é lenta ou longa.</li>` +
+        `<li><b>Conexões inter-regionais</b> aproximam mercados distantes e tornam hubs do Sudeste, Nordeste e Centro-Oeste pontos estratégicos de transferência.</li>` +
+        `</ul>` +
+        `<span class="insight-note">Leitura principal: o grafo mostra a aviação como infraestrutura de integração, não só como conjunto de voos isolados.</span>`;
+
+    document.getElementById('insight-3').innerHTML =
+        `O aeroporto <b>${maiorHub.iata}</b>, em <b>${maiorHub.cidade}</b>, aparece como o ponto mais conectado da rede filtrada, com grau <b>${maiorHub.grau}</b>. ` +
+        `Isso ajuda a reduzir distâncias e organizar conexões, mas também cria uma dependência operacional: se esse aeroporto tiver restrição climática, pane, congestionamento ou fechamento temporário, parte da malha tende a sentir o impacto.` +
+        `<ul>` +
+        `<li><b>Atrasos em cascata:</b> voos conectados ao mesmo hub podem acumular espera por pista, portão, conexão e janela de embarque.</li>` +
+        `<li><b>Baixa redundância:</b> aeroportos com poucas conexões têm menos caminhos alternativos quando uma rota principal falha.</li>` +
+        `</ul>` +
+        `<span class="insight-note">Leitura principal: a centralização aumenta eficiência em dias normais, mas diminui a resiliência quando a operação sai do previsto.</span>`;
+
+    document.getElementById('insight-4').innerHTML =
+        `A partir do grafo, a recomendação não é “eliminar hubs”, porque eles são necessários. A questão é criar uma rede menos frágil ao redor deles.` +
+        `<ul>` +
+        `<li><b>Planejamento de rotas:</b> fortalecer ligações secundárias entre regiões reduz dependência dos maiores hubs.</li>` +
+        `<li><b>Gestão de crise:</b> aeroportos com alto grau devem ter prioridade em monitoramento, contingência e redistribuição de demanda.</li>` +
+        `<li><b>Política pública:</b> melhorar conectividade de aeroportos periféricos pode ampliar acesso, turismo regional e escoamento de cargas.</li>` +
+        `</ul>` +
+        `<span class="insight-note">Leitura principal: a rede ideal combina hubs fortes com alternativas regionais suficientes para manter o sistema funcionando.</span>`;
 }
 
 function renderAllCharts() {

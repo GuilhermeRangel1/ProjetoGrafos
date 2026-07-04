@@ -67,8 +67,8 @@ function LandingPage({ onSelect }) {
     }}>
       <div style={{ textAlign: 'center' }}>
         <div style={{
-          fontFamily: "'Syne', sans-serif",
-          fontWeight: 800,
+          fontFamily: "'Nunito', 'Inter', sans-serif",
+          fontWeight: 900,
           fontSize: '2.35rem',
           color: '#2f5942',
           marginBottom: 8,
@@ -111,8 +111,8 @@ function LandingPage({ onSelect }) {
           >
             <div style={{ fontSize: '2.2rem', marginBottom: 16 }}>{card.icon}</div>
             <div style={{
-              fontFamily: "'Syne', sans-serif",
-              fontWeight: 800,
+              fontFamily: "'Nunito', 'Inter', sans-serif",
+              fontWeight: 900,
               fontSize: '1rem',
               color: card.accent,
               marginBottom: 10,
