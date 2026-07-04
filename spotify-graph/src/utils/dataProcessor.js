@@ -69,9 +69,9 @@ export const parseDataset = (url, onProgress) => {
             artistData.genres.add(genre)
             artistData.topTracks.push({ name: trackName, popularity, id: trackId })
 
-            if (artistData.topTracks.length > 12) {
+            if (artistData.topTracks.length > 120) {
               artistData.topTracks.sort((a, b) => b.popularity - a.popularity)
-              artistData.topTracks.length = 4
+              artistData.topTracks.length = 80
             }
 
             pairSet.add(`${artist}|||${genre}`)
@@ -104,9 +104,12 @@ export const buildGraphData = (
     showTracks = false,
     tracksPerArtist = 1,
     maxTrackArtists = 250,
+    trackSearchQuery = '',
     pinnedArtists = PINNED_ARTISTS,
   } = {}
 ) => {
+  const normalizedTrackSearch = trackSearchQuery.trim().toLowerCase()
+
   let artists = Array.from(artistMap.entries())
     .map(([id, data]) => ({
       id: `artist:${id}`,
@@ -116,11 +119,12 @@ export const buildGraphData = (
       trackCount: data.trackCount,
       popularityAvg: data.trackCount > 0 ? data.popularitySum / data.trackCount : 0,
       genres: Array.from(data.genres),
-      topTracks: data.topTracks
-        .sort((a, b) => b.popularity - a.popularity)
-        .slice(0, Math.max(1, tracksPerArtist)),
+      topTracks: data.topTracks.sort((a, b) => b.popularity - a.popularity),
       genreCount: data.genres.size,
       pinned: pinnedArtists.some((name) => id.toLowerCase() === name.toLowerCase()),
+      hasTrackSearchMatch: normalizedTrackSearch
+        ? data.topTracks.some((track) => track.name.toLowerCase().includes(normalizedTrackSearch))
+        : false,
     }))
     .filter((artist) => artist.trackCount >= minTracks)
     .filter((artist) => artist.popularityAvg >= minPopularity)
@@ -131,7 +135,7 @@ export const buildGraphData = (
   }
 
   if (artists.length > maxArtists) {
-    const pinned = artists.filter((artist) => artist.pinned)
+    const pinned = artists.filter((artist) => artist.pinned || artist.hasTrackSearchMatch)
     const pinnedIds = new Set(pinned.map((artist) => artist.id))
     const ranked = artists
       .filter((artist) => !pinnedIds.has(artist.id))
@@ -205,20 +209,36 @@ export const buildGraphData = (
   }
 
   const nodes = [...genres, ...artists]
-  if (showTracks) {
+  if (showTracks || normalizedTrackSearch) {
     const artistsWithTracks = artists
       .slice()
       .sort((a, b) => {
+        if (a.hasTrackSearchMatch && !b.hasTrackSearchMatch) return -1
+        if (!a.hasTrackSearchMatch && b.hasTrackSearchMatch) return 1
         if (a.pinned && !b.pinned) return -1
         if (!a.pinned && b.pinned) return 1
         return b.popularityAvg - a.popularityAvg
       })
-      .slice(0, maxTrackArtists)
+      .slice(0, normalizedTrackSearch ? Math.max(maxTrackArtists, 500) : maxTrackArtists)
 
     for (const artist of artistsWithTracks) {
       if (!artist.topTracks) continue
 
-      for (const track of artist.topTracks) {
+      const seenTrackIds = new Set()
+      const candidateTracks = normalizedTrackSearch
+        ? artist.topTracks.filter((track) => track.name.toLowerCase().includes(normalizedTrackSearch))
+        : artist.topTracks
+      const tracksToShow = []
+
+      for (const track of candidateTracks) {
+        const dedupeKey = track.id || `${track.name}:${track.popularity}`
+        if (seenTrackIds.has(dedupeKey)) continue
+        seenTrackIds.add(dedupeKey)
+        tracksToShow.push(track)
+        if (tracksToShow.length >= (normalizedTrackSearch ? 40 : Math.max(1, tracksPerArtist))) break
+      }
+
+      for (const track of tracksToShow) {
         const trackNodeId = `track:${artist.id}:${track.id}`
         const trackAngle = ((hashString(trackNodeId) % 360) / 360) * Math.PI * 2
         const trackPosition = polarPoint(trackAngle, 22, artist)

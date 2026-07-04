@@ -130,6 +130,12 @@ function LandingPage({ onSelect }) {
 }
 
 function SpotifyApp({ onBack }) {
+  const [selectedNode, setSelectedNode] = useState(null)
+  const [searchQuery, setSearchQuery] = useState('')
+  const [trackSearchQuery, setTrackSearchQuery] = useState('')
+  const [showLabels, setShowLabels] = useState(false)
+  const [showCharts, setShowCharts] = useState(false)
+
   const {
     graphData,
     genreColorMap,
@@ -147,13 +153,7 @@ function SpotifyApp({ onBack }) {
     setMaxArtists,
     showTracks,
     setShowTracks,
-  } = useGraphData()
-
-  const [selectedNode, setSelectedNode] = useState(null)
-  const [searchQuery, setSearchQuery] = useState('')
-  const [trackSearchQuery, setTrackSearchQuery] = useState('')
-  const [showLabels, setShowLabels] = useState(false)
-  const [showCharts, setShowCharts] = useState(false)
+  } = useGraphData({ trackSearchQuery })
 
   const graphRef = useRef(null)
 

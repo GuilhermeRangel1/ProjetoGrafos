@@ -146,7 +146,7 @@ export default function Sidebar({ node, genreColorMap, onClose }) {
           <section>
             <SectionTitle>Top Tracks</SectionTitle>
             <ul className="mt-2 space-y-1.5">
-              {node.topTracks.map((t, i) => (
+              {node.topTracks.slice(0, 12).map((t, i) => (
                 <li key={i} className="flex items-center gap-2">
                   <span className="text-slate-600 text-xs w-4 text-right shrink-0">{i + 1}</span>
                   <a

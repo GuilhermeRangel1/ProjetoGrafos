@@ -2,7 +2,7 @@ import { useState, useEffect, useMemo, useCallback } from 'react'
 import { parseDataset, buildGraphData } from '../utils/dataProcessor'
 import { buildGenreColorMap } from '../utils/colors'
 
-export const useGraphData = () => {
+export const useGraphData = ({ trackSearchQuery = '' } = {}) => {
   const [rawData, setRawData] = useState(null)
   const [loadingProgress, setLoadingProgress] = useState(0)
   const [loadingStatus, setLoadingStatus] = useState('idle') // idle | loading | done | error
@@ -56,8 +56,9 @@ export const useGraphData = () => {
       showTracks,
       tracksPerArtist: 1,
       maxTrackArtists: 250,
+      trackSearchQuery,
     })
-  }, [rawData, minPopularity, minGenreCount, activeGenres, maxArtists, showTracks])
+  }, [rawData, minPopularity, minGenreCount, activeGenres, maxArtists, showTracks, trackSearchQuery])
 
   return {
     graphData,
