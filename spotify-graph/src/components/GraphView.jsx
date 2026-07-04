@@ -6,6 +6,10 @@ import { displayGenreLabel } from '../utils/genreTranslations'
 const MIN_POP = 0
 const MAX_POP = 100
 
+const getLinkEndpointId = (endpoint) => (
+  typeof endpoint === 'object' && endpoint !== null ? endpoint.id : endpoint
+)
+
 export default function GraphView({
   graphData,
   genreColorMap,
@@ -36,6 +40,30 @@ export default function GraphView({
 
   // Avoid cloning thousands of nodes/links on every graph update.
   const stableData = useMemo(() => graphData, [graphData])
+  const selectedGraphContext = useMemo(() => {
+    const relatedNodeIds = new Set()
+    const relatedLinkIds = new Set()
+    if (!selectedNode) return { relatedNodeIds, relatedLinkIds }
+
+    relatedNodeIds.add(selectedNode.id)
+    for (const link of stableData.links) {
+      const sourceId = getLinkEndpointId(link.source)
+      const targetId = getLinkEndpointId(link.target)
+      const isDirect = sourceId === selectedNode.id || targetId === selectedNode.id
+      const isSelectedArtistTrack =
+        selectedNode.type === 'artist' &&
+        link.type === 'track-link' &&
+        sourceId === selectedNode.id
+
+      if (isDirect || isSelectedArtistTrack) {
+        relatedLinkIds.add(`${sourceId}->${targetId}`)
+        relatedNodeIds.add(sourceId)
+        relatedNodeIds.add(targetId)
+      }
+    }
+
+    return { relatedNodeIds, relatedLinkIds }
+  }, [selectedNode, stableData])
 
   useEffect(() => {
     const graph = fgRef.current
@@ -45,6 +73,18 @@ export default function GraphView({
     graph.d3Force('link')?.distance((link) => (link.type === 'track-link' ? 14 : 34)).strength(0.28)
     graph.d3ReheatSimulation()
   }, [fgRef, stableData])
+
+  useEffect(() => {
+    if (selectedNode?.type !== 'track') return
+    const graph = fgRef.current
+    if (!graph) return
+
+    const graphNode = stableData.nodes.find((node) => node.id === selectedNode.id)
+    if (!graphNode || typeof graphNode.x !== 'number' || typeof graphNode.y !== 'number') return
+
+    graph.centerAt(graphNode.x, graphNode.y, 600)
+    graph.zoom(Math.max(graph.zoom(), 3), 600)
+  }, [fgRef, selectedNode, stableData])
 
   const searchLower = searchQuery ? searchQuery.toLowerCase() : ''
   const trackSearchLower = trackSearchQuery ? trackSearchQuery.toLowerCase() : ''
@@ -68,6 +108,7 @@ export default function GraphView({
 
       // Highlight logic
       const isSelected = selectedNode?.id === node.id
+      const isRelatedToSelection = selectedGraphContext.relatedNodeIds.has(node.id)
 
       const hasArtistQuery = !!searchLower
       let isArtistMatch = false
@@ -102,14 +143,14 @@ export default function GraphView({
 
       const dimmed =
         ((hasArtistQuery || hasTrackQuery) && !isSearchMatch) ||
-        (selectedNode && !isSelected)
+        (selectedNode && !isSelected && !isRelatedToSelection)
 
       ctx.save()
 
       // Glow for selected/matched
-      if (isSelected || isSearchMatch) {
+      if (isSelected || isSearchMatch || isRelatedToSelection) {
         ctx.shadowColor = color
-        ctx.shadowBlur = 12
+        ctx.shadowBlur = isSelected || isSearchMatch ? 12 : 6
       }
 
       // Draw circle
@@ -126,9 +167,9 @@ export default function GraphView({
         ctx.fill()
       }
 
-      if (isSelected || isSearchMatch) {
+      if (isSelected || isSearchMatch || isRelatedToSelection) {
         ctx.strokeStyle = '#fff'
-        ctx.lineWidth = 1.5 / globalScale
+        ctx.lineWidth = (isSelected || isSearchMatch ? 1.5 : 0.8) / globalScale
         ctx.stroke()
       }
 
@@ -161,7 +202,7 @@ export default function GraphView({
         ctx.restore()
       }
     },
-    [genreColorMap, selectedNode, searchLower, trackSearchLower, showLabels, getArtistRadius, getGenreRadius, getTrackRadius]
+    [genreColorMap, selectedNode, selectedGraphContext, searchLower, trackSearchLower, showLabels, getArtistRadius, getGenreRadius, getTrackRadius]
   )
 
   const nodePointerAreaPaint = useCallback(
@@ -201,6 +242,17 @@ export default function GraphView({
   // Link color: match source genre, or subtle green for track links
   const linkColor = useCallback(
     (link) => {
+      const sourceId = getLinkEndpointId(link.source)
+      const targetId = getLinkEndpointId(link.target)
+      const isSelectedLink = selectedGraphContext.relatedLinkIds.has(`${sourceId}->${targetId}`)
+
+      if (isSelectedLink) {
+        if (link.type === 'track-link') return 'rgba(29, 185, 84, 0.85)'
+        return 'rgba(255, 255, 255, 0.38)'
+      }
+
+      if (selectedNode) return 'rgba(255,255,255,0.025)'
+
       if (link.type === 'track-link') {
         return 'rgba(29, 185, 84, 0.08)' // faint Spotify green
       }
@@ -209,15 +261,20 @@ export default function GraphView({
       const color = genreColorMap.get(target.label) || '#ffffff'
       return `${color}18`
     },
-    [genreColorMap]
+    [genreColorMap, selectedNode, selectedGraphContext]
   )
 
   const linkWidth = useCallback(
     (link) => {
+      const sourceId = getLinkEndpointId(link.source)
+      const targetId = getLinkEndpointId(link.target)
+      if (selectedGraphContext.relatedLinkIds.has(`${sourceId}->${targetId}`)) {
+        return link.type === 'track-link' ? 1.2 : 0.9
+      }
       if (link.type === 'track-link') return 0.2
       return 0.4
     },
-    []
+    [selectedGraphContext]
   )
 
   return (

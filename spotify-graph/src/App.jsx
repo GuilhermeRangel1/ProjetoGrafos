@@ -135,6 +135,7 @@ function SpotifyApp({ onBack }) {
   const [trackSearchQuery, setTrackSearchQuery] = useState('')
   const [showLabels, setShowLabels] = useState(false)
   const [showCharts, setShowCharts] = useState(false)
+  const focusedArtistId = selectedNode?.type === 'artist' ? selectedNode.id : selectedNode?.artistId
 
   const {
     graphData,
@@ -153,13 +154,28 @@ function SpotifyApp({ onBack }) {
     setMaxArtists,
     showTracks,
     setShowTracks,
-  } = useGraphData({ trackSearchQuery })
+  } = useGraphData({ trackSearchQuery, focusedArtistId })
 
   const graphRef = useRef(null)
 
   const handleResetView = useCallback(() => {
     if (graphRef.current) graphRef.current.zoomToFit(600, 60)
     setSelectedNode(null)
+  }, [])
+
+  const handleSelectSidebarTrack = useCallback((track, artist) => {
+    if (!track || !artist) return
+    const trackNodeId = `track:${artist.id}:${track.id}`
+    setSelectedNode({
+      id: trackNodeId,
+      rawId: track.id,
+      type: 'track',
+      label: track.name,
+      popularity: track.popularity,
+      artistId: artist.id,
+      artistLabel: artist.label,
+      genre: artist.genres?.[0] || '',
+    })
   }, [])
 
   const isDone = loadingStatus === 'done'
@@ -213,6 +229,7 @@ function SpotifyApp({ onBack }) {
             <Sidebar
               node={selectedNode}
               genreColorMap={genreColorMap}
+              onSelectTrack={handleSelectSidebarTrack}
               onClose={() => setSelectedNode(null)}
             />
           )}

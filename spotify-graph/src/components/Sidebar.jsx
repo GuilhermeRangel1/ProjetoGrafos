@@ -2,7 +2,7 @@ import { useState } from 'react'
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000'
 
-export default function Sidebar({ node, genreColorMap, onClose }) {
+export default function Sidebar({ node, genreColorMap, onSelectTrack, onClose }) {
   const [playlist, setPlaylist] = useState(null)
   const [loadingPlaylist, setLoadingPlaylist] = useState(false)
   const [playlistError, setPlaylistError] = useState(null)
@@ -51,7 +51,7 @@ export default function Sidebar({ node, genreColorMap, onClose }) {
       : genreColorMap.get(node.genres?.[0]) || '#888'
 
   return (
-    <div className="absolute top-0 right-0 h-full w-72 bg-[#12121c]/95 backdrop-blur border-l border-slate-700/50 flex flex-col z-20 shadow-2xl">
+    <div className="absolute top-0 right-0 h-full w-[22rem] sm:w-[26rem] max-w-[calc(100vw-1rem)] bg-[#12121c]/95 backdrop-blur border-l border-slate-700/50 flex flex-col z-20 shadow-2xl">
       {/* Header */}
       <div
         className="flex items-center justify-between px-4 py-3 border-b border-slate-700/50"
@@ -146,18 +146,17 @@ export default function Sidebar({ node, genreColorMap, onClose }) {
           <section>
             <SectionTitle>Top Tracks</SectionTitle>
             <ul className="mt-2 space-y-1.5">
-              {node.topTracks.slice(0, 12).map((t, i) => (
+              {node.topTracks.slice(0, 20).map((t, i) => (
                 <li key={i} className="flex items-center gap-2">
                   <span className="text-slate-600 text-xs w-4 text-right shrink-0">{i + 1}</span>
-                  <a
-                    href={`https://open.spotify.com/track/${t.id}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-slate-300 hover:text-[#1DB954] text-xs truncate flex-1 transition-colors hover:underline"
-                    title="Ouvir no Spotify"
+                  <button
+                    type="button"
+                    onClick={() => onSelectTrack?.(t, node)}
+                    className="text-left text-slate-300 hover:text-[#1DB954] text-xs truncate flex-1 transition-colors hover:underline"
+                    title="Selecionar música no grafo"
                   >
                     {t.name}
-                  </a>
+                  </button>
                   <PopularityBar value={t.popularity} color={color} />
                 </li>
               ))}

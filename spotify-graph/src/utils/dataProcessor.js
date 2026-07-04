@@ -105,6 +105,7 @@ export const buildGraphData = (
     tracksPerArtist = 1,
     maxTrackArtists = 250,
     trackSearchQuery = '',
+    focusedArtistId = null,
     pinnedArtists = PINNED_ARTISTS,
   } = {}
 ) => {
@@ -209,22 +210,26 @@ export const buildGraphData = (
   }
 
   const nodes = [...genres, ...artists]
-  if (showTracks || normalizedTrackSearch) {
+  if (showTracks || normalizedTrackSearch || focusedArtistId) {
     const artistsWithTracks = artists
       .slice()
       .sort((a, b) => {
+        if (a.id === focusedArtistId && b.id !== focusedArtistId) return -1
+        if (a.id !== focusedArtistId && b.id === focusedArtistId) return 1
         if (a.hasTrackSearchMatch && !b.hasTrackSearchMatch) return -1
         if (!a.hasTrackSearchMatch && b.hasTrackSearchMatch) return 1
         if (a.pinned && !b.pinned) return -1
         if (!a.pinned && b.pinned) return 1
         return b.popularityAvg - a.popularityAvg
       })
-      .slice(0, normalizedTrackSearch ? Math.max(maxTrackArtists, 500) : maxTrackArtists)
+      .filter((artist) => !focusedArtistId || showTracks || normalizedTrackSearch || artist.id === focusedArtistId)
+      .slice(0, focusedArtistId ? Math.max(maxTrackArtists, 1) : (normalizedTrackSearch ? Math.max(maxTrackArtists, 500) : maxTrackArtists))
 
     for (const artist of artistsWithTracks) {
       if (!artist.topTracks) continue
 
       const seenTrackIds = new Set()
+      const isFocusedArtist = artist.id === focusedArtistId
       const candidateTracks = normalizedTrackSearch
         ? artist.topTracks.filter((track) => track.name.toLowerCase().includes(normalizedTrackSearch))
         : artist.topTracks
@@ -235,7 +240,7 @@ export const buildGraphData = (
         if (seenTrackIds.has(dedupeKey)) continue
         seenTrackIds.add(dedupeKey)
         tracksToShow.push(track)
-        if (tracksToShow.length >= (normalizedTrackSearch ? 40 : Math.max(1, tracksPerArtist))) break
+        if (!isFocusedArtist && tracksToShow.length >= (normalizedTrackSearch ? 40 : Math.max(1, tracksPerArtist))) break
       }
 
       for (const track of tracksToShow) {
