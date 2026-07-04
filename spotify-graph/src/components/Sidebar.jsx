@@ -6,17 +6,6 @@ export default function Sidebar({ node, genreColorMap, onSelectTrack, onClose })
   const [playlist, setPlaylist] = useState(null)
   const [loadingPlaylist, setLoadingPlaylist] = useState(false)
   const [playlistError, setPlaylistError] = useState(null)
-  const [copied, setCopied] = useState(false)
-
-  const handleCopyPlaylist = () => {
-    if (!playlist) return
-    const uris = playlist.playlist.map(t => `spotify:track:${t.id}`).join('\n')
-    navigator.clipboard.writeText(uris).then(() => {
-      setCopied(true)
-      setTimeout(() => setCopied(false), 3000)
-    }).catch(err => console.error("Falha ao copiar:", err))
-  }
-
   const handleGeneratePlaylist = async (algorithm) => {
     setLoadingPlaylist(true)
     setPlaylistError(null)
@@ -203,22 +192,8 @@ export default function Sidebar({ node, genreColorMap, onSelectTrack, onClose })
               <div className="mt-4 bg-slate-800/40 rounded-lg p-3 border border-slate-700">
                 <div className="flex items-center justify-between mb-2">
                   <span className="text-xs font-bold text-white">Playlist ({playlist.playlist.length} faixas)</span>
-                  <div className="flex gap-2">
-                    <button 
-                      onClick={handleCopyPlaylist} 
-                      className={`text-[10px] px-2 py-0.5 rounded transition-colors ${copied ? 'bg-green-500/20 text-green-400' : 'bg-slate-700 hover:bg-slate-600 text-white'}`}
-                    >
-                      {copied ? '✓ Copiado!' : '📋 Copiar p/ Spotify'}
-                    </button>
-                    <button onClick={() => setPlaylist(null)} className="text-[10px] text-slate-400 hover:text-white">Fechar</button>
-                  </div>
+                  <button onClick={() => setPlaylist(null)} className="text-[10px] text-slate-400 hover:text-white">Fechar</button>
                 </div>
-
-                {copied && (
-                  <div className="text-[9px] text-[#1DB954] mb-2 px-1">
-                    Cole (Ctrl+V) dentro de uma playlist vazia no aplicativo do Spotify para Desktop!
-                  </div>
-                )}
                 
                 {playlist.fallback_usado && (
                   <div className="text-[10px] text-yellow-400 mb-3 bg-yellow-400/10 p-2 rounded">

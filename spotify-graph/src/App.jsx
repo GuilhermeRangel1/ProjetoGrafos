@@ -6,15 +6,16 @@ import Controls from './components/Controls'
 import LoadingScreen from './components/LoadingScreen'
 import ChartsPanel from './components/ChartsPanel'
 
-function BackButton({ onClick }) {
+function BackButton({ onClick, side = 'right' }) {
   return (
     <button
       onClick={onClick}
       style={{
         position: 'fixed',
         bottom: 20,
-        right: 20,
-        zIndex: 9999,
+        right: side === 'right' ? 20 : 'auto',
+        left: side === 'left' ? 20 : 'auto',
+        zIndex: 15,
         background: 'rgba(255, 249, 235, 0.92)',
         border: '1px solid rgba(128, 101, 67, 0.18)',
         color: '#6e6a53',
@@ -268,7 +269,7 @@ function SpotifyApp({ onBack }) {
         </>
       )}
 
-      <BackButton onClick={onBack} />
+      {isDone && !selectedNode && !showCharts && <BackButton onClick={onBack} side="left" />}
     </div>
   )
 }
