@@ -14,6 +14,143 @@ const displayMetricText = (text = '') =>
 
 const displayKpiValue = (value = '') => displayGenreLabel(value)
 
+const pathToNodes = (path = '') => path.split(/\s*(?:→|â†’)\s*/).map(node => node.trim()).filter(Boolean)
+
+const formatMs = (seconds = 0) => `${(seconds * 1000).toFixed(3)} ms`
+
+const compactLabel = (value = '', max = 24) => {
+  if (value.length <= max) return value
+  return `${value.slice(0, max - 1)}…`
+}
+
+const buildPathGraph = (path, totalCost = 1, { negative = false, kind = 'similaridade' } = {}) => {
+  const labels = pathToNodes(path)
+  const nodes = labels.map((label, index) => ({
+    id: `n${index}`,
+    label,
+    x: labels.length === 1 ? 50 : 8 + (index / (labels.length - 1)) * 84,
+    y: 50 + Math.sin(index * 0.9) * 15,
+  }))
+  const weight = labels.length > 1 ? totalCost / (labels.length - 1) : 0
+  const edges = nodes.slice(0, -1).map((node, index) => ({
+    id: `e${index}`,
+    source: node.id,
+    target: nodes[index + 1].id,
+    weight,
+    kind,
+  }))
+
+  return {
+    nodes,
+    edges,
+    source: nodes[0]?.id,
+    target: nodes[nodes.length - 1]?.id,
+    order: nodes.map(node => node.id),
+    path: nodes.map(node => node.id),
+    activeEdges: edges.map(edge => edge.id),
+    negative,
+  }
+}
+
+const runVisualGraphExecution = (report, algorithm) => {
+  const started = performance.now()
+
+  if (algorithm === 'dijkstra') {
+    const sample = report.dijkstra?.find(item => item.caminho?.includes('You Give Love A Bad Name')) ?? report.dijkstra?.[0]
+    const graph = buildPathGraph(sample?.caminho, sample?.custo, { kind: 'menor distância' })
+    return {
+      title: 'Dijkstra montando o menor caminho',
+      subtitle: `${sample?.origem} → ${sample?.destino}`,
+      description: 'O algoritmo relaxa as arestas com menor custo acumulado e consolida a rota final entre músicas reais do relatório.',
+      metrics: [
+        ['saltos', sample?.saltos ?? graph.activeEdges.length],
+        ['custo', (sample?.custo ?? 0).toFixed(3)],
+        ['tempo relatório', formatMs(sample?.tempo_s ?? 0)],
+      ],
+      ...graph,
+      browserMs: performance.now() - started,
+    }
+  }
+
+  if (algorithm === 'bellman') {
+    const sample = report.bellman_ford_pesos_negativos?.[1] ?? report.bellman_ford_pesos_negativos?.[0]
+    const graph = buildPathGraph(sample?.caminho, sample?.custo, { negative: true, kind: 'peso negativo' })
+    return {
+      title: 'Bellman-Ford buscando corredor sonoro',
+      subtitle: `${sample?.origem} → ${sample?.destino}`,
+      description: 'Aqui o front executa relaxamentos sucessivos sobre um caminho com pesos negativos, simulando o corredor de maior similaridade.',
+      metrics: [
+        ['relaxamentos', graph.edges.length * Math.max(1, graph.nodes.length - 1)],
+        ['custo', (sample?.custo ?? 0).toFixed(3)],
+        ['tempo relatório', formatMs(sample?.tempo_s ?? 0)],
+      ],
+      ...graph,
+      browserMs: performance.now() - started,
+    }
+  }
+
+  if (algorithm === 'cycle') {
+    const cycle = report.bellman_ford_ciclo_negativo?.[0]
+    const nodes = [
+      { id: 'a', label: 'a', x: 32, y: 30 },
+      { id: 'b', label: 'b', x: 70, y: 50 },
+      { id: 'c', label: 'c', x: 32, y: 70 },
+    ]
+    const edges = [
+      { id: 'ab', source: 'a', target: 'b', weight: -1, kind: 'ciclo' },
+      { id: 'bc', source: 'b', target: 'c', weight: -1, kind: 'ciclo' },
+      { id: 'ca', source: 'c', target: 'a', weight: -1, kind: 'ciclo' },
+    ]
+    return {
+      title: 'Bellman-Ford detectando ciclo negativo',
+      subtitle: 'subgrafo artificial do relatório',
+      description: 'A animação fecha o ciclo a → b → c → a com peso -1 em cada aresta, mostrando por que o custo pode cair indefinidamente.',
+      metrics: [
+        ['arestas', 3],
+        ['custo ciclo', cycle?.custo ?? -19],
+        ['tempo relatório', formatMs(cycle?.tempo_s ?? 0.00012)],
+      ],
+      nodes,
+      edges,
+      source: 'a',
+      target: 'a',
+      order: ['a', 'b', 'c', 'a'],
+      path: ['a', 'b', 'c', 'a'],
+      activeEdges: ['ab', 'bc', 'ca'],
+      negative: true,
+      browserMs: performance.now() - started,
+    }
+  }
+
+  const seed = report.dijkstra?.[0] ?? report.bellman_ford_pesos_negativos?.[0]
+  const graph = buildPathGraph(seed?.caminho, seed?.custo, { kind: algorithm === 'dfs' ? 'profundidade' : 'camada' })
+  const order = algorithm === 'dfs'
+    ? graph.nodes.map(node => node.id)
+    : graph.nodes.map(node => node.id)
+
+  return {
+    title: algorithm === 'dfs' ? 'DFS caminhando em profundidade' : 'BFS expandindo por camadas',
+    subtitle: `${seed?.origem} → ${seed?.destino}`,
+    description: algorithm === 'dfs'
+      ? 'A execução desce pelo caminho até não haver novo vizinho, simulando a busca em profundidade sobre músicas reais.'
+      : 'A execução avança camada por camada, revelando a rota como uma expansão gradual de vizinhos no subgrafo real.',
+    metrics: algorithm === 'dfs'
+      ? [
+          ['nós visitados', order.length],
+          ['arestas ativas', graph.edges.length],
+          ['modo', 'profundidade'],
+        ]
+      : [
+          ['camadas', graph.edges.length],
+          ['nós visitados', order.length],
+          ['origem real', compactLabel(seed?.origem ?? '', 16)],
+        ],
+    ...graph,
+    order,
+    browserMs: performance.now() - started,
+  }
+}
+
 const C = {
   bg:     '#10170f',
   surf:   'rgba(31, 45, 30, 0.9)',
@@ -46,9 +183,21 @@ export default function ChartsPanel({ onClose }) {
   const [hubCount, setHubCount]   = useState(10)
   const [timingData, setTimingData] = useState(null)
   const [fullReport, setFullReport] = useState(null)
+  const [selectedAlgorithm, setSelectedAlgorithm] = useState('bfs')
+  const [runStatus, setRunStatus] = useState('idle')
+  const [runResult, setRunResult] = useState(null)
+  const [executionStep, setExecutionStep] = useState(0)
 
   const top15 = useMemo(() => [...GENRES].sort((a, b) => b.avg_pop - a.avg_pop).slice(0, 15), [])
   const topN   = useMemo(() => top15.slice(0, hubCount), [top15, hubCount])
+
+  const algorithmOptions = useMemo(() => ([
+    { id: 'bfs', label: 'BFS', desc: 'expansão por camadas' },
+    { id: 'dfs', label: 'DFS', desc: 'classificação de arestas' },
+    { id: 'dijkstra', label: 'Dijkstra', desc: 'menor caminho ponderado' },
+    { id: 'bellman', label: 'Bellman-Ford', desc: 'pesos negativos' },
+    { id: 'cycle', label: 'Ciclo negativo', desc: 'detecção com BF' },
+  ]), [])
 
   // ── Fetch timing data from parte2_report.json ─────────────────────────────
   useEffect(() => {
@@ -439,6 +588,42 @@ export default function ChartsPanel({ onClose }) {
     )
   }
 
+  const executeAlgorithmCheck = () => {
+    if (!fullReport) {
+      setRunResult({
+        title: 'Relatório ainda não carregado',
+        subtitle: 'parte2_report.json',
+        description: 'Aguarde o carregamento do relatório para executar a animação.',
+        metrics: [],
+        nodes: [],
+        edges: [],
+        order: [],
+        path: [],
+        activeEdges: [],
+        browserMs: 0,
+      })
+      return
+    }
+
+    setRunStatus('running')
+    setRunResult(null)
+    setExecutionStep(0)
+
+    window.setTimeout(() => {
+      const result = runVisualGraphExecution(fullReport, selectedAlgorithm)
+      setRunResult(result)
+      setRunStatus('done')
+
+      let step = 0
+      const totalSteps = Math.max(result.order.length, result.activeEdges.length + 1)
+      const timer = window.setInterval(() => {
+        step += 1
+        setExecutionStep(step)
+        if (step >= totalSteps) window.clearInterval(timer)
+      }, 420)
+    }, 260)
+  }
+
   return (
     <div style={{
       position: 'absolute', inset: 0, zIndex: 30,
@@ -611,6 +796,82 @@ export default function ChartsPanel({ onClose }) {
           </ChartCard>
 
         </div>
+
+        <section style={{
+          marginTop: 26,
+          marginBottom: 26,
+          background: 'linear-gradient(135deg, rgba(16,23,15,0.72), rgba(31,45,30,0.92))',
+          border: `1px solid ${C.border}`,
+          borderRadius: 16,
+          padding: 24,
+          boxShadow: '0 22px 52px rgba(0,0,0,0.28)',
+        }}>
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: 'minmax(260px, 0.95fr) minmax(420px, 1.45fr)',
+            gap: 24,
+            alignItems: 'stretch',
+          }}>
+            <div>
+              <div style={{
+                color: C.accent, fontSize: '0.66rem', letterSpacing: 2,
+                textTransform: 'uppercase', fontWeight: 900, marginBottom: 8,
+              }}>
+                Bancada de execução
+              </div>
+              <h3 style={{
+                color: C.text, fontFamily: "'Syne', sans-serif",
+                fontSize: '1.15rem', marginBottom: 10, lineHeight: 1.25,
+              }}>
+                Executar algoritmos no grafo
+              </h3>
+              <p style={{ color: C.muted, fontSize: '0.78rem', lineHeight: 1.75, marginBottom: 16 }}>
+                Executa no navegador uma simulação sobre um subgrafo real extraído dos caminhos do
+                relatório. Os nós são músicas reais e as arestas são transições usadas nos testes,
+                com o caminho sendo montado visualmente.
+              </p>
+
+              <div style={{ display: 'grid', gap: 8 }}>
+                {algorithmOptions.map(option => (
+                  <button
+                    key={option.id}
+                    onClick={() => setSelectedAlgorithm(option.id)}
+                    style={{
+                      width: '100%', textAlign: 'left', cursor: 'pointer',
+                      background: selectedAlgorithm === option.id ? 'rgba(143,189,140,0.18)' : 'rgba(16,23,15,0.48)',
+                      border: `1px solid ${selectedAlgorithm === option.id ? C.accent : C.border}`,
+                      color: C.text, borderRadius: 10, padding: '10px 12px',
+                      fontFamily: 'inherit',
+                    }}
+                  >
+                    <span style={{ display: 'block', fontWeight: 900, fontSize: '0.8rem' }}>{option.label}</span>
+                    <span style={{ display: 'block', color: C.muted, fontSize: '0.68rem', marginTop: 2 }}>{option.desc}</span>
+                  </button>
+                ))}
+              </div>
+
+              <button
+                onClick={executeAlgorithmCheck}
+                disabled={runStatus === 'running'}
+                style={{
+                  width: '100%', marginTop: 14,
+                  background: runStatus === 'running' ? 'rgba(143,189,140,0.35)' : C.accent,
+                  border: `1px solid ${C.accent}`,
+                  color: '#10170f',
+                  borderRadius: 999,
+                  padding: '10px 14px',
+                  fontWeight: 900,
+                  fontFamily: 'inherit',
+                  cursor: runStatus === 'running' ? 'wait' : 'pointer',
+                }}
+              >
+                {runStatus === 'running' ? 'Montando caminho...' : 'Executar no grafo'}
+              </button>
+            </div>
+
+            <AlgorithmResultPanel result={runResult} status={runStatus} step={executionStep} />
+          </div>
+        </section>
 
         {/* ── Insights do grafo ── */}
         <section style={{
@@ -842,6 +1103,203 @@ function InsightMetric({ label, value }) {
       <div style={{
         color: C.text, fontSize: '1.2rem', fontWeight: 900,
         fontFamily: "'Syne', sans-serif", lineHeight: 1.1,
+      }}>
+        {value}
+      </div>
+    </div>
+  )
+}
+
+function AlgorithmResultPanel({ result, status, step }) {
+  const isRunning = status === 'running'
+  const isReady = Boolean(result)
+  const visited = new Set(result?.order?.slice(0, Math.max(1, step)) ?? [])
+  const activeEdgeIds = new Set(result?.activeEdges?.slice(0, Math.max(0, step - 1)) ?? [])
+  const pathIds = new Set(result?.path ?? [])
+  const nodeById = new Map((result?.nodes ?? []).map(node => [node.id, node]))
+
+  return (
+    <div style={{
+      background: 'rgba(16, 23, 15, 0.58)',
+      border: `1px solid ${C.border}`,
+      borderRadius: 14,
+      padding: 18,
+      minHeight: 330,
+      display: 'flex',
+      flexDirection: 'column',
+    }}>
+      <div style={{
+        display: 'flex', justifyContent: 'space-between', gap: 12,
+        alignItems: 'center', marginBottom: 16,
+      }}>
+        <div>
+          <div style={{ color: C.muted, fontSize: '0.62rem', textTransform: 'uppercase', letterSpacing: 1.6, fontWeight: 900 }}>
+            Execução visual no grafo
+          </div>
+          <div style={{ color: C.text, fontWeight: 900, marginTop: 4 }}>
+            {isRunning ? 'Preparando subgrafo...' : isReady ? result.title : 'Nenhuma execução ainda'}
+          </div>
+        </div>
+        <span style={{
+          borderRadius: 999,
+          padding: '6px 10px',
+          background: isRunning ? 'rgba(242,217,139,0.16)' : isReady ? 'rgba(143,189,140,0.18)' : 'rgba(127,179,213,0.14)',
+          border: `1px solid ${isRunning ? '#f2d98b66' : isReady ? '#8fbd8c66' : '#7fb3d566'}`,
+          color: isRunning ? '#f2d98b' : isReady ? '#8fbd8c' : '#7fb3d5',
+          fontSize: '0.66rem',
+          fontWeight: 900,
+          textTransform: 'uppercase',
+          whiteSpace: 'nowrap',
+        }}>
+          {isRunning ? 'executando' : isReady ? 'animado' : 'aguardando'}
+        </span>
+      </div>
+
+      {isRunning && (
+        <div style={{
+          flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center',
+          color: C.muted, fontSize: '0.82rem',
+        }}>
+          Carregando nós reais e preparando a animação...
+        </div>
+      )}
+
+      {!isRunning && !isReady && (
+        <div style={{
+          flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center',
+          color: C.muted, fontSize: '0.82rem', textAlign: 'center', lineHeight: 1.7,
+        }}>
+          Escolha um algoritmo ao lado para ver o caminho sendo montado no subgrafo real usado nos testes.
+        </div>
+      )}
+
+      {!isRunning && isReady && (
+        <>
+          <div style={{ color: C.muted, fontSize: '0.74rem', lineHeight: 1.55, marginBottom: 12 }}>
+            <b style={{ color: C.text }}>{result.subtitle}</b><br />
+            {result.description}
+          </div>
+
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 10, marginBottom: 14 }}>
+            {result.metrics.map(([label, value]) => (
+              <ResultTile key={label} label={label} value={value} />
+            ))}
+          </div>
+
+          <div style={{
+            position: 'relative',
+            flex: 1,
+            minHeight: 250,
+            borderRadius: 14,
+            border: `1px solid ${C.border}`,
+            background: 'radial-gradient(circle at 25% 20%, rgba(143,189,140,0.12), transparent 34%), rgba(6,10,7,0.48)',
+            overflow: 'hidden',
+          }}>
+            <svg viewBox="0 0 100 100" preserveAspectRatio="none" style={{ width: '100%', height: '100%', display: 'block' }}>
+              {(result.edges ?? []).map(edge => {
+                const source = nodeById.get(edge.source)
+                const target = nodeById.get(edge.target)
+                if (!source || !target) return null
+                const active = activeEdgeIds.has(edge.id)
+                return (
+                  <line
+                    key={edge.id}
+                    x1={source.x}
+                    y1={source.y}
+                    x2={target.x}
+                    y2={target.y}
+                    stroke={active ? (result.negative ? '#c88a9a' : '#8fbd8c') : 'rgba(217,207,173,0.18)'}
+                    strokeWidth={active ? 0.9 : 0.35}
+                    strokeLinecap="round"
+                    style={{ transition: 'stroke 260ms ease, stroke-width 260ms ease' }}
+                  />
+                )
+              })}
+              {(result.nodes ?? []).map(node => {
+                const active = visited.has(node.id)
+                const inPath = pathIds.has(node.id)
+                return (
+                  <g key={node.id} style={{ transition: 'opacity 220ms ease' }}>
+                    <circle
+                      cx={node.x}
+                      cy={node.y}
+                      r={active ? 2.7 : 1.75}
+                      fill={active ? (result.negative ? '#c88a9a' : '#8fbd8c') : inPath ? '#f2d98b' : '#7fb3d5'}
+                      stroke={active ? '#f7efcf' : 'rgba(247,239,207,0.42)'}
+                      strokeWidth={active ? 0.55 : 0.28}
+                      style={{
+                        filter: active ? 'drop-shadow(0 0 6px rgba(143,189,140,0.95))' : 'none',
+                        transition: 'r 260ms ease, fill 260ms ease, stroke 260ms ease',
+                      }}
+                    />
+                  </g>
+                )
+              })}
+            </svg>
+            <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none' }}>
+              {(result.nodes ?? []).map(node => {
+                const active = visited.has(node.id)
+                return (
+                  <div
+                    key={node.id}
+                    title={node.label}
+                    style={{
+                      position: 'absolute',
+                      left: `${node.x}%`,
+                      top: `${node.y}%`,
+                      transform: 'translate(-50%, 9px)',
+                      color: active ? C.text : C.muted,
+                      fontSize: active ? '0.64rem' : '0.55rem',
+                      maxWidth: active ? 118 : 72,
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis',
+                      whiteSpace: 'nowrap',
+                      textAlign: 'center',
+                      opacity: active ? 1 : 0.62,
+                      textShadow: '0 2px 8px rgba(0,0,0,0.8)',
+                      transition: 'all 220ms ease',
+                    }}
+                  >
+                    {compactLabel(node.label, active ? 18 : 10)}
+                  </div>
+                )
+              })}
+            </div>
+          </div>
+
+          <div style={{
+            marginTop: 12,
+            color: C.muted,
+            fontSize: '0.68rem',
+            lineHeight: 1.6,
+          }}>
+            Passo {Math.min(step, Math.max(result.order.length, 1))} de {Math.max(result.order.length, 1)}
+            {' '}· tempo no navegador: {result.browserMs.toFixed(3)} ms
+          </div>
+        </>
+      )}
+    </div>
+  )
+}
+
+function ResultTile({ label, value }) {
+  return (
+    <div style={{
+      background: 'rgba(31,45,30,0.64)',
+      border: `1px solid ${C.border}`,
+      borderRadius: 10,
+      padding: '10px 11px',
+      minWidth: 0,
+    }}>
+      <div style={{
+        color: C.muted, fontSize: '0.56rem', letterSpacing: 1.3,
+        textTransform: 'uppercase', marginBottom: 6, fontWeight: 900,
+      }}>
+        {label}
+      </div>
+      <div style={{
+        color: C.text, fontSize: '0.76rem', fontWeight: 900,
+        overflow: 'hidden', textOverflow: 'ellipsis',
       }}>
         {value}
       </div>
