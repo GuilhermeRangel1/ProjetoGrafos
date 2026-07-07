@@ -54,6 +54,10 @@ def load_airports(path: Path) -> dict:
             airports[iata] = {
                 "cidade": (row.get("cidade") or row.get("Cidade") or "").strip(),
                 "regiao": (row.get("regiao") or row.get("Regiao") or row.get("regiao") or "").strip(),
+                "nome": (row.get("nome") or row.get("Nome") or "").strip(),
+                "uf": (row.get("uf") or row.get("UF") or "").strip(),
+                "lat": row.get("lat") or row.get("latitude") or row.get("latitude_deg") or "",
+                "lon": row.get("lon") or row.get("longitude") or row.get("longitude_deg") or "",
             }
     return airports
 
@@ -96,6 +100,15 @@ def fetch_coords(airports: dict) -> dict[str, tuple[float, float]]:
 
     updated = False
     for iata in airports:
+        raw_lat = airports[iata].get("lat")
+        raw_lon = airports[iata].get("lon")
+        if raw_lat not in (None, "") and raw_lon not in (None, ""):
+            try:
+                cache[iata] = [float(raw_lat), float(raw_lon)]
+                updated = True
+                continue
+            except (TypeError, ValueError):
+                pass
         if iata in cache: continue
         if iata in COORDS_FALLBACK:
             cache[iata] = list(COORDS_FALLBACK[iata])
@@ -138,6 +151,9 @@ class Grafo:
         self.adj[v].append((u, w))
         self.nodes.update([u, v])
 
+    def add_node(self, u: str):
+        self.nodes.add(u)
+
     def obter_todos_nos(self):
         return list(self.nodes)
 
@@ -148,11 +164,11 @@ class Grafo:
         return _dijkstra(self, src, dst)
 
 REGION_COLORS = {
-    "Norte":        "#00c2a8",
-    "Nordeste":     "#f5a623",
-    "Sudeste":      "#e84393",
-    "Sul":          "#6c63ff",
-    "Centro-Oeste": "#ff6b35",
+    "Norte":        "#5c9f79",
+    "Nordeste":     "#dfb04f",
+    "Sudeste":      "#c9767d",
+    "Sul":          "#4f8fb8",
+    "Centro-Oeste": "#d98c53",
 }
 
 def _clean_reg(regiao: str) -> str:
@@ -172,6 +188,8 @@ def build_html(airports, edges, ego, coords, path_rpo, path_msp) -> str:
         reg_limpa = _clean_reg(info["regiao"])
         ap_data[iata] = {
             "cidade":        info["cidade"],
+            "nome":          info.get("nome", ""),
+            "uf":            info.get("uf", ""),
             "regiao":        reg_limpa,
             "lat":           lat,
             "lon":           lon,
@@ -205,74 +223,76 @@ def build_html(airports, edges, ego, coords, path_rpo, path_msp) -> str:
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1"/>
-<title>Aeroportos do Brasil</title>
+<title>AeroGraph</title>
+<link rel="icon" href="/favicon.ico?v=2" sizes="any"/>
+<link rel="icon" type="image/svg+xml" href="/favicon.svg?v=2"/>
 <link  rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
-<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@800&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;700;800;900&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet"/>
 <style>
-:root{{--bg:#0d0d14;--surf:#13131f;--border:#252535;--accent:#6c63ff;--text:#e0e0f0;--muted:#777799}}
+:root{{--bg:#f6edcf;--surf:rgba(255,250,235,.9);--panel:rgba(255,249,235,.76);--border:rgba(122,98,68,.18);--accent:#5c9f79;--accent-2:#4f8fb8;--text:#334332;--muted:#746f5a;--line:#9db49b}}
 *{{box-sizing:border-box;margin:0;padding:0}}
-body{{background:var(--bg);color:var(--text);font-family:'Space Mono',monospace;
+body{{background:linear-gradient(180deg,#f7edcf 0%,#d8e8c6 48%,#a9d0bf 100%);color:var(--text);font-family:'Nunito','Inter',sans-serif;
       display:flex;flex-direction:column;height:100vh;overflow:hidden}}
 header{{display:flex;align-items:center;justify-content:space-between;
-        padding:12px 18px;background:var(--surf);border-bottom:1px solid var(--border);flex-shrink:0}}
-.logo{{font-family:'Syne',sans-serif;font-size:1.1rem;
-       background:linear-gradient(90deg,#6c63ff,#00c2a8);
-       -webkit-background-clip:text;-webkit-text-fill-color:transparent}}
-.sub{{font-size:.65rem;color:var(--muted);margin-top:2px;transition: color 0.2s;}}
+        padding:14px 20px;background:rgba(255,249,235,.86);border-bottom:1px solid var(--border);flex-shrink:0;
+        box-shadow:0 14px 36px rgba(80,91,61,.14);backdrop-filter:blur(14px)}}
+.logo{{font-family:'Nunito','Inter',sans-serif;font-size:1.1rem;font-weight:900;
+       color:#2f5942;letter-spacing:0}}
+.sub{{font-size:.72rem;color:var(--muted);margin-top:3px;transition: color 0.2s;}}
 .toolbar{{display:flex;gap:6px;align-items:center;flex-wrap:wrap}}
-.toolbar input, .toolbar select {{background:var(--bg);border:1px solid var(--border);color:var(--text);
-                font-family:inherit;font-size:.75rem;padding:4px 9px;border-radius:4px;
-                outline:none;transition:border .2s}}
+.toolbar input, .toolbar select {{background:rgba(255,255,248,.72);border:1px solid var(--border);color:var(--text);
+                font-family:inherit;font-size:.76rem;padding:7px 11px;border-radius:999px;
+                outline:none;transition:border .2s, box-shadow .2s}}
 .toolbar input:focus, .toolbar select:focus {{border-color:var(--accent)}}
 .toolbar select {{ cursor: pointer; }}
-.toolbar button{{background:var(--bg);border:1px solid var(--border);color:var(--text);
-                 font-family:inherit;font-size:.7rem;padding:4px 10px;border-radius:4px;
+.toolbar button{{background:rgba(255,255,248,.72);border:1px solid var(--border);color:var(--text);
+                 font-family:inherit;font-size:.72rem;padding:7px 12px;border-radius:999px;
                  cursor:pointer;transition: all .2s}}
-.toolbar button:hover{{background:var(--border)}}
-.toolbar button.active{{background:var(--accent);border-color:var(--accent);color:#fff}}
+.toolbar button:hover{{background:#fff9eb;border-color:#8cbf99;box-shadow:0 8px 20px rgba(92,159,121,.15)}}
+.toolbar button.active{{background:#5c9f79;border-color:#5c9f79;color:#fff}}
 main{{display:flex;flex:1;overflow:hidden; width: 100%;}}
 
 #map-container {{display:flex;flex:1; width:100%;}}
 #map{{flex:1}}
-#sidebar{{width:235px;background:var(--surf);border-left:1px solid var(--border);
-          overflow-y:auto;flex-shrink:0;padding:12px 10px;
+#sidebar{{width:272px;background:rgba(255,249,235,.84);border-left:1px solid var(--border);
+          overflow-y:auto;flex-shrink:0;padding:16px 14px;
           display:flex;flex-direction:column;gap:13px}}
 
-.dash-panel {{ display: flex; flex-direction: column; background: var(--bg); border: 1px solid var(--border); border-radius: 5px; padding: 9px; margin-bottom: 5px;}}
-.metric-box {{ background: var(--surf); padding: 8px; border-radius: 4px; border-left: 3px solid var(--accent); margin-bottom: 5px; }}
+.dash-panel {{ display: flex; flex-direction: column; background: var(--panel); border: 1px solid var(--border); border-radius: 16px; padding: 12px; margin-bottom: 5px; box-shadow:0 14px 32px rgba(80,91,61,.10);}}
+.metric-box {{ background: rgba(255,255,248,.7); padding: 10px; border-radius: 12px; border-left: 4px solid var(--accent); margin-bottom: 6px; }}
 .metric-box:last-child {{ margin-bottom: 0; }}
-.metric-title {{ font-size: 0.6rem; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; }}
-.metric-value {{ font-size: 1.1rem; font-family: 'Syne', sans-serif; font-weight: 800; color: #fff; margin-top: 3px;}}
+.metric-title {{ font-size: 0.62rem; color: var(--muted); text-transform: uppercase; letter-spacing: .8px; }}
+.metric-value {{ font-size: 1.16rem; font-family:'Nunito','Inter',sans-serif; font-weight: 900; color: #2f5942; margin-top: 3px;}}
 
-.ptitle{{font-family:'Syne',sans-serif;font-size:.67rem;text-transform:uppercase;
-         letter-spacing:2px;color:var(--muted);margin-bottom:4px}}
+.ptitle{{font-family:'Nunito','Inter',sans-serif;font-size:.7rem;font-weight:900;text-transform:uppercase;
+         letter-spacing:.6px;color:#5e7f62;margin-bottom:6px}}
 .leg-item{{display:flex;align-items:center;gap:7px;font-size:.68rem;margin-bottom:3px}}
-.leg-dot{{width:10px;height:10px;border-radius:50%;flex-shrink:0}}
-.ibox{{background:var(--bg);border:1px solid var(--border);border-radius:5px;
-       padding:9px;font-size:.68rem;line-height:1.65;min-height:80px;color:var(--muted)}}
+.leg-dot{{width:10px;height:10px;border-radius:50%;flex-shrink:0;box-shadow:0 0 0 3px rgba(255,255,248,.7)}}
+.ibox{{background:rgba(255,255,248,.66);border:1px solid var(--border);border-radius:14px;
+       padding:11px;font-size:.72rem;line-height:1.65;min-height:80px;color:var(--muted)}}
 .ibox b{{color:var(--text)}}
-.pbox{{background:var(--bg);border:1px solid var(--border);border-radius:5px;
+.pbox{{background:rgba(255,255,248,.66);border:1px solid var(--border);border-radius:14px;
        padding:7px;font-size:.64rem;line-height:1.75;word-break:break-all}}
-.pr{{color:#ff7070}} .pm{{color:#70b8ff}}
-#statusbar{{padding:3px 14px;font-size:.62rem;color:var(--muted);
-            background:var(--surf);border-top:1px solid var(--border);flex-shrink:0}}
-.rota-input{{background:var(--bg);border:1px solid var(--border);color:var(--text);
-             font-family:inherit;font-size:.75rem;padding:5px 8px;border-radius:4px;
+.pr{{color:#c95b50}} .pm{{color:#4f8fb8}}
+#statusbar{{padding:6px 16px;font-size:.68rem;color:var(--muted);
+            background:rgba(255,249,235,.86);border-top:1px solid var(--border);flex-shrink:0}}
+.rota-input{{background:rgba(255,255,248,.72);border:1px solid var(--border);color:var(--text);
+             font-family:inherit;font-size:.75rem;padding:8px 10px;border-radius:999px;
              width:100%;outline:none;text-transform:uppercase;transition:border .2s}}
 .rota-input:focus{{border-color:var(--accent)}}
-.leaflet-tile{{filter:brightness(.42) saturate(.55) hue-rotate(195deg)}}
-.leaflet-container{{background:#0d0d14}}
+.leaflet-tile{{filter:saturate(.72) sepia(.12) brightness(1.04) hue-rotate(18deg)}}
+.leaflet-container{{background:#d6e5c8}}
 .ap-dot{{border-radius:50%;border:2px solid #fff;display:flex;align-items:center;
-         justify-content:center;font-family:'Space Mono',monospace;font-weight:700;
-         color:#fff;cursor:pointer;box-shadow:0 0 10px rgba(0,0,0,.8);
+         justify-content:center;font-family:'Nunito',sans-serif;font-weight:800;
+         color:#fff;cursor:pointer;box-shadow:0 8px 18px rgba(61,78,49,.22), inset 0 0 0 1px rgba(255,255,255,.36);
          transition:transform .15s, box-shadow .15s;}}
-.ap-dot:hover{{transform:scale(1.3);box-shadow:0 0 16px rgba(255,255,255,.3)}}
+.ap-dot:hover{{transform:scale(1.25);box-shadow:0 12px 28px rgba(61,78,49,.28), inset 0 0 0 1px rgba(255,255,255,.7)}}
 
 #charts-container {{
-    display: none; flex: 1; width: 100%; overflow-y: auto; padding: 30px 40px; background: #09090f;
+    display: none; flex: 1; width: 100%; overflow-y: auto; padding: 30px 40px; background:linear-gradient(180deg,#f7edcf 0%,#d8e8c6 100%);
 }}
 
 .charts-grid {{
@@ -283,7 +303,7 @@ main{{display:flex;flex:1;overflow:hidden; width: 100%;}}
     margin: 0 auto;
 }}
 .chart-card {{
-    background: var(--surf); border: 1px solid var(--border); border-radius: 12px; padding: 25px; box-shadow: 0 10px 30px rgba(0,0,0,0.4);
+    background: var(--surf); border: 1px solid var(--border); border-radius: 18px; padding: 25px; box-shadow: 0 16px 36px rgba(80,91,61,.13);
     display: flex; flex-direction: column; justify-content: space-between; min-height: 400px;
 }}
 .col-span-2 {{ grid-column: span 2; }}
@@ -300,16 +320,17 @@ main{{display:flex;flex:1;overflow:hidden; width: 100%;}}
     .col-span-2, .col-span-3, .col-span-6 {{ grid-column: 1 / -1; }}
 }}
 
-.chart-card h3 {{ font-family: 'Syne', sans-serif; font-size: 0.95rem; margin-bottom: 8px; color: #00c2a8; text-transform: uppercase; letter-spacing: 1px; text-align: center; }}
+.chart-card h3 {{ font-family:'Nunito','Inter',sans-serif; font-size: 1rem; font-weight:900; margin-bottom: 8px; color: #2f5942; text-transform: uppercase; letter-spacing: .4px; text-align: center; }}
 .chart-controls {{ display: flex; gap: 8px; justify-content: center; margin-bottom: 15px; flex-wrap: wrap; }}
 .chart-controls button, .chart-controls select {{
-    background: var(--bg); border: 1px solid var(--border); color: var(--text); padding: 4px 10px; font-size: 0.68rem;
-    font-family: inherit; border-radius: 4px; cursor: pointer; outline: none; transition: all 0.2s;
+    background: rgba(255,255,248,.72); border: 1px solid var(--border); color: var(--text); padding: 6px 12px; font-size: 0.68rem;
+    font-family: inherit; border-radius: 999px; cursor: pointer; outline: none; transition: all 0.2s;
 }}
 .chart-controls button:hover, .chart-controls select:hover {{ border-color: var(--accent); }}
 .chart-controls button.active {{ background: var(--accent); border-color: var(--accent); color: white; }}
 .chart-wrapper {{ position: relative; flex: 1; width: 100%; min-height: 260px; }}
 .chart-card p {{ font-size: 0.75rem; color: var(--muted); margin-top: 14px; line-height: 1.5; text-align: center; }}
+.chart-card p b {{ color: #2f5942 !important; }}
 
 .animated-path {{ animation: dash-flow 15s linear infinite; }}
 @keyframes dash-flow {{ from {{ stroke-dashoffset: 1000; }} to {{ stroke-dashoffset: 0; }} }}
@@ -318,11 +339,11 @@ main{{display:flex;flex:1;overflow:hidden; width: 100%;}}
 <body>
 <header>
   <div>
-    <div class="logo">✈ AeroBrasil Graph</div>
+    <div class="logo">AeroGraph</div>
     <div id="app-subtitle" class="sub">Rede de Aeroportos — Grafo Interativo</div>
   </div>
   <div class="toolbar">
-    <button id="btn-tab" onclick="toggleView()" style="border-color:#00c2a8; color:#00c2a8; font-weight:bold; padding: 5px 12px;">📊 Ver Gráficos</button>
+    <button id="btn-tab" onclick="toggleView()" style="border-color:#5c9f79; color:#2f5942; font-weight:bold;">Ver Gráficos</button>
     <div class="map-ui" style="width: 1px; height: 16px; background: var(--border); margin: 0 4px;"></div>
     
     <select id="ux-regiao" class="map-ui" onchange="applyFilters()">
@@ -350,16 +371,16 @@ main{{display:flex;flex:1;overflow:hidden; width: 100%;}}
       <div class="dash-panel">
           <div class="ptitle" style="margin-bottom: 8px;">Painel de Métricas (Ego)</div>
           <div style="display:flex; gap:5px; margin-bottom: 5px;">
-              <div class="metric-box" style="flex:1; border-left-color: #00c2a8;">
+              <div class="metric-box" style="flex:1; border-left-color: #5c9f79;">
                   <div class="metric-title">Nós</div>
                   <div class="metric-value" id="metric-ordem">--</div>
               </div>
-              <div class="metric-box" style="flex:1; border-left-color: #e84393;">
+              <div class="metric-box" style="flex:1; border-left-color: #c9767d;">
                   <div class="metric-title">Dens.</div>
                   <div class="metric-value" id="metric-densidade">--</div>
               </div>
           </div>
-          <div class="metric-box" style="border-left-color: #6c63ff;">
+          <div class="metric-box" style="border-left-color: #4f8fb8;">
               <div class="metric-title">Arestas (Conexões)</div>
               <div class="metric-value" id="metric-arestas">--</div>
           </div>
@@ -374,8 +395,8 @@ main{{display:flex;flex:1;overflow:hidden; width: 100%;}}
         <div style="display:flex;flex-direction:column;gap:5px">
           <input id="rota-origem" list="iata-list" class="rota-input" placeholder="Origem (ex: REC)" maxlength="3"/>
           <input id="rota-destino" list="iata-list" class="rota-input" placeholder="Destino (ex: POA)" maxlength="3"/>
-          <button onclick="buscarRota()" style="margin-top:2px;padding:5px;background:var(--accent);border:none;color:#fff;border-radius:4px;cursor:pointer;font-family:inherit;font-size:.72rem;font-weight:700">🔍 Calcular Rota</button>
-          <button onclick="limparRota()" style="padding:4px;background:var(--bg);border:1px solid var(--border);color:var(--muted);border-radius:4px;cursor:pointer;font-family:inherit;font-size:.68rem">✕ Limpar tudo</button>
+          <button onclick="buscarRota()" style="margin-top:2px;padding:8px;background:var(--accent);border:none;color:#fff;border-radius:999px;cursor:pointer;font-family:inherit;font-size:.72rem;font-weight:800">Calcular rota</button>
+          <button onclick="limparRota()" style="padding:7px;background:rgba(255,255,248,.72);border:1px solid var(--border);color:var(--muted);border-radius:999px;cursor:pointer;font-family:inherit;font-size:.68rem">Limpar tudo</button>
         </div>
         <div class="ibox" id="rota-result" style="margin-top:6px;min-height:60px">Digite origem e destino para calcular.</div>
       </div>
@@ -389,7 +410,7 @@ main{{display:flex;flex:1;overflow:hidden; width: 100%;}}
   <div id="charts-container">
     <div class="charts-grid">
       <div class="col-span-6" style="margin-bottom: 5px; border-bottom: 1px solid var(--border); padding-bottom: 15px;">
-         <h2 style="font-family: 'Syne', sans-serif; color: var(--text); font-size: 1.4rem;">Análise Topológica Interativa (Módulo AVD)</h2>
+         <h2 style="font-family:'Nunito','Inter',sans-serif; font-weight:900; color: var(--text); font-size: 1.45rem; letter-spacing:0;">Análise Topológica Interativa (Módulo AVD)</h2>
          <p style="color: var(--muted); font-size: 0.8rem; margin-top: 6px;">Visualizações geradas dinamicamente com base nas leis de Gestalt aplicadas aos dados do Grafo.</p>
       </div>
 
@@ -404,7 +425,7 @@ main{{display:flex;flex:1;overflow:hidden; width: 100%;}}
           <div class="chart-wrapper">
               <canvas id="chart-hubs"></canvas>
           </div>
-          <p>Aeroportos ordenados pelo Grau. <b style="color:#e0e0f0;">Dica: Clique na barra para ver no mapa!</b></p>
+          <p>Aeroportos ordenados pelo Grau. <b style="color:#2f5942;">Dica: Clique na barra para ver no mapa!</b></p>
       </div>
 
       <div class="chart-card col-span-2">
@@ -464,11 +485,11 @@ main{{display:flex;flex:1;overflow:hidden; width: 100%;}}
           <div class="chart-wrapper">
               <canvas id="chart-scatter"></canvas>
           </div>
-          <p>Correlação Grau x Densidade. <b style="color:#e0e0f0;">Dica: Clique em um ponto para ver no mapa!</b></p>
+          <p>Correlação Grau x Densidade. <b style="color:#2f5942;">Dica: Clique em um ponto para ver no mapa!</b></p>
       </div>
 
       <div class="col-span-6" style="margin-top: 30px; border-bottom: 1px solid var(--border); padding-bottom: 15px;">
-         <h2 style="font-family: 'Syne', sans-serif; color: var(--text); font-size: 1.4rem;">📖 Storytelling Analítico & Insights do Grafo</h2>
+         <h2 style="font-family:'Nunito','Inter',sans-serif; font-weight:900; color: var(--text); font-size: 1.45rem; letter-spacing:0;">Insights da malha aérea</h2>
          <p style="color: var(--muted); font-size: 0.8rem; margin-top: 6px;">Discussão Crítica e Conclusões Acionáveis baseadas nas métricas e leis da Gestalt.</p>
       </div>
 
@@ -482,13 +503,13 @@ main{{display:flex;flex:1;overflow:hidden; width: 100%;}}
           <div id="insight-2" style="font-size: 0.8rem; line-height: 1.6; color: var(--text); text-align: justify;"></div>
       </div>
 
-      <div class="chart-card col-span-3" style="min-height: auto; border-top: 4px solid #ff7070;">
-          <h3 style="text-align: left; color: #ff7070; margin-bottom: 10px;">3. Discussão Crítica & Limitações</h3>
+      <div class="chart-card col-span-3" style="min-height: auto; border-top: 4px solid #c9767d;">
+          <h3 style="text-align: left; color: #a64955; margin-bottom: 10px;">3. Discussão Crítica & Limitações</h3>
           <div id="insight-3" style="font-size: 0.8rem; line-height: 1.6; color: var(--text); text-align: justify;"></div>
       </div>
 
-      <div class="chart-card col-span-3" style="min-height: auto; border-top: 4px solid #00c2a8;">
-          <h3 style="text-align: left; color: #00c2a8; margin-bottom: 10px;">4. Conclusão & Insights Acionáveis</h3>
+      <div class="chart-card col-span-3" style="min-height: auto; border-top: 4px solid #5c9f79;">
+          <h3 style="text-align: left; color: #2f5942; margin-bottom: 10px;">4. Conclusão & Insights Acionáveis</h3>
           <div id="insight-4" style="font-size: 0.8rem; line-height: 1.6; color: var(--text); text-align: justify;"></div>
       </div>
 
@@ -505,8 +526,8 @@ const PATH_RPO = {rpo_json};
 const PATH_MSP = {msp_json};
 
 const R_COLORS = {{
-    "Norte": "#00c2a8", "Nordeste": "#f5a623", "Sudeste": "#e84393",
-    "Sul": "#6c63ff", "Centro-Oeste": "#ff6b35"
+    "Norte": "#5c9f79", "Nordeste": "#dfb04f", "Sudeste": "#c9767d",
+    "Sul": "#4f8fb8", "Centro-Oeste": "#d98c53"
 }};
 const REGIONS_LIST = Object.keys(R_COLORS);
 
@@ -602,12 +623,12 @@ function toggleView() {{
       btn.style.borderColor = 'var(--border)';
       btn.style.color = 'var(--text)';
       subtitle.innerHTML = 'Análise Estatística & Distribuição Estatística do Grafo';
-      subtitle.style.color = '#00c2a8';
+      subtitle.style.color = '#5c9f79';
       renderAllCharts();
   }} else {{
-      btn.innerHTML = '📊 Ver Gráficos';
-      btn.style.borderColor = '#00c2a8';
-      btn.style.color = '#00c2a8';
+      btn.innerHTML = 'Ver Gráficos';
+      btn.style.borderColor = '#5c9f79';
+      btn.style.color = '#2f5942';
       subtitle.innerHTML = 'Rede de Aeroportos — Grafo Interativo';
       subtitle.style.color = 'var(--muted)';
       setTimeout(() => map.invalidateSize(), 50);
@@ -724,15 +745,15 @@ function updateHubsChart(limit) {{
                 label: 'Conexões Diretas',
                 data: sortedHubs.map(h => h.grau),
                 backgroundColor: sortedHubs.map(h => h.color),
-                borderWidth: 1, borderColor: '#13131f'
+                borderWidth: 1, borderColor: 'rgba(255,249,235,.9)'
             }}]
         }},
         options: {{
             responsive: true, maintainAspectRatio: false,
             plugins: {{ legend: {{ display: false }} }},
             scales: {{
-                y: {{ beginAtZero: true, grid: {{ color: '#252535' }}, ticks: {{ color: '#777799' }} }},
-                x: {{ ticks: {{ color: '#777799' }} }}
+                y: {{ beginAtZero: true, grid: {{ color: 'rgba(122,98,68,.18)' }}, ticks: {{ color: '#746f5a' }} }},
+                x: {{ ticks: {{ color: '#746f5a' }} }}
             }},
             onClick: (event, elements) => {{
                 if (elements.length > 0) {{
@@ -768,8 +789,8 @@ function updateDistributionType(type) {{
             datasets: [{{
                 label: 'Aeroportos',
                 data: datasetData,
-                backgroundColor: 'rgba(0, 194, 168, 0.25)',
-                borderColor: '#00c2a8', borderWidth: 2,
+                backgroundColor: 'rgba(92, 159, 121, 0.25)',
+                borderColor: '#5c9f79', borderWidth: 2,
                 fill: type === 'line', tension: 0.3
             }}]
         }},
@@ -777,8 +798,8 @@ function updateDistributionType(type) {{
             responsive: true, maintainAspectRatio: false,
             plugins: {{ legend: {{ display: false }} }},
             scales: {{
-                y: {{ beginAtZero: true, grid: {{ color: '#252535' }}, ticks: {{ color: '#777799' }} }},
-                x: {{ grid: {{ color: '#252535' }}, ticks: {{ color: '#777799' }} }}
+                y: {{ beginAtZero: true, grid: {{ color: 'rgba(122,98,68,.18)' }}, ticks: {{ color: '#746f5a' }} }},
+                x: {{ grid: {{ color: 'rgba(122,98,68,.18)' }}, ticks: {{ color: '#746f5a' }} }}
             }}
         }}
     }});
@@ -813,13 +834,13 @@ function updateRegionsChart(metric) {{
                 label: labelText,
                 data: chartData,
                 backgroundColor: labels.map(r => R_COLORS[r]),
-                borderColor: '#13131f', borderWidth: 2
+                borderColor: 'rgba(255,249,235,.9)', borderWidth: 2
             }}]
         }},
         options: {{
             responsive: true, maintainAspectRatio: false,
             plugins: {{
-                legend: {{ position: 'right', labels: {{ color: '#e0e0f0', font: {{ family: 'Space Mono', size: 10 }} }} }}
+                legend: {{ position: 'right', labels: {{ color: '#334332', font: {{ family: 'Nunito', size: 11, weight: '700' }} }} }}
             }}
         }}
     }});
@@ -941,8 +962,8 @@ function initBoxplot() {{
                 }}
             }},
             scales: {{
-                y: {{ beginAtZero: true, grid: {{ color: '#252535' }}, ticks: {{ color: '#777799' }} }},
-                x: {{ grid: {{ display: false }}, ticks: {{ color: '#777799' }} }}
+                y: {{ beginAtZero: true, grid: {{ color: 'rgba(122,98,68,.18)' }}, ticks: {{ color: '#746f5a' }} }},
+                x: {{ grid: {{ display: false }}, ticks: {{ color: '#746f5a' }} }}
             }}
         }}
     }});
@@ -970,12 +991,12 @@ function initBubbleRegions() {{
         options: {{
             responsive: true, maintainAspectRatio: false,
             plugins: {{
-                legend: {{ labels: {{ color: '#e0e0f0' }} }},
+                legend: {{ labels: {{ color: '#334332' }} }},
                 tooltip: {{ callbacks: {{ label: (ctx) => `${{ctx.dataset.label}}: Grau Médio ${{ctx.raw.x.toFixed(1)}} | Densidade Média ${{ctx.raw.y.toFixed(2)}}` }} }}
             }},
             scales: {{
-                x: {{ title: {{ display: true, text: 'Grau Médio Regional', color: '#777799' }}, grid: {{ color: '#252535' }}, ticks: {{ color: '#777799' }} }},
-                y: {{ title: {{ display: true, text: 'Densidade Ego Média', color: '#777799' }}, grid: {{ color: '#252535' }}, ticks: {{ color: '#777799' }} }}
+                x: {{ title: {{ display: true, text: 'Grau Médio Regional', color: '#746f5a' }}, grid: {{ color: 'rgba(122,98,68,.18)' }}, ticks: {{ color: '#746f5a' }} }},
+                y: {{ title: {{ display: true, text: 'Densidade Ego Média', color: '#746f5a' }}, grid: {{ color: 'rgba(122,98,68,.18)' }}, ticks: {{ color: '#746f5a' }} }}
             }}
         }}
     }});
@@ -1015,9 +1036,9 @@ function initHeatmap() {{
     let html = '<table style="width:100%; max-width:900px; margin:0 auto; height:90%; border-collapse:collapse; text-align:center; font-size:1.05rem; table-layout:fixed;">';
     html += '<tr>' + 
             '<th style="width:16%"></th>' + 
-            '<th style="padding:10px; font-weight:normal; color:#777799; width:22.6%">Ordem</th>' + 
-            '<th style="padding:10px; font-weight:normal; color:#777799; width:22.6%">Tamanho</th>' + 
-            '<th style="padding:10px; font-weight:normal; color:#777799; width:22.6%">Densidade</th>' + 
+            '<th style="padding:10px; font-weight:normal; color:#746f5a; width:22.6%">Ordem</th>' +
+            '<th style="padding:10px; font-weight:normal; color:#746f5a; width:22.6%">Tamanho</th>' +
+            '<th style="padding:10px; font-weight:normal; color:#746f5a; width:22.6%">Densidade</th>' +
             '<th style="width:16%"></th>' + 
             '</tr>';
 
@@ -1033,11 +1054,11 @@ function initHeatmap() {{
 
         html += `<tr><td style="padding:10px 20px 10px 10px; text-align:right; font-weight:bold; color:${{R_COLORS[r]}}">${{r}}</td>`;
         
-        html += `<td style="background:${{cOrd.bg}}; color:${{cOrd.dark ? '#fff' : '#000'}}; border:1px solid #13131f; padding:15px; transition: transform 0.2s;" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">${{stats.ordem.toFixed(1)}}</td>`;
+        html += `<td style="background:${{cOrd.bg}}; color:${{cOrd.dark ? '#fff' : '#000'}}; border:1px solid rgba(122,98,68,.18); padding:15px; transition: transform 0.2s;" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">${{stats.ordem.toFixed(1)}}</td>`;
         
-        html += `<td style="background:${{cTam.bg}}; color:${{cTam.dark ? '#fff' : '#000'}}; border:1px solid #13131f; padding:15px; transition: transform 0.2s;" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">${{stats.tamanho.toFixed(1)}}</td>`;
+        html += `<td style="background:${{cTam.bg}}; color:${{cTam.dark ? '#fff' : '#000'}}; border:1px solid rgba(122,98,68,.18); padding:15px; transition: transform 0.2s;" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">${{stats.tamanho.toFixed(1)}}</td>`;
         
-        html += `<td style="background:${{cDen.bg}}; color:${{cDen.dark ? '#fff' : '#000'}}; border:1px solid #13131f; padding:15px; transition: transform 0.2s;" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">${{stats.densidade.toFixed(3)}}</td>`;
+        html += `<td style="background:${{cDen.bg}}; color:${{cDen.dark ? '#fff' : '#000'}}; border:1px solid rgba(122,98,68,.18); padding:15px; transition: transform 0.2s;" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">${{stats.densidade.toFixed(3)}}</td>`;
         
         html += '<td></td></tr>';
     }});
@@ -1069,8 +1090,8 @@ function initScatterChart() {{
                 tooltip: {{ callbacks: {{ label: (ctx) => ` Aeroporto: ${{ctx.raw.label}} | Grau: ${{ctx.raw.x}} | Dens. Ego: ${{ctx.raw.y}}` }} }}
             }},
             scales: {{
-                y: {{ grid: {{ color: '#252535' }}, ticks: {{ color: '#777799' }}, title: {{ display: true, text: 'Densidade da Rede Ego', color: '#777799' }} }},
-                x: {{ grid: {{ color: '#252535' }}, ticks: {{ color: '#777799' }}, title: {{ display: true, text: 'Grau do Vértice (Conexões)', color: '#777799' }} }}
+                y: {{ grid: {{ color: 'rgba(122,98,68,.18)' }}, ticks: {{ color: '#746f5a' }}, title: {{ display: true, text: 'Densidade da Rede Ego', color: '#746f5a' }} }},
+                x: {{ grid: {{ color: 'rgba(122,98,68,.18)' }}, ticks: {{ color: '#746f5a' }}, title: {{ display: true, text: 'Grau do Vértice (Conexões)', color: '#746f5a' }} }}
             }},
             onClick: (event, elements) => {{
                 if (elements.length > 0) {{
@@ -1274,14 +1295,14 @@ function buscarRota() {{
   const destino = document.getElementById('rota-destino').value.trim().toUpperCase();
   const box     = document.getElementById('rota-result');
 
-  if (!origem || !destino) {{ box.innerHTML = '<span style="color:#ff7070">Preencha origem e destino.</span>'; return; }}
-  if (!AP[origem])  {{ box.innerHTML = `<span style="color:#ff7070">Aeroporto "${{origem}}" não encontrado.</span>`;  return; }}
-  if (!AP[destino]) {{ box.innerHTML = `<span style="color:#ff7070">Aeroporto "${{destino}}" não encontrado.</span>`; return; }}
-  if (origem === destino) {{ box.innerHTML = '<span style="color:#ff7070">Origem e destino são iguais.</span>'; return; }}
+  if (!origem || !destino) {{ box.innerHTML = '<span style="color:#a64955">Preencha origem e destino.</span>'; return; }}
+  if (!AP[origem])  {{ box.innerHTML = `<span style="color:#a64955">Aeroporto "${{origem}}" não encontrado.</span>`;  return; }}
+  if (!AP[destino]) {{ box.innerHTML = `<span style="color:#a64955">Aeroporto "${{destino}}" não encontrado.</span>`; return; }}
+  if (origem === destino) {{ box.innerHTML = '<span style="color:#a64955">Origem e destino são iguais.</span>'; return; }}
 
   const {{custo, caminho}} = dijkstraJS(origem, destino);
   if (rotaLine) {{ map.removeLayer(rotaLine); rotaLine = null; }}
-  if (caminho.length === 0) {{ box.innerHTML = `<span style="color:#ff7070">Sem caminho entre ${{origem}} e ${{destino}}.</span>`; return; }}
+  if (caminho.length === 0) {{ box.innerHTML = `<span style="color:#a64955">Sem caminho entre ${{origem}} e ${{destino}}.</span>`; return; }}
 
   const direto  = EDGES.some(e => (e.from===origem&&e.to===destino)||(e.from===destino&&e.to===origem));
   const escalas = caminho.length - 2;
@@ -1289,7 +1310,7 @@ function buscarRota() {{
 
   const corOrigem = AP[origem].color;
 
-  box.innerHTML = `<b style="color:#e0e0f0">${{origem}} → ${{destino}}</b><br>${{tipo}}<br>`+
+  box.innerHTML = `<b style="color:#2f5942">${{origem}} → ${{destino}}</b><br>${{tipo}}<br>`+
     `Distância: <b style="color:${{corOrigem}}">${{custo.toFixed(0)}} km</b><br>Percurso:<br><span style="color:${{corOrigem}}">${{caminho.join(' → ')}}</span>`;
 
   EDGES.forEach(e => {{
@@ -1338,12 +1359,31 @@ def _find_iata(airports: dict, cidade: str) -> str | None:
         if cidade.lower() in info.get("cidade", "").lower(): return iata
     return None
 
+def keep_only_connected_airports(airports: dict, edges: list) -> dict:
+    connected = set()
+    for edge in edges:
+        connected.add(edge["origem"])
+        connected.add(edge["destino"])
+    return {iata: info for iata, info in airports.items() if iata in connected}
+
 def main() -> None:
+    airports_path = DATA / "aeroportos_data_real.csv"
+    edges_path = DATA / "adjacencias_aeroportos_real.csv"
+    using_real_data = airports_path.exists() and edges_path.exists()
+    if not airports_path.exists():
+        airports_path = DATA / "aeroportos_data.csv"
+    if not edges_path.exists():
+        edges_path = DATA / "adjacencias_aeroportos.csv"
+
     print("Carregando aeroportos…")
-    airports = load_airports(DATA / "aeroportos_data.csv")
+    airports = load_airports(airports_path)
     
     print("Carregando arestas…")
-    edges = load_edges(DATA / "adjacencias_aeroportos.csv")
+    edges = load_edges(edges_path)
+    if using_real_data:
+        total_airports = len(airports)
+        airports = keep_only_connected_airports(airports, edges)
+        print(f"Filtrando malha ativa: {len(airports)} de {total_airports} aeroportos possuem conexões.")
     
     print("Carregando métricas ego…")
     ego = load_ego(OUT / "ego_aeroportos.csv")
@@ -1353,16 +1393,18 @@ def main() -> None:
     
     print("Calculando caminhos obrigatórios…")
     g = Grafo()
+    for iata in airports:
+        g.add_node(iata)
     for e in edges:
         g.add_edge(e["origem"], e["destino"], e["peso"])
 
-    recife       = "REC"
-    porto_alegre = _find_iata(airports, "porto alegre") or "POA"
-    manaus       = _find_iata(airports, "manaus")       or "MAO"
-    sao_paulo    = (_find_iata(airports, "guarulhos") or _find_iata(airports, "são paulo") or "GRU")
+    recife       = "REC" if "REC" in airports else _find_iata(airports, "recife")
+    porto_alegre = "POA" if "POA" in airports else _find_iata(airports, "porto alegre")
+    manaus       = "MAO" if "MAO" in airports else _find_iata(airports, "manaus")
+    sao_paulo    = "GRU" if "GRU" in airports else (_find_iata(airports, "guarulhos") or _find_iata(airports, "são paulo"))
 
-    _, path_rpo = g.dijkstra(recife, porto_alegre)
-    _, path_msp = g.dijkstra(manaus, sao_paulo)
+    _, path_rpo = g.dijkstra(recife, porto_alegre) if recife and porto_alegre else (float("inf"), [])
+    _, path_msp = g.dijkstra(manaus, sao_paulo) if manaus and sao_paulo else (float("inf"), [])
 
     html = build_html(airports, edges, ego, coords, path_rpo, path_msp)
     out_path = OUT / "grafo_interativo.html"

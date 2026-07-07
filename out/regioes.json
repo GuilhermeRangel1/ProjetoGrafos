@@ -1,27 +1,32 @@
 {
-    "Nordeste": {
-        "ordem": 6,
-        "tamanho": 11,
-        "densidade": 0.7333
-    },
-    "Sudeste": {
-        "ordem": 5,
-        "tamanho": 9,
-        "densidade": 0.9
+    "Brasil": {
+        "ordem": 1,
+        "tamanho": 0,
+        "densidade": 0.0
     },
     "Centro-Oeste": {
-        "ordem": 2,
-        "tamanho": 1,
-        "densidade": 1.0
+        "ordem": 14,
+        "tamanho": 12,
+        "densidade": 0.1319
     },
-    "Sul": {
-        "ordem": 3,
-        "tamanho": 2,
-        "densidade": 0.6667
+    "Nordeste": {
+        "ordem": 24,
+        "tamanho": 38,
+        "densidade": 0.1377
     },
     "Norte": {
-        "ordem": 4,
-        "tamanho": 3,
-        "densidade": 0.5
+        "ordem": 38,
+        "tamanho": 41,
+        "densidade": 0.0583
+    },
+    "Sudeste": {
+        "ordem": 27,
+        "tamanho": 70,
+        "densidade": 0.1994
+    },
+    "Sul": {
+        "ordem": 23,
+        "tamanho": 35,
+        "densidade": 0.1383
     }
 }

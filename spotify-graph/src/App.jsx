@@ -45,14 +45,14 @@ function LandingPage({ onSelect }) {
     {
       id: 'airports',
       icon: '✈',
-      title: 'Aeroportos do Brasil',
+      title: 'AeroGraph',
       desc: 'Rede de aeroportos brasileiros com rotas, algoritmos de caminho e estatísticas regionais.',
       accent: '#5c9f79',
     },
     {
       id: 'spotify',
       icon: '🎵',
-      title: 'Grafo Spotify',
+      title: 'SoundGraph',
       desc: 'Grafo interativo de artistas e gêneros musicais com geração de playlists via BFS e DFS.',
       accent: '#4f8fb8',
     },
@@ -554,7 +554,7 @@ export default function App() {
         <iframe
           src="/grafo_interativo.html"
           style={{ position: 'fixed', inset: 0, width: '100%', height: '100%', border: 'none' }}
-          title="Aeroportos do Brasil"
+          title="AeroGraph"
         />
         <BackButton onClick={() => setView(null)} />
       </>

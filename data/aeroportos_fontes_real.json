@@ -1,0 +1,10 @@
+{
+  "fontes": {
+    "aeroportos": "https://davidmegginson.github.io/ourairports-data/airports.csv",
+    "rotas": "https://raw.githubusercontent.com/jpatokal/openflights/master/data/routes.dat",
+    "aeroportos_rotas": "https://raw.githubusercontent.com/jpatokal/openflights/master/data/airports.dat"
+  },
+  "observacao": "OurAirports fornece cadastro e coordenadas de aerodromos. OpenFlights fornece rotas publicas historicas, usadas aqui como proxy de conexoes regulares sem chave de API paga.",
+  "aeroportos_brasil_com_iata": 353,
+  "conexoes_brasil": 374
+}

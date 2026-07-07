@@ -7,20 +7,28 @@ from collections import OrderedDict
 sys.path.append(os.path.join(os.path.dirname(__file__)))
 
 from graphs.algorithms import dijkstra
-from viz import gerar_html_do_caminho
+try:
+    from viz import gerar_html_do_caminho
+except ImportError:
+    def gerar_html_do_caminho(*_args, **_kwargs):
+        return None
 
 class GrafoAeroportos:
     def __init__(self):
         self.adj = {}
         self.nos_ordenados = []
 
+    def adicionar_no(self, u):
+        if u not in self.adj:
+            self.adj[u] = []
+        if u not in self.nos_ordenados:
+            self.nos_ordenados.append(u)
+
     def adicionar_aresta(self, u, v, peso):
-        if u not in self.adj: self.adj[u] = []
-        if v not in self.adj: self.adj[v] = []
+        self.adicionar_no(u)
+        self.adicionar_no(v)
         self.adj[u].append((v, peso))
         self.adj[v].append((u, peso)) 
-        if u not in self.nos_ordenados: self.nos_ordenados.append(u)
-        if v not in self.nos_ordenados: self.nos_ordenados.append(v)
 
     def obter_todos_nos(self):
         return self.nos_ordenados
@@ -136,9 +144,12 @@ def resolver_etapa_7(grafo, caminho_rotas, pasta_saida):
 
 def main():
     base_path = os.path.dirname(os.path.dirname(__file__))
-    caminho_adj = os.path.join(base_path, 'data', 'adjacencias_aeroportos.csv')
+    caminho_adj_real = os.path.join(base_path, 'data', 'adjacencias_aeroportos_real.csv')
+    caminho_aeroportos_real = os.path.join(base_path, 'data', 'aeroportos_data_real.csv')
+    usando_base_real = os.path.exists(caminho_adj_real) and os.path.exists(caminho_aeroportos_real)
+    caminho_adj = caminho_adj_real if usando_base_real else os.path.join(base_path, 'data', 'adjacencias_aeroportos.csv')
     caminho_rotas = os.path.join(base_path, 'data', 'rotas.csv')
-    caminho_aeroportos_data = os.path.join(base_path, 'data', 'aeroportos_data.csv')
+    caminho_aeroportos_data = caminho_aeroportos_real if usando_base_real else os.path.join(base_path, 'data', 'aeroportos_data.csv')
     pasta_saida = os.path.join(base_path, 'out')
     
     if not os.path.exists(pasta_saida):
@@ -146,7 +157,17 @@ def main():
 
     try:
         df_adj = pd.read_csv(caminho_adj, encoding='utf-8')
+        df_aero = pd.read_csv(caminho_aeroportos_data, encoding='utf-8')
         grafo = GrafoAeroportos()
+        col_iata = 'iata' if 'iata' in df_aero.columns else df_aero.columns[0]
+        aeroportos_conectados = set()
+        if usando_base_real:
+            aeroportos_conectados.update(df_adj['origem'].dropna().astype(str).str.strip().str.upper())
+            aeroportos_conectados.update(df_adj['destino'].dropna().astype(str).str.strip().str.upper())
+        for iata in df_aero[col_iata].dropna().astype(str):
+            iata = iata.strip().upper()
+            if not usando_base_real or iata in aeroportos_conectados:
+                grafo.adicionar_no(iata)
         for _, linha in df_adj.iterrows():
             grafo.adicionar_aresta(str(linha['origem']).strip(), str(linha['destino']).strip(), float(linha['peso']))
             

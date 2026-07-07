@@ -1,0 +1,354 @@
+iata,cidade,regiao,uf,nome,icao,lat,lon,tipo,servico_regular,fonte
+BAU,Bauru,Brasil,,Bauru Airport,,-22.3449993134,-49.0537986755,unknown,,OpenFlights
+CPQ,Campinas,Brasil,,Amarais Airport,,-22.85919952392578,-47.10820007324219,unknown,,OpenFlights
+QCJ,Botucatu,Brasil,,Botucatu - Tancredo de Almeida Neves Airport,,-22.939501,-48.467999,unknown,,OpenFlights
+QHP,Taubaté,Brasil,,Base de Aviação de Taubaté Airport,,-23.04010009765625,-45.51599884033203,unknown,,OpenFlights
+QNV,Nova Iguacu,Brasil,,Aeroclube Airport,,-22.74530029296875,-43.46030044555664,unknown,,OpenFlights
+QPS,Piracununga,Brasil,,Campo Fontenelle Airport,,-21.984600067138672,-47.334800720214844,unknown,,OpenFlights
+STZ,Santa Terezinha,Brasil,,Santa Terezinha Airport,,-10.4647216796875,-50.518611907958984,unknown,,OpenFlights
+BSB,Brasília,Centro-Oeste,DF,Presidente Juscelino Kubitschek International Airport,SBBR,-15.869167,-47.920834,large_airport,yes,OurAirports
+APS,Anápolis,Centro-Oeste,GO,Anápolis Airport,SWNS,-16.363575,-48.9288,small_airport,no,OurAirports
+ARS,Aragarças,Centro-Oeste,GO,Aragarças Airport,SJVO,-15.8994,-52.2411,small_airport,no,OurAirports
+CLV,Caldas Novas,Centro-Oeste,GO,Nelson Ribeiro Guimarães Airport,SBCN,-17.725096,-48.606324,small_airport,yes,OurAirports
+GYN,Goiânia,Centro-Oeste,GO,Santa Genoveva International Airport,SBGO,-16.632,-49.220699,large_airport,yes,OurAirports
+ITR,Itumbiara,Centro-Oeste,GO,Francisco Vilela do Amaral Airport,SBIT,-18.4447,-49.213402,small_airport,no,OurAirports
+JTI,Jataí,Centro-Oeste,GO,Jataí Airport,SWJW,-17.8299007416,-51.7729988098,small_airport,no,OurAirports
+MQH,Minaçu,Centro-Oeste,GO,Minaçu Airport,SWIQ,-13.5491,-48.195301,medium_airport,no,OurAirports
+NQL,Niquelândia,Centro-Oeste,GO,Niquelândia Airport,SWNQ,-14.434869,-48.491615,small_airport,no,OurAirports
+RVD,Rio Verde,Centro-Oeste,GO,General Leite de Castro Airport,SWLC,-17.834723,-50.956112,small_airport,no,OurAirports
+SQM,São Miguel do Araguaia,Centro-Oeste,GO,São Miguel do Araguaia Airport,SWUA,-13.3313,-50.197601,small_airport,no,OurAirports
+TLZ,Catalão,Centro-Oeste,GO,Catalão Airport,SWKT,-18.216801,-47.8997,small_airport,no,OurAirports
+BYO,Bonito,Centro-Oeste,MS,Bonito Airport,SBDB,-21.2473,-56.452399,small_airport,yes,OurAirports
+CGR,Campo Grande,Centro-Oeste,MS,Campo Grande Airport,SBCG,-20.469998,-54.673988,medium_airport,yes,OurAirports
+CMG,Corumbá,Centro-Oeste,MS,Corumbá International Airport,SBCR,-19.01193,-57.672772,medium_airport,yes,OurAirports
+CSS,Cassilândia,Centro-Oeste,MS,Cassilândia Airport,SSCL,-19.146861,-51.676941,small_airport,no,OurAirports
+DOU,Dourados,Centro-Oeste,MS,Dourados Airport,SBDO,-22.2019,-54.926601,small_airport,no,OurAirports
+PBB,Paranaíba,Centro-Oeste,MS,Paranaíba Airport,SSPN,-19.651199,-51.199402,small_airport,no,OurAirports
+PMG,Ponta Porã,Centro-Oeste,MS,Ponta Porã Airport,SBPP,-22.549601,-55.702599,medium_airport,yes,OurAirports
+TJL,Três Lagoas,Centro-Oeste,MS,Plínio Alarcom Airport,SBTG,-20.752643,-51.682026,small_airport,yes,OurAirports
+AFL,Alta Floresta,Centro-Oeste,MT,Piloto Osvaldo Marques Dias Airport,SBAT,-9.866389,-56.106298,medium_airport,yes,OurAirports
+AIR,Aripuanã,Centro-Oeste,MT,Aripuanã Airport,SSOU,-10.187375,-59.457469,small_airport,no,OurAirports
+AZL,Sapezal,Centro-Oeste,MT,Fazenda Tucunaré Airport,SWTU,-13.465528,-58.866935,small_airport,no,OurAirports
+BPG,Barra do Garças,Centro-Oeste,MT,Barra do Garças Airport,SBBW,-15.861417,-52.389008,medium_airport,no,OurAirports
+CCX,Cáceres,Centro-Oeste,MT,Cáceres Airport,SWKC,-16.0436,-57.629902,small_airport,no,OurAirports
+CFO,Confresa,Centro-Oeste,MT,Confresa Airport,SJHG,-10.633296,-51.565836,small_airport,no,OurAirports
+CGB,Cuiabá,Centro-Oeste,MT,Várzea Grande–Marechal Rondon International Airport,SBCY,-15.6529,-56.116699,large_airport,yes,OurAirports
+CQA,Canarana,Centro-Oeste,MT,Canarana Airport,SWEK,-13.576545,-52.268296,small_airport,no,OurAirports
+DMT,Diamantino,Centro-Oeste,MT,Diamantino Airport,SWDM,-14.3769,-56.400398,small_airport,no,OurAirports
+GGB,Água Boa,Centro-Oeste,MT,Frederico Carlos Müller Airport,SWHP,-14.019959,-52.152003,small_airport,no,OurAirports
+JIA,Juína,Centro-Oeste,MT,Juína Airport,SWJN,-11.419444,-58.701668,small_airport,no,OurAirports
+JRN,Juruena,Centro-Oeste,MT,Juruena Airport,,-10.314114,-58.494877,small_airport,no,OurAirports
+JUA,Juara,Centro-Oeste,MT,Inácio Luís do Nascimento Airport,SIZX,-11.2966,-57.5495,small_airport,no,OurAirports
+LCB,Pontes e Lacerda,Centro-Oeste,MT,André Antônio Maggi Airport,SWBG,-15.1934,-59.3848,small_airport,yes,OurAirports
+LVR,Lucas do Rio Verde,Centro-Oeste,MT,Municipal Bom Futuro Airport,SILC,-13.037861,-55.95025,small_airport,no,OurAirports
+MBK,Matupá,Centro-Oeste,MT,Orlando Villas Boas Regional Airport,SWXM,-10.170368,-54.953964,small_airport,no,OurAirports
+MTG,Vila Bela Da Santíssima Trindade,Centro-Oeste,MT,Vila Bela da Santíssima Trindade Airport,,-14.995499,-59.945662,small_airport,no,OurAirports
+NOK,Nova Xavantina,Centro-Oeste,MT,Xavantina Airport,SWXV,-14.697778,-52.347246,small_airport,no,OurAirports
+NVM,Nova Mutum,Centro-Oeste,MT,Brigadeiro Eduardo Gomes Airport,SDNM,-13.821021,-56.038591,small_airport,no,OurAirports
+OPS,Sinop,Centro-Oeste,MT,Presidente João Batista Figueiredo Airport,SBSI,-11.885001,-55.586109,small_airport,yes,OurAirports
+OTT,Cotriguaçu,Centro-Oeste,MT,Andre Maggi Airport,,-9.898611,-58.581944,small_airport,no,OurAirports
+PBX,Porto Alegre do Norte,Centro-Oeste,MT,Fazenda Piraguassu Airport,SWPQ,-10.85935,-51.688152,small_airport,no,OurAirports
+ROO,Rondonópolis,Centro-Oeste,MT,Maestro Marinho Franco Airport,SBRD,-16.584292,-54.724803,medium_airport,yes,OurAirports
+SMT,Sorriso,Centro-Oeste,MT,Adolino Bedin Regional Airport,SBSO,-12.479177,-55.672341,small_airport,yes,OurAirports
+SXO,São Félix Do Araguaia,Centro-Oeste,MT,São Félix do Araguaia Airport,SWFX,-11.6324,-50.689602,small_airport,no,OurAirports
+TGQ,Tangará da Serra,Centro-Oeste,MT,Tangará da Serra Airport,SWTS,-14.662,-57.443744,small_airport,yes,OurAirports
+VLP,Vila Rica,Centro-Oeste,MT,Vila Rica Airport,SWVC,-9.981057,-51.140358,small_airport,no,OurAirports
+APQ,Arapiraca,Nordeste,AL,Arapiraca Airport,SNAL,-9.776589,-36.628983,small_airport,no,OurAirports
+MCZ,Maceió,Nordeste,AL,Zumbi dos Palmares International Airport,SBMO,-9.512559,-35.791839,large_airport,yes,OurAirports
+BMS,Brumado,Nordeste,BA,Sócrates Mariani Bittencourt Airport,SSXH,-14.2554,-41.817501,small_airport,no,OurAirports
+BPS,Porto Seguro,Nordeste,BA,Porto Seguro International Airport,SBPS,-16.438426,-39.080584,large_airport,yes,OurAirports
+BQQ,Barra,Nordeste,BA,Barra Airport,SNBX,-11.0808,-43.147499,small_airport,no,OurAirports
+BRA,Barreiras,Nordeste,BA,Dom Ricardo Weberberger Airport,SNBR,-12.0789,-45.008999,small_airport,yes,OurAirports
+BVM,Belmonte,Nordeste,BA,Belmonte Airport,SD6P,-15.8717,-38.871899,small_airport,no,OurAirports
+CHD,Mucugê,Nordeste,BA,Mucugê Airport,SNQU,-13.0312,-41.444099,small_airport,no,OurAirports
+CNV,Canavieiras,Nordeste,BA,Sócrates Rezende Airport,SNED,-15.666999816895,-38.954700469971,small_airport,no,OurAirports
+CRQ,Caravelas,Nordeste,BA,Caravelas Airport,SSCV,-17.6523,-39.253101,medium_airport,no,OurAirports
+FEC,Feira de Santana,Nordeste,BA,João Durval Carneiro Airport,SDIY,-12.200694,-38.906164,medium_airport,yes,OurAirports
+GNM,Guanambi,Nordeste,BA,Guanambi Airport,SNGI,-14.2082,-42.746101,small_airport,no,OurAirports
+IOS,Ilhéus,Nordeste,BA,Bahia - Jorge Amado Airport,SBIL,-14.815929,-39.033458,medium_airport,yes,OurAirports
+IPU,Ipiaú,Nordeste,BA,Ipiaú Airport,SNIU,-14.173538,-39.68399,small_airport,no,OurAirports
+IRE,Irecê,Nordeste,BA,Irecê Airport,SNIC,-11.339900016784668,-41.84700012207031,small_airport,no,OurAirports
+ITE,Ituberá,Nordeste,BA,Ituberá Airport,SNZW,-13.731571,-39.140377,small_airport,no,OurAirports
+ITN,Itabuna,Nordeste,BA,Tertuliano Guedes de Pinho Airport,,-14.8105,-39.290401,small_airport,no,OurAirports
+JCM,Jacobina,Nordeste,BA,Jacobina Airport,SNJB,-11.1632,-40.553101,small_airport,no,OurAirports
+JEQ,Jequié,Nordeste,BA,Jequié Airport,SNJK,-13.8777,-40.071602,small_airport,no,OurAirports
+LAZ,Bom Jesus da Lapa,Nordeste,BA,Bom Jesus da Lapa Airport,SBLP,-13.2621,-43.4081,medium_airport,no,OurAirports
+LEC,Lençóis,Nordeste,BA,Coronel Horácio de Mattos Airport,SBLE,-12.4823,-41.277,small_airport,yes,OurAirports
+MUU,Maraú,Nordeste,BA,Barra Grande Airport,SIRI,-13.906082,-38.940804,small_airport,yes,OurAirports
+MVS,Mucuri,Nordeste,BA,Mucuri Airport,SNMU,-18.048901,-39.864321,small_airport,no,OurAirports
+MXQ,Cairu,Nordeste,BA,Lorenzo Airport,SNCL,-13.389444,-38.91,small_airport,no,OurAirports
+PAV,Paulo Afonso,Nordeste,BA,Paulo Afonso Airport,SBUF,-9.40088,-38.250599,medium_airport,yes,OurAirports
+PBA,Cairu,Nordeste,BA,Fábio Perini Airport,SDLO,-13.5648,-38.939999,small_airport,no,OurAirports
+PDF,Prado,Nordeste,BA,Prado Airport,SNRD,-17.296976,-39.271131,small_airport,no,OurAirports
+QIT,Itapetinga,Nordeste,BA,Itapetinga Airport,SNIP,-15.244500160217285,-40.277198791503906,small_airport,no,OurAirports
+SSA,Salvador,Nordeste,BA,Deputado Luiz Eduardo Magalhães International Airport,SBSV,-12.908611,-38.322498,large_airport,yes,OurAirports
+TXF,Teixeira de Freitas,Nordeste,BA,9 de Maio - Teixeira de Freitas Airport,SNTF,-17.524392,-39.668499,small_airport,no,OurAirports
+UNA,Una,Nordeste,BA,Una-Comandatuba Airport,SBTC,-15.354358,-38.998729,small_airport,yes,OurAirports
+VAL,Valença,Nordeste,BA,Valença Airport,SNVB,-13.2965,-38.992401,small_airport,yes,OurAirports
+VDC,Vitória da Conquista,Nordeste,BA,Glauber de Andrade Rocha Airport,SBVC,-14.907885,-40.914804,medium_airport,yes,OurAirports
+ARX,Aracati,Nordeste,CE,Aracati Dragão do Mar Regional Airport,SBAC,-4.568896,-37.805135,medium_airport,no,OurAirports
+CMC,Camocim,Nordeste,CE,Camocim - Pinto Martins Airport,SNWC,-2.895596,-40.859299,small_airport,no,OurAirports
+FOR,Fortaleza,Nordeste,CE,Pinto Martins International Airport,SBFZ,-3.775833,-38.532222,large_airport,yes,OurAirports
+JCS,Crateús,Nordeste,CE,Crateús Airport,SNWS,-5.21135,-40.704201,small_airport,no,OurAirports
+JDO,Juazeiro do Norte,Nordeste,CE,Orlando Bezerra de Menezes Airport,SBJU,-7.21932,-39.269096,small_airport,yes,OurAirports
+JJD,Cruz,Nordeste,CE,Comandante Ariston Pessoa Airport,SBJE,-2.906425,-40.357338,medium_airport,yes,OurAirports
+JSB,São Benedito,Nordeste,CE,Walfrido Salmito de Almeida Airport,SWBE,-4.042841,-40.893813,small_airport,no,OurAirports
+JSO,Sobral,Nordeste,CE,Dr. Luciano de Arruda Coelho Regional Airport,SN6L,-3.614488,-40.231426,medium_airport,yes,OurAirports
+JTA,Tauá,Nordeste,CE,Pedro Teixeira Castelo Airport,SDZG,-5.9334,-40.2975,small_airport,no,OurAirports
+QIG,Iguatu,Nordeste,CE,Iguatu Airport,SNIG,-6.346319,-39.294448,small_airport,no,OurAirports
+APY,Alto Parnaíba,Nordeste,MA,Alto Parnaíba Airport,,-9.08533,-45.955603,small_airport,no,OurAirports
+BDC,Barra do Corda,Nordeste,MA,Barra do Corda Airport,SNBC,-5.5025,-45.215833,small_airport,no,OurAirports
+BRB,Barreirinhas,Nordeste,MA,Barreirinhas National Airport,SSRS,-2.756644,-42.803187,small_airport,yes,OurAirports
+BSS,Balsas,Nordeste,MA,Balsas Airport,SNBS,-7.525305,-46.053364,small_airport,no,OurAirports
+CLN,Carolina,Nordeste,MA,Brig. Lysias Augusto Rodrigues Airport,SBCI,-7.32044,-47.458698,medium_airport,no,OurAirports
+CPU,Cururupu,Nordeste,MA,Cururupu Airport,,-1.820006,-44.864065,small_airport,no,OurAirports
+CTP,Carutapera,Nordeste,MA,Carutapera Airport,,-1.225365,-46.019057,small_airport,no,OurAirports
+GMS,Guimarães,Nordeste,MA,Antônio Guerreiro Airport,SNYW,-2.109444,-44.651114,small_airport,no,OurAirports
+IMP,Imperatriz,Nordeste,MA,Prefeito Renato Moreira Airport,SBIZ,-5.53129,-47.459999,medium_airport,yes,OurAirports
+PDR,Presidente Dutra,Nordeste,MA,Presidente José Sarney Airport,,-5.3098,-44.481,small_airport,no,OurAirports
+PHI,Pinheiro,Nordeste,MA,Pinheiro Airport,SNYE,-2.477426,-45.105003,small_airport,no,OurAirports
+SLZ,São Luís,Nordeste,MA,Marechal Cunha Machado International Airport,SBSL,-2.586386,-44.235008,large_airport,yes,OurAirports
+CJZ,Cajazeiras,Nordeste,PB,Pedro Vieira Moreira Airport,SJZA,-6.8827,-38.61583,small_airport,yes,OurAirports
+CPV,Campina Grande,Nordeste,PB,Presidente João Suassuna Airport,SBKG,-7.269662,-35.896057,medium_airport,yes,OurAirports
+JPA,João Pessoa,Nordeste,PB,Presidente Castro Pinto International Airport,SBJP,-7.148691,-34.950554,large_airport,yes,OurAirports
+JPO,Patos,Nordeste,PB,Aeroporto Brigadeiro Firmino Ayres,SNTS,-7.03899,-37.251598,small_airport,no,OurAirports
+CAU,Caruaru,Nordeste,PE,Caruaru Airport,SNRU,-8.28239,-36.0135,small_airport,yes,OurAirports
+FEN,Fernando de Noronha,Nordeste,PE,Fernando de Noronha Airport,SBFN,-3.854534,-32.423017,medium_airport,yes,OurAirports
+JAW,Araripina,Nordeste,PE,Araripina Airport,SNAB,-7.586417,-40.535431,small_airport,no,OurAirports
+PNZ,Petrolina,Nordeste,PE,Senador Nilo Coelho Airport,SBPL,-9.362422,-40.569098,medium_airport,yes,OurAirports
+QGP,Garanhuns,Nordeste,PE,Garanhuns Airport,SNGN,-8.83428,-36.4716,small_airport,no,OurAirports
+REC,Recife,Nordeste,PE,Recife/Guararapes - Gilberto Freyre International Airport,SBRF,-8.12747,-34.922961,large_airport,yes,OurAirports
+SET,Serra Talhada,Nordeste,PE,Santa Magalhães Airport,SNHS,-8.061433,-38.328888,small_airport,yes,OurAirports
+FLB,Floriano,Nordeste,PI,Cangapara Airport,SNQG,-6.84639,-43.077301,small_airport,no,OurAirports
+GDP,Guadalupe,Nordeste,PI,Guadalupe Airport,SNGD,-6.782219886779785,-43.58219909667969,small_airport,no,OurAirports
+NSR,São Raimundo Nonato,Nordeste,PI,Serra da Capivara Airport,SWKQ,-9.083392,-42.644656,small_airport,no,OurAirports
+PCS,Picos,Nordeste,PI,Picos Airport,SNPC,-7.061385,-41.525871,small_airport,no,OurAirports
+PHB,Parnaíba,Nordeste,PI,Parnaíba - Prefeito Doutor João Silva Filho International Airport,SBPB,-2.89375,-41.731998,medium_airport,yes,OurAirports
+THE,Teresina,Nordeste,PI,Senador Petrônio Portela Airport,SBTE,-5.06025,-42.823712,medium_airport,yes,OurAirports
+MVF,Mossoró,Nordeste,RN,Dix-Sept Rosado Airport,SBMS,-5.20192,-37.3643,medium_airport,yes,OurAirports
+NAT,Natal,Nordeste,RN,Rio Grande do Norte/São Gonçalo do Amarante–Governador Aluízio Alves International Airport,SBSG,-5.769822,-35.36661,large_airport,yes,OurAirports
+QCP,Currais Novos,Nordeste,RN,Currais Novos Airport,SNKN,-6.280832767486572,-36.540279388427734,small_airport,no,OurAirports
+AJU,Aracaju,Nordeste,SE,Aracaju - Santa Maria Airport,SBAR,-10.98394,-37.072873,medium_airport,yes,OurAirports
+CZS,Cruzeiro Do Sul,Norte,AC,Cruzeiro do Sul Airport,SBCZ,-7.59991,-72.769501,medium_airport,yes,OurAirports
+FEJ,Feijó,Norte,AC,Feijó Airport,SNOU,-8.141213,-70.340821,small_airport,no,OurAirports
+RBR,Rio Branco,Norte,AC,Rio Branco-Plácido de Castro International Airport,SBRB,-9.869031,-67.893984,large_airport,yes,OurAirports
+TRQ,Tarauacá,Norte,AC,Tarauacá Airport,SBTK,-8.155534,-70.782985,medium_airport,no,OurAirports
+ZMD,Sena Madureira,Norte,AC,Sena Madureira Airport,,-9.116,-68.6108,small_airport,no,OurAirports
+BAZ,Barcelos,Norte,AM,Barcelos Airport,SWBC,-0.981191,-62.918603,small_airport,yes,OurAirports
+BCR,Boca do Acre,Norte,AM,Novo Campo Airport,SWNK,-8.834573,-67.312485,small_airport,no,OurAirports
+CAF,Carauari,Norte,AM,Carauari Airport,SWCA,-4.871473,-66.897552,small_airport,yes,OurAirports
+CIZ,Coari,Norte,AM,Danilson Municipal Airport,SWKO,-4.13406,-63.132599,small_airport,no,OurAirports
+ERN,Eirunepé,Norte,AM,Eirunepé Airport,SWEI,-6.639533,-69.879709,small_airport,no,OurAirports
+FBA,Fonte Boa,Norte,AM,Fonte Boa Airport,SWOB,-2.5326099395800004,-66.0831985474,small_airport,no,OurAirports
+HUW,Humaitá,Norte,AM,Humaitá Airport,SWHT,-7.532120227810001,-63.072101593,small_airport,no,OurAirports
+IPG,Santo Antônio do Içá,Norte,AM,Ipiranga Airport,SWII,-2.940141,-69.694264,small_airport,no,OurAirports
+IRZ,Santa Isabel do Rio Negro,Norte,AM,Tapuruquara Airport,SWTP,-0.378604,-64.992558,small_airport,yes,OurAirports
+ITA,Itacoatiara,Norte,AM,Itacoatiara Airport,SBIC,-3.126539,-58.481668,medium_airport,no,OurAirports
+IUP,Apuí,Norte,AM,Apuí Airport,SWYN,-7.172773,-59.8396,small_airport,no,OurAirports
+LBR,Lábrea,Norte,AM,Lábrea Airport,SWLB,-7.27897,-64.769501,small_airport,yes,OurAirports
+MAO,Manaus,Norte,AM,Eduardo Gomes International Airport,SBEG,-3.03861,-60.049702,large_airport,yes,OurAirports
+MBZ,Maués,Norte,AM,Maués Airport,SWMW,-3.37217,-57.7248,small_airport,no,OurAirports
+MNX,Manicoré,Norte,AM,Manicoré Airport,SBMY,-5.81138,-61.278301,medium_airport,yes,OurAirports
+NVP,Novo Aripuanã,Norte,AM,Novo Aripuanã Airport,SWNA,-5.11803,-60.364899,small_airport,no,OurAirports
+OLC,São Paulo De Olivença,Norte,AM,Senadora Eunice Micheles Airport,SDCG,-3.46907,-68.921056,small_airport,no,OurAirports
+PIN,Parintins,Norte,AM,Parintins Airport,SWPI,-2.673521,-56.777625,small_airport,no,OurAirports
+PLL,Manaus,Norte,AM,Ponta Pelada Airport / Manaus Air Base,SBMN,-3.14604,-59.986301,medium_airport,no,OurAirports
+RBB,Borba,Norte,AM,Borba Airport,SWBR,-4.40634,-59.602402,small_airport,yes,OurAirports
+RPU,Urucu,Norte,AM,Urucu Airport,SBUY,-4.884263,-65.355421,small_airport,no,OurAirports
+SJL,São Gabriel da Cachoeira,Norte,AM,São Gabriel da Cachoeira Airport,SBUA,-0.14835,-66.9855,medium_airport,yes,OurAirports
+TBT,Tabatinga,Norte,AM,Tabatinga International Airport,SBTT,-4.25567,-69.935799,medium_airport,yes,OurAirports
+TFF,Tefé,Norte,AM,Tefé Airport,SBTF,-3.38294,-64.724098,medium_airport,yes,OurAirports
+MCP,Macapá,Norte,AP,Macapá - Alberto Alcolumbre International Airport,SBMQ,0.050664,-51.072201,medium_airport,yes,OurAirports
+OYK,Oiapoque,Norte,AP,Oiapoque Airport,SBOI,3.85412,-51.797056,medium_airport,no,OurAirports
+ALT,Alenquer,Norte,PA,Alenquer Municipal Airport,SDWQ,-1.917,-54.7231,small_airport,no,OurAirports
+ATM,Altamira,Norte,PA,Altamira Interstate Airport,SBHT,-3.253144,-52.253938,medium_airport,yes,OurAirports
+BEL,Belém,Norte,PA,Val de Cans/Júlio Cezar Ribeiro International Airport,SBBE,-1.379279,-48.476207,large_airport,yes,OurAirports
+BVS,Breves,Norte,PA,Breves Airport,SNVS,-1.63653,-50.4436,small_airport,yes,OurAirports
+CDJ,Conceição do Araguaia,Norte,PA,Conceição do Araguaia Airport,SBAA,-8.34835,-49.301498,medium_airport,no,OurAirports
+CKS,Parauapebas,Norte,PA,Carajás Airport,SBCJ,-6.117841,-50.003372,medium_airport,yes,OurAirports
+CMP,Santana do Araguaia,Norte,PA,Santana do Araguaia Airport,SD12,-9.319906,-50.328536,small_airport,no,OurAirports
+CMT,Cametá,Norte,PA,New Cametá Airport,,-2.2468,-49.56,small_airport,no,OurAirports
+GGF,Almeirim,Norte,PA,Almeirim Airport,SNYA,-1.479524,-52.578214,small_airport,yes,OurAirports
+ITB,Itaituba,Norte,PA,Itaituba Airport,SBIH,-4.242131,-56.000651,medium_airport,yes,OurAirports
+JCR,Jacareacanga,Norte,PA,Jacareacanga Airport,SBEK,-6.23316,-57.776901,medium_airport,no,OurAirports
+JPE,Paragominas,Norte,PA,Nagib Demachki Airport,SNEB,-3.019798,-47.316474,small_airport,yes,OurAirports
+JRT,Juruti,Norte,PA,Juruti Airport,SNRJ,-2.186667,-56.090279,small_airport,no,OurAirports
+MAB,Marabá,Norte,PA,João Correa da Rocha Airport,SBMA,-5.36859,-49.138,medium_airport,yes,OurAirports
+MEU,Almeirim,Norte,PA,Monte Dourado - Serra do Areão Airport,SBMD,-0.889839,-52.6022,medium_airport,no,OurAirports
+MTE,Monte Alegre,Norte,PA,Monte Alegre Airport,SNMA,-1.9958,-54.0742,small_airport,no,OurAirports
+NPR,Novo Progresso,Norte,PA,Novo Progresso Airport,SJNP,-7.125833,-55.400833,small_airport,no,OurAirports
+OBI,Óbidos,Norte,PA,Óbidos Municipal Airport,SNTI,-1.867981,-55.514596,small_airport,no,OurAirports
+OIA,Ourilândia do Norte,Norte,PA,Ourilândia do Norte Airport,SDOW,-6.762992,-51.04993,small_airport,no,OurAirports
+OPP,Salinópolis,Norte,PA,Salinópolis Airport,SNSM,-0.696111,-47.336111,small_airport,yes,OurAirports
+ORX,Oriximiná,Norte,PA,Oriximiná Airport,SNOX,-1.71408,-55.836201,small_airport,no,OurAirports
+PTQ,Porto de Moz,Norte,PA,Porto de Moz Airport,SNMZ,-1.741307,-52.236026,small_airport,no,OurAirports
+RDC,Redenção,Norte,PA,Redenção Airport,SNDC,-8.031188,-49.979687,small_airport,no,OurAirports
+SFK,Soure,Norte,PA,Soure Airport,SNI6,-0.697844,-48.519759,small_airport,no,OurAirports
+STM,Santarém,Norte,PA,Santarém - Maestro Wilson Fonseca International Airport,SBSN,-2.422423,-54.79306,medium_airport,yes,OurAirports
+SXX,São Félix do Xingu,Norte,PA,São Félix do Xingu Airport,SNFX,-6.6413,-51.9523,small_airport,no,OurAirports
+TMT,Oriximiná,Norte,PA,Trombetas Airport,SBTB,-1.4896,-56.396801,medium_airport,yes,OurAirports
+TUR,Tucuruí,Norte,PA,Tucuruí Airport,SBTU,-3.78601,-49.720299,medium_airport,yes,OurAirports
+XIG,Xinguara,Norte,PA,Xinguara Municipal Airport,SWSX,-7.0906,-49.9765,small_airport,no,OurAirports
+AQM,Ariquemes,Norte,RO,Ariquemes Airport,SJOG,-9.880436,-63.047115,small_airport,no,OurAirports
+BVH,Vilhena,Norte,RO,Brigadeiro Camarão Airport,SBVH,-12.6944,-60.098301,medium_airport,yes,OurAirports
+CQS,Costa Marques,Norte,RO,Costa Marques Airport,SWCQ,-12.4211,-64.251602,small_airport,no,OurAirports
+GJM,Guajará-Mirim,Norte,RO,Guajará-Mirim Airport,SBGM,-10.78641,-65.28486,medium_airport,no,OurAirports
+JPR,Ji-Paraná,Norte,RO,Ji-Paraná Airport,SBJI,-10.870743,-61.846675,small_airport,yes,OurAirports
+OAL,Cacoal,Norte,RO,Cacoal Airport,SSKW,-11.496,-61.4508,small_airport,yes,OurAirports
+PBQ,Pimenta Bueno,Norte,RO,Pimenta Bueno Airport,SWPM,-11.6416,-61.1791,small_airport,no,OurAirports
+PVH,Porto Velho,Norte,RO,Governador Jorge Teixeira de Oliveira International Airport,SBPV,-8.708491,-63.902338,large_airport,yes,OurAirports
+BVB,Boa Vista,Norte,RR,Atlas Brasil Cantanhede International Airport,SBBV,2.84615,-60.690648,large_airport,yes,OurAirports
+AAI,Arraias,Norte,TO,Arraias Airport,,-13.025154,-46.884107,small_airport,no,OurAirports
+AUX,Araguaína,Norte,TO,Araguaína Airport,SWGN,-7.22787,-48.240501,medium_airport,yes,OurAirports
+DNO,Dianópolis,Norte,TO,Dianópolis Airport,SWDN,-11.5954,-46.846699,small_airport,no,OurAirports
+GRP,Gurupi,Norte,TO,Gurupi Airport,SWGI,-11.7396,-49.132198,small_airport,no,OurAirports
+IDO,Cristalândia,Norte,TO,Santa Izabel do Morro Airport,SWIY,-11.57229995727539,-50.66619873046875,small_airport,no,OurAirports
+PMW,Palmas,Norte,TO,Brigadeiro Lysias Rodrigues Airport,SBPJ,-10.2915,-48.356998,medium_airport,yes,OurAirports
+PNB,Porto Nacional,Norte,TO,Porto Nacional Airport,SDPE,-10.719402,-48.3997,medium_airport,no,OurAirports
+CDI,Cachoeiro do Itapemirim,Sudeste,ES,Cachoeiro do Itapemirim - Raimundo de Andrade Airport,SNKI,-20.834299,-41.1856,small_airport,no,OurAirports
+GUZ,Guarapari,Sudeste,ES,Guarapari Airport,SNGA,-20.6465,-40.491901,small_airport,yes,OurAirports
+LHN,Linhares,Sudeste,ES,Linhares Municipal Airport,SNLN,-19.355202,-40.07128,medium_airport,no,OurAirports
+QCH,Colatina,Sudeste,ES,Colatina Airport,SNCX,-19.487476,-40.579362,small_airport,no,OurAirports
+SBJ,São Mateus,Sudeste,ES,São Mateus - Ernesto Bonomo Airport,SNMX,-18.7213,-39.833698,small_airport,no,OurAirports
+VIX,Vitória,Sudeste,ES,Eurico de Aguiar Salles International Airport,SBVT,-20.258,-40.285,large_airport,yes,OurAirports
+AAX,Araxá,Sudeste,MG,Romeu Zema Airport,SBAX,-19.5632,-46.9604,medium_airport,yes,OurAirports
+AIY,Araçuaí,Sudeste,MG,Araçuaí Airport,SNUI,-16.851571,-42.045633,small_airport,no,OurAirports
+AMJ,Almenara,Sudeste,MG,Cirilo Queiróz Airport,SNAR,-16.165579,-40.684024,small_airport,no,OurAirports
+CNF,Belo Horizonte,Sudeste,MG,Tancredo Neves International Airport,SBCF,-19.63571,-43.966928,large_airport,yes,OurAirports
+DIQ,Divinópolis,Sudeste,MG,Brigadeiro Cabral Airport,SNDV,-20.180700302124,-44.870899200439,small_airport,no,OurAirports
+DTI,Diamantina,Sudeste,MG,Diamantina Airport,SNDT,-18.232000351,-43.650398254399995,small_airport,no,OurAirports
+GVR,Governador Valadares,Sudeste,MG,Coronel Altino Machado Airport,SBGV,-18.895882,-41.982869,medium_airport,yes,OurAirports
+IPN,Ipatinga,Sudeste,MG,Usiminas Airport,SBIP,-19.470699,-42.487598,medium_airport,yes,OurAirports
+ITI,Itambacuri,Sudeste,MG,Fazenda Americana Airport,SWEU,-18.147591,-41.715044,small_airport,no,OurAirports
+IZA,Juiz de Fora,Sudeste,MG,Presidente Itamar Franco Airport,SBZM,-21.513086,-43.173069,medium_airport,yes,OurAirports
+JDF,Juiz de Fora,Sudeste,MG,Francisco de Assis Airport,SBJF,-21.791482,-43.386072,medium_airport,yes,OurAirports
+JDR,São João Del Rei,Sudeste,MG,Prefeito Octávio de Almeida Neves Airport,SNJR,-21.085638,-44.225299,small_airport,no,OurAirports
+JMA,Manhuaçu,Sudeste,MG,Aeroporto Elias Breder Airport,SNJM,-20.259722,-42.183887,small_airport,no,OurAirports
+JNA,Januária,Sudeste,MG,Januária Airport,SNJN,-15.4738,-44.385502,small_airport,no,OurAirports
+LEP,Leopoldina,Sudeste,MG,Leopoldina Airport,,-21.468226,-42.727076,small_airport,no,OurAirports
+MOC,Montes Claros,Sudeste,MG,Mário Ribeiro Airport,SBMK,-16.706919,-43.818901,medium_airport,yes,OurAirports
+NNU,Nanuque,Sudeste,MG,Nanuque Airport,SNNU,-17.823158,-40.329662,small_airport,no,OurAirports
+PIV,Pirapora,Sudeste,MG,Pirapora Airport,SNPX,-17.3169002532959,-44.86029815673828,small_airport,no,OurAirports
+PLU,Belo Horizonte,Sudeste,MG,Pampulha - Carlos Drummond de Andrade Airport,SBBH,-19.85074,-43.950316,medium_airport,no,OurAirports
+POJ,Patos de Minas,Sudeste,MG,Patos de Minas Airport,SNPD,-18.672673,-46.491292,small_airport,no,OurAirports
+POO,Poços De Caldas,Sudeste,MG,Poços de Caldas - Embaixador Walther Moreira Salles Airport,SBPC,-21.842529,-46.569768,medium_airport,no,OurAirports
+PPY,Pouso Alegre,Sudeste,MG,Pouso Alegre Airport,SNZA,-22.2892,-45.919102,small_airport,no,OurAirports
+PSW,Passos,Sudeste,MG,José Figueiredo Municipal Airport,SNOS,-20.731838,-46.662011,small_airport,no,OurAirports
+PYT,Paracatu,Sudeste,MG,Pedro Rabelo de Souza Airport,SNZR,-17.242599,-46.883099,small_airport,yes,OurAirports
+SSO,São Lourenço,Sudeste,MG,São Lourenço Airport,SNLO,-22.0909,-45.044498,small_airport,no,OurAirports
+TFL,Teófilo Otoni,Sudeste,MG,Juscelino Kubitscheck Airport,SNTO,-17.8923,-41.513599,small_airport,no,OurAirports
+UBA,Uberaba,Sudeste,MG,Mário de Almeida Franco Airport,SBUR,-19.765036,-47.964805,medium_airport,yes,OurAirports
+UDI,Uberlândia,Sudeste,MG,Ten. Cel. Aviador César Bombonato Airport,SBUL,-18.883579,-48.225936,medium_airport,yes,OurAirports
+VAG,Varginha,Sudeste,MG,Major Brigadeiro Trompowsky Airport,SBVG,-21.591375,-45.474116,medium_airport,no,OurAirports
+VRZ,Lavras,Sudeste,MG,Padre Israel Airport,SSOL,-21.240601,-44.963902,small_airport,no,OurAirports
+BZC,Cabo Frio,Sudeste,RJ,Umberto Modiano Airport,SSBZ,-22.770881,-41.96308,medium_airport,no,OurAirports
+CAW,Campos dos Goytacazes,Sudeste,RJ,Bartolomeu Lisandro Airport,SBCP,-21.698299,-41.301701,medium_airport,yes,OurAirports
+CFB,Cabo Frio,Sudeste,RJ,Cabo Frio Airport,SBCB,-22.921485,-42.071874,small_airport,yes,OurAirports
+GDR,Angra dos Reis,Sudeste,RJ,Angra dos Reis Airport,SDAG,-22.9753,-44.307098,small_airport,no,OurAirports
+GIG,Rio De Janeiro,Sudeste,RJ,Rio Galeão – Tom Jobim International Airport,SBGL,-22.809999,-43.250557,large_airport,yes,OurAirports
+ITP,Itaperuna,Sudeste,RJ,Itaperuna Airport,SDUN,-21.219299316399997,-41.8759002686,small_airport,no,OurAirports
+JMR,Maricá,Sudeste,RJ,Maricá Airport,SBMI,-22.9195,-42.830898,small_airport,no,OurAirports
+JPY,Paraty,Sudeste,RJ,Paraty Airport,SDTK,-23.224044,-44.7234,small_airport,yes,OurAirports
+MEA,Macaé,Sudeste,RJ,Macaé Benedito Lacerda Airport,SBME,-22.343,-41.765999,medium_airport,no,OurAirports
+REZ,Resende,Sudeste,RJ,Resende Airport,SDRS,-22.4785,-44.480301,small_airport,no,OurAirports
+RRJ,Rio de Janeiro,Sudeste,RJ,Jacarepaguá - Roberto Marinho Airport,SBJR,-22.986773,-43.372194,medium_airport,yes,OurAirports
+SDU,Rio de Janeiro,Sudeste,RJ,Santos Dumont Airport,SBRJ,-22.910397,-43.16282,large_airport,yes,OurAirports
+SNZ,Rio de Janeiro,Sudeste,RJ,Santa Cruz Air Force Base,SBSC,-22.9324,-43.719101,medium_airport,no,OurAirports
+AIF,Assis,Sudeste,SP,Marcelo Pires Halzhausen Airport,SNAX,-22.638601,-50.455983,small_airport,no,OurAirports
+AQA,Araraquara,Sudeste,SP,Araraquara Airport,SBAQ,-21.812,-48.132999,medium_airport,yes,OurAirports
+ARU,Araçatuba,Sudeste,SP,Araçatuba Airport,SBAU,-21.141479,-50.424575,medium_airport,yes,OurAirports
+BAT,Barretos,Sudeste,SP,Chafei Amsei Airport,SNBA,-20.584631,-48.594125,medium_airport,no,OurAirports
+BJP,Bragança Paulista,Sudeste,SP,Estadual Arthur Siqueira Airport,SBBP,-22.978822,-46.537131,small_airport,no,OurAirports
+CGH,São Paulo,Sudeste,SP,Congonhas–Deputado Freitas Nobre Airport,SBSP,-23.627657,-46.654601,large_airport,yes,OurAirports
+FRC,Franca,Sudeste,SP,Tenente Lund Pressoto Airport,SIMK,-20.592199,-47.3829,small_airport,no,OurAirports
+GRU,São Paulo,Sudeste,SP,São Paulo/Guarulhos–Governor André Franco Montoro International Airport,SBGR,-23.431274,-46.469954,large_airport,yes,OurAirports
+GUJ,Guaratinguetá,Sudeste,SP,Edu Chaves Field,SBGW,-22.791599,-45.2048,medium_airport,no,OurAirports
+JHF,São Roque,Sudeste,SP,São Paulo Catarina Executive Airport,SBJH,-23.426886,-47.165658,medium_airport,no,OurAirports
+JLS,Jales,Sudeste,SP,Jales Airport,SDJL,-20.292296,-50.545546,small_airport,no,OurAirports
+JTC,Bauru,Sudeste,SP,Bauru/Arealva–Moussa Nakhal Tobias State Airport,SBAE,-22.160755,-49.070325,medium_airport,yes,OurAirports
+JTN,Itanhaém,Sudeste,SP,Itanhaém Airport,SDIM,-24.159729,-46.790604,small_airport,no,OurAirports
+LIP,Lins,Sudeste,SP,Lins Airport,SWXQ,-21.663491,-49.729954,medium_airport,no,OurAirports
+MII,Marília,Sudeste,SP,Frank Miloye Milenkowichi–Marília State Airport,SBML,-22.196899,-49.926485,medium_airport,yes,OurAirports
+OUS,Ourinhos,Sudeste,SP,Jornalista Benedito Pimentel Airport,SDOU,-22.966598,-49.912049,small_airport,no,OurAirports
+PPB,Presidente Prudente,Sudeste,SP,Presidente Prudente Airport,SBDN,-22.1751,-51.424599,medium_airport,yes,OurAirports
+QDV,Jundiaí,Sudeste,SP,Comte. Rolim Adolfo Amaro–Jundiaí State Airport,SBJD,-23.180861,-46.943921,small_airport,no,OurAirports
+QSC,São Carlos,Sudeste,SP,Mário Pereira Lopes–São Carlos International Airport,SDSC,-21.875032,-47.903851,small_airport,no,OurAirports
+RAO,Ribeirão Preto,Sudeste,SP,Leite Lopes Airport,SBRP,-21.134314,-47.774053,medium_airport,yes,OurAirports
+RTE,São Paulo,Sudeste,SP,Campo de Marte Airport,SBMT,-23.5091,-46.637798,medium_airport,no,OurAirports
+SFV,Santa Fé do Sul,Sudeste,SP,Santa Fé do Sul Airport,SSA2,-20.228473,-50.968943,small_airport,no,OurAirports
+SJK,São José Dos Campos,Sudeste,SP,Professor Urbano Ernesto Stumpf Airport,SBSJ,-23.2292,-45.8615,medium_airport,yes,OurAirports
+SJP,São José do Rio Preto,Sudeste,SP,Prof. Eribelto Manoel Reino State Airport,SBSR,-20.817113,-49.406963,medium_airport,yes,OurAirports
+SOD,Sorocaba,Sudeste,SP,Sorocaba Airport,SDCO,-23.478001,-47.490002,small_airport,yes,OurAirports
+SSZ,Guarujá,Sudeste,SP,Santos Nero Moura Air Base / Guarujá Airport,SBST,-23.928192,-46.300195,medium_airport,no,OurAirports
+UBT,Ubatuba,Sudeste,SP,Ubatuba Gastão Madeira State Airport,SDUB,-23.441122,-45.075814,small_airport,no,OurAirports
+VCP,Campinas,Sudeste,SP,Viracopos International Airport,SBKP,-23.007404,-47.134502,large_airport,yes,OurAirports
+VOT,Votuporanga,Sudeste,SP,Domingos Pignatari Airport,SDVG,-20.458426,-50.003134,small_airport,no,OurAirports
+ZFU,Arujá,Sudeste,SP,Unifly Heliport,SSUO,-23.4086112976,-46.330554962200004,heliport,no,OurAirports
+APU,Apucarana,Sul,PR,Captain João Busse Airport,SSAP,-23.609099,-51.384301,small_airport,no,OurAirports
+APX,Arapongas,Sul,PR,Arapongas Airport,SSOG,-23.352636,-51.491967,small_airport,no,OurAirports
+BFH,Curitiba,Sul,PR,Bacacheri Airport,SBBI,-25.4051,-49.231998,medium_airport,no,OurAirports
+CAC,Cascavel,Sul,PR,Coronel Adalberto Mendes da Silva Airport,SBCA,-25.000323,-53.501208,medium_airport,yes,OurAirports
+CBW,Campo Mourão,Sul,PR,Campo Mourão Airport,SSKM,-24.009199,-52.3568,small_airport,no,OurAirports
+CKO,Cornélio Procópio,Sul,PR,Cornélio Procópio Airport,SSCP,-23.152711,-50.602868,small_airport,no,OurAirports
+CWB,Curitiba,Sul,PR,Curitiba-Afonso Pena International Airport,SBCT,-25.5285,-49.1758,large_airport,yes,OurAirports
+FBE,Francisco Beltrão,Sul,PR,Paulo Abdala Airport,SSFB,-26.05938,-53.063827,small_airport,yes,OurAirports
+GGH,Cianorte,Sul,PR,Engenheiro Gastão de Mesquita Filho Airport,SSCT,-23.69157,-52.642091,small_airport,no,OurAirports
+GGJ,Guaíra,Sul,PR,Guaíra Airport,SSGY,-24.0811,-54.1917,small_airport,yes,OurAirports
+GPB,Guarapuava,Sul,PR,Tancredo Thomas de Faria Airport,SSGG,-25.388327,-51.52349,small_airport,yes,OurAirports
+IGU,Foz do Iguaçu,Sul,PR,Cataratas International Airport,SBFI,-25.594167,-54.489444,large_airport,yes,OurAirports
+LDB,Londrina,Sul,PR,Governor José Richa Airport,SBLO,-23.334375,-51.128365,medium_airport,yes,OurAirports
+MGF,Maringá,Sul,PR,Regional de Maringá - Sílvio Name Júnior Airport,SBMG,-23.47606,-52.016187,medium_airport,yes,OurAirports
+PGZ,Ponta Grossa,Sul,PR,Ponta Grossa Airport - Comandante Antonio Amilton Beraldo,SBPG,-25.184476,-50.143822,medium_airport,yes,OurAirports
+PNG,Paranaguá,Sul,PR,Paranaguá Airport,SSPG,-25.5401,-48.5312,small_airport,no,OurAirports
+PTO,Pato Branco,Sul,PR,Juvenal Loureiro Cardoso Airport,SBPO,-26.217184,-52.694463,small_airport,yes,OurAirports
+PVI,Paranavaí,Sul,PR,Paranavaí Airport,SSPI,-23.089899,-52.488499,small_airport,no,OurAirports
+TEC,Telêmaco Borba,Sul,PR,Telêmaco Borba Airport,SSVL,-24.317801,-50.6516,medium_airport,no,OurAirports
+TOW,Toledo,Sul,PR,Toledo - Luiz Dalcanale Filho Municipal Airport,SBTD,-24.6863,-53.697498,small_airport,yes,OurAirports
+UMU,Umuarama,Sul,PR,Orlando de Carvalho Airport,SSUM,-23.7987,-53.313801,small_airport,yes,OurAirports
+UVI,União da Vitória,Sul,PR,José Cleto Airport,SSUV,-26.233224,-51.066754,small_airport,yes,OurAirports
+ALQ,Alegrete,Sul,RS,Alegrete Novo Airport,SSLT,-29.811595,-55.894707,small_airport,no,OurAirports
+BGV,Bento Gonçalves,Sul,RS,Aeroclube de Bento Gonçalves Airport,SSBG,-29.147424,-51.540791,small_airport,no,OurAirports
+BGX,Bagé,Sul,RS,Comandante Gustavo Kraemer Airport,SBBG,-31.390499,-54.112202,medium_airport,no,OurAirports
+CEL,Canela,Sul,RS,Canela Airport,SSCN,-29.370091,-50.831729,small_airport,yes,OurAirports
+CSU,Santa Cruz do Sul,Sul,RS,Santa Cruz do Sul Airport,SSSC,-29.684099,-52.412201,small_airport,no,OurAirports
+CTQ,Santa Vitória do Palmar,Sul,RS,Santa Vitória do Palmar Airport,,-33.502038,-53.344911,small_airport,no,OurAirports
+CXJ,Caxias Do Sul,Sul,RS,Hugo Cantergiani Regional Airport,SBCX,-29.197183,-51.187647,medium_airport,yes,OurAirports
+CZB,Cruz Alta,Sul,RS,Carlos Ruhl Airport,SSAK,-28.657934,-53.610095,small_airport,no,OurAirports
+ERM,Erechim,Sul,RS,Erechim Airport,SSER,-27.663614,-52.271489,small_airport,no,OurAirports
+GCV,Gravatai,Sul,RS,Gravatai Airport,,-29.9494,-50.98505,small_airport,no,OurAirports
+GEL,Santo Ângelo,Sul,RS,Santo Ângelo Airport,SBNM,-28.282503,-54.169623,medium_airport,yes,OurAirports
+HRZ,Horizontina,Sul,RS,Walter Bündchen Airport,SSHZ,-27.6383,-54.3391,small_airport,no,OurAirports
+IJU,Ijuí,Sul,RS,João Batista Bos Filho Airport,SSIJ,-28.368711,-53.846568,small_airport,no,OurAirports
+ITQ,Itaqui,Sul,RS,Itaqui Airport,SSIQ,-29.171981,-56.538343,small_airport,no,OurAirports
+JBS,São Borja,Sul,RS,São Borja Airport,SSSB,-28.6549,-56.034599,small_airport,no,OurAirports
+PET,Pelotas,Sul,RS,João Simões Lopes Neto International Airport,SBPK,-31.717189,-52.327796,medium_airport,yes,OurAirports
+PFB,Passo Fundo,Sul,RS,Lauro Kurtz Airport,SBPF,-28.243976,-52.32777,medium_airport,yes,OurAirports
+POA,Porto Alegre,Sul,RS,Porto Alegre-Salgado Filho International Airport,SBPA,-29.993984,-51.167482,large_airport,yes,OurAirports
+QDB,Cachoeira Do Sul,Sul,RS,Cachoeira do Sul Airport,SSKS,-30.00189971923828,-52.940799713134766,small_airport,no,OurAirports
+QGF,Montenegro,Sul,RS,Montenegro Airport,SSNG,-29.71940040588379,-51.48939895629883,small_airport,no,OurAirports
+QHV,Novo Hamburgo,Sul,RS,Novo Hamburgo Airport,SSNH,-29.69610023498535,-51.08169937133789,small_airport,no,OurAirports
+QNS,Porto Alegre,Sul,RS,Canoas Air Force Base,SBCO,-29.945928,-51.144413,medium_airport,no,OurAirports
+RIA,Santa Maria,Sul,RS,Santa Maria Airport,SBSM,-29.711399,-53.688202,medium_airport,yes,OurAirports
+RIG,Rio Grande,Sul,RS,Rio Grande Regional Airport,SJRG,-32.083065,-52.167184,small_airport,no,OurAirports
+SQY,São Lourenço Do Sul,Sul,RS,São Lourenço do Sul Airport,SSRU,-31.38330078125,-52.032798767089844,small_airport,no,OurAirports
+SRA,Santa Rosa,Sul,RS,Luis Alberto Lehr Airport,SSZR,-27.90658,-54.520628,small_airport,yes,OurAirports
+TSQ,Torres,Sul,RS,Torres Airport,SSTE,-29.4149,-49.810001,small_airport,no,OurAirports
+URG,Uruguaiana,Sul,RS,Rubem Berta Airport,SBUG,-29.7822,-57.0382,medium_airport,yes,OurAirports
+VCC,Vacaria,Sul,RS,Vacaria Airport,SNEE,-28.43248,-51.023322,small_airport,no,OurAirports
+AXE,Xanxerê,Sul,SC,Xanxerê Airport,SSXX,-26.875067,-52.372862,small_airport,no,OurAirports
+BNU,Blumenau,Sul,SC,Blumenau Airport,SSBL,-26.831661,-49.093569,small_airport,no,OurAirports
+CCI,Concórdia,Sul,SC,Olavo Cecco Rigon Airport,SSCK,-27.180511,-52.051755,small_airport,no,OurAirports
+CCM,Criciúma,Sul,SC,Forquilhinha - Criciúma  Airport,SSIM,-28.725743,-49.424475,medium_airport,yes,OurAirports
+CFC,Caçador,Sul,SC,Doctor Carlos Alberto da Costa Neves Airport,SBCD,-26.787423,-50.939942,small_airport,no,OurAirports
+EEA,Correia Pinto,Sul,SC,Planalto Serrano Regional Airport,SNCP,-27.634128,-50.358253,medium_airport,no,OurAirports
+FLN,Florianópolis,Sul,SC,Hercílio Luz International Airport,SBFL,-27.670279,-48.552502,large_airport,yes,OurAirports
+ITJ,Itajaí,Sul,SC,Campo Comandantes Airport,SIJY,-26.983055,-48.816387,small_airport,no,OurAirports
+JCB,Joaçaba,Sul,SC,Santa Terezinha Airport,SSJA,-27.171514,-51.553327,small_airport,no,OurAirports
+JJG,Jaguaruna,Sul,SC,Humberto Ghizzo Bortoluzzi Regional Airport,SBJA,-28.6753,-49.0596,small_airport,yes,OurAirports
+JOI,Joinville,Sul,SC,Lauro Carneiro de Loyola Airport,SBJV,-26.224501,-48.797401,medium_airport,yes,OurAirports
+LAJ,Lages,Sul,SC,Lages Airport,SBLJ,-27.782101,-50.281502,medium_airport,yes,OurAirports
+LOI,Lontras,Sul,SC,Helmuth Baungarten Airport,SSLN,-27.159999847399998,-49.5424995422,small_airport,no,OurAirports
+NVT,Navegantes,Sul,SC,Ministro Victor Konder International Airport,SBNF,-26.879431,-48.650979,large_airport,yes,OurAirports
+SQX,São Miguel do Oeste,Sul,SC,São Miguel do Oeste Hélio Wasum Airport,SSOE,-26.781601,-53.503502,small_airport,no,OurAirports
+VIA,Videira,Sul,SC,Videira Airport,SSVI,-26.999701,-51.141899,small_airport,no,OurAirports
+XAP,Chapecó,Sul,SC,Serafin Enoss Bertaso Airport,SBCH,-27.134199,-52.656601,medium_airport,yes,OurAirports

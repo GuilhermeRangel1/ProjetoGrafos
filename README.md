@@ -1,6 +1,6 @@
 # DataGraph
 
-DataGraph - modelagem da malha aerea brasileira (Parte 1) e comparacao de algoritmos em dataset maior do Spotify (Parte 2), com interface web interativa unificada.
+DataGraph - projeto com dois módulos interativos: AeroGraph, para modelagem da malha aérea brasileira (Parte 1), e SoundGraph, para comparação de algoritmos em um dataset musical maior (Parte 2).
 
 ## Requisitos
 
@@ -18,6 +18,8 @@ projeto-grafos/
 ├── data/
 │   ├── aeroportos_data.csv          # dados dos aeroportos
 │   ├── adjacencias_aeroportos.csv   # arestas construídas pelo grupo
+│   ├── aeroportos_data_real.csv     # aeroportos brasileiros importados de fontes públicas
+│   ├── adjacencias_aeroportos_real.csv # conexões reais/proxy entre aeroportos brasileiros
 │   ├── rotas.csv                    # pares origem-destino para Dijkstra
 │   └── dataset_parte2/
 │       └── dataset.csv              # Spotify Tracks Dataset (Kaggle)
@@ -25,6 +27,7 @@ projeto-grafos/
 ├── spotify-graph/                   # app React da interface web
 ├── src/
 │   ├── solve.py                     # pipeline Parte 1
+│   ├── import_aeroportos_reais.py    # importação de aeroportos e rotas públicas
 │   ├── analise.py                   # visualizações Parte 1
 │   ├── analise_etapa10.py           # análise AVD Parte 1
 │   ├── analise_parte2.py            # pipeline Parte 2
@@ -68,9 +71,19 @@ npm install   # apenas na primeira vez
 npm run dev
 ```
 
-Acesse `http://localhost:5173`. A página inicial permite escolher entre o grafo de aeroportos e o grafo do Spotify.
+Acesse `http://localhost:5173`. A página inicial permite escolher entre o AeroGraph e o SoundGraph.
 
-## Parte 1 — Grafo de Aeroportos do Brasil
+## Parte 1 — AeroGraph
+
+A malha de aeroportos pode ser gerada a partir de fontes públicas: [OurAirports](https://davidmegginson.github.io/ourairports-data/airports.csv), para cadastro e coordenadas de aeroportos, e [OpenFlights](https://github.com/jpatokal/openflights), para rotas aéreas públicas/históricas. O importador cria uma base mais ampla da rede brasileira e salva os arquivos `data/aeroportos_data_real.csv`, `data/adjacencias_aeroportos_real.csv` e `data/aeroportos_fontes_real.json`.
+
+```bash
+python -m src.import_aeroportos_reais
+```
+
+Quando esses arquivos existem, `solve.py` e `viz.py` usam automaticamente a malha realista. Se eles forem removidos, o projeto volta a usar os CSVs manuais originais.
+
+No AeroGraph, aeroportos cadastrados sem nenhuma conexão registrada são descartados da visualização e das métricas do grafo. A base completa permanece salva em `data/aeroportos_data_real.csv`, mas a análise considera apenas a malha aérea ativa.
 
 Executa todas as etapas: métricas globais, rotas com Dijkstra e visualizações.
 
@@ -107,7 +120,7 @@ python -m src.viz
 | `vis3_comparacao_regioes.png` | Comparação de métricas por região |
 | `vis4_subgrafo_hubs.html` | Subgrafo dos maiores hubs |
 
-## Parte 2 — Dataset Spotify + Comparação de Algoritmos
+## Parte 2 — SoundGraph
 
 **Dataset:** [Spotify Tracks Dataset (Kaggle)](https://www.kaggle.com/datasets/maharshipandya/-spotify-tracks-dataset)  
 **Nós:** faixas musicais | **Arestas:** K vizinhos mais próximos por distância euclidiana de features de áudio
@@ -134,7 +147,7 @@ python -m src.gerador_playlists
 | Arquivo | Conteúdo |
 |---|---|
 | `parte2_report.json` | Métricas do dataset e tempos de execução por algoritmo |
-| `p2_vis1_distribuicao_graus.png` | Histograma de graus do grafo Spotify |
+| `p2_vis1_distribuicao_graus.png` | Histograma de graus do SoundGraph |
 | `p2_vis2_tempo_algoritmos.png` | Comparação de tempo médio por algoritmo |
 | `p2_vis3_heatmap_distancias.png` | Heatmap de distâncias entre 20 faixas |
 | `p2_vis4_bfs_camadas.png` | Distribuição de nós por camada (BFS) |

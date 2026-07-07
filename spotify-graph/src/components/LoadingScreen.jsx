@@ -39,7 +39,7 @@ export default function LoadingScreen({ progress, status, error }) {
         </svg>
       </div>
 
-      <h1 className="text-2xl font-bold text-[#f7efcf] mb-1 tracking-tight">Grafo de artistas e gêneros do Spotify</h1>
+      <h1 className="text-2xl font-bold text-[#f7efcf] mb-1 tracking-tight">SoundGraph</h1>
       <p className="text-[#d9cfad] text-sm mb-8">
         {isStarting ? 'Preparando dataset...' : `Processando ${(114000).toLocaleString('pt-BR')} faixas...`}
       </p>

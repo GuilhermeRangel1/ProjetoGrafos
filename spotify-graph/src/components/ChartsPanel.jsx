@@ -458,7 +458,7 @@ export default function ChartsPanel({ onClose }) {
             background: 'linear-gradient(90deg,#efe6c8,#8fbd8c)',
             WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent',
           }}>
-            Spotify
+            SoundGraph
           </div>
           <div style={{ fontSize: '0.65rem', color: C.muted, marginTop: 2 }}>
             Análise musical interativa
@@ -632,7 +632,7 @@ export default function ChartsPanel({ onClose }) {
               fontFamily: "'Syne', sans-serif", color: C.text,
               fontSize: '1.65rem', lineHeight: 1.2, marginBottom: 10,
             }}>
-              Insights do Grafo Spotify
+              Insights do SoundGraph
             </h2>
             <p style={{ color: C.muted, fontSize: '0.88rem', lineHeight: 1.8, margin: 0 }}>
               O que aparece quando tratamos músicas, artistas e gêneros como uma rede. A leitura combina atributos de áudio, popularidade e caminhos do grafo para explicar
