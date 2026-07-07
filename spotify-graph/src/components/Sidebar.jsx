@@ -51,7 +51,7 @@ export default function Sidebar({ node, genreColorMap, onSelectTrack, onClose })
             className="text-[10px] font-semibold uppercase tracking-widest"
             style={{ color }}
           >
-            {isGenre ? 'Genre' : (isTrack ? 'Música' : 'Artist')}
+            {isGenre ? 'Gênero' : (isTrack ? 'Música' : 'Artista')}
           </span>
           <h2 className="text-[#f7efcf] font-bold text-base leading-tight mt-0.5 truncate max-w-[260px]" title={node.label}>
             {node.label}
@@ -75,12 +75,12 @@ export default function Sidebar({ node, genreColorMap, onSelectTrack, onClose })
             </>
           ) : (
             <>
-              <StatCard label="Avg Popularity" value={node.popularityAvg?.toFixed(1) ?? '—'} />
-              <StatCard label="Tracks" value={node.trackCount?.toLocaleString() ?? '—'} />
+              <StatCard label="Popularidade média" value={node.popularityAvg?.toFixed(1) ?? '—'} />
+              <StatCard label="Faixas" value={node.trackCount?.toLocaleString() ?? '—'} />
             </>
           )}
           {!isGenre && !isTrack && (
-            <StatCard label="Genres" value={node.genreCount ?? '—'} />
+            <StatCard label="Gêneros" value={node.genreCount ?? '—'} />
           )}
         </div>
 
@@ -108,10 +108,10 @@ export default function Sidebar({ node, genreColorMap, onSelectTrack, onClose })
           </section>
         )}
 
-        {/* Genres (for artist nodes) */}
+        {/* Genres for artist nodes */}
         {!isGenre && !isTrack && node.genres && node.genres.length > 0 && (
           <section>
-            <SectionTitle>Genres</SectionTitle>
+            <SectionTitle>Gêneros</SectionTitle>
             <div className="flex flex-wrap gap-1.5 mt-2">
               {node.genres.sort().map((g) => (
                 <span
@@ -133,7 +133,7 @@ export default function Sidebar({ node, genreColorMap, onSelectTrack, onClose })
         {/* Top tracks (artist only) */}
         {!isGenre && !isTrack && node.topTracks && node.topTracks.length > 0 && (
           <section>
-            <SectionTitle>Top Tracks</SectionTitle>
+            <SectionTitle>Principais faixas</SectionTitle>
             <ul className="mt-2 space-y-1.5">
               {node.topTracks.slice(0, 20).map((t, i) => (
                 <li key={i} className="flex items-center gap-2">
@@ -196,8 +196,8 @@ export default function Sidebar({ node, genreColorMap, onSelectTrack, onClose })
                 </div>
                 
                 {playlist.fallback_usado && (
-                  <div className="text-[10px] text-[#f2d98b] mb-3 bg-[#8a6d2f]/20 p-2 rounded">
-                    A música selecionada não estava na nossa amostra processada do grafo. Começamos a playlist a partir de uma música de estilo parecido: <b>{playlist.seed_utilizado.name} - {playlist.seed_utilizado.artist}</b>.
+                  <div className="text-[10px] leading-relaxed text-[#efe6c8] mb-3 bg-[#8a6d2f]/18 border border-[#c4b37e]/20 p-2.5 rounded-lg">
+                    Playlist iniciada por similaridade sonora a partir de <b>{playlist.seed_utilizado.name}</b>, de <b>{playlist.seed_utilizado.artist}</b>.
                   </div>
                 )}
 
