@@ -71,6 +71,7 @@ def load_edges(path: Path) -> list:
                 "tipo":          row.get("tipo_conexao", "").strip(),
                 "justificativa": row.get("justificativa", "").strip(),
                 "peso":          float(row.get("peso", 1.0)),
+                "frequencia":    int(float(row.get("frequencia_estimada", row.get("frequencia", 1)) or 1)),
             })
     return edges
 
@@ -209,7 +210,7 @@ def build_html(airports, edges, ego, coords, path_rpo, path_msp) -> str:
         edges_clean.append({
             "from": e["origem"], "to": e["destino"],
             "tipo": e.get("tipo", ""), "just": e.get("justificativa", ""),
-            "peso": e.get("peso", 1.0),
+            "peso": e.get("peso", 1.0), "freq": e.get("frequencia", 1),
         })
 
     ap_json     = json.dumps(ap_data,     ensure_ascii=False)
@@ -415,7 +416,7 @@ main{{display:flex;flex:1;overflow:hidden; width: 100%;}}
       </div>
 
       <div class="chart-card col-span-2">
-          <h3>Top Hubs Nacionais</h3>
+          <h3>Hubs que estruturam a malha</h3>
           <div class="chart-controls">
               <span style="font-size:0.65rem; color:var(--muted); align-self:center;">Mostrar:</span>
               <button id="hub-5-btn" onclick="updateHubsChart(5)">Top 5</button>
@@ -425,59 +426,47 @@ main{{display:flex;flex:1;overflow:hidden; width: 100%;}}
           <div class="chart-wrapper">
               <canvas id="chart-hubs"></canvas>
           </div>
-          <p>Aeroportos ordenados pelo Grau. <b style="color:#2f5942;">Dica: Clique na barra para ver no mapa!</b></p>
+          <p>Ranking dos aeroportos que concentram mais conexões diretas. <b style="color:#2f5942;">Clique em uma barra para localizar no mapa.</b></p>
       </div>
 
       <div class="chart-card col-span-2">
-          <h3>Distribuição de Graus</h3>
-          <div class="chart-controls">
-              <button id="dist-line-btn" class="active" onclick="updateDistributionType('line')">Visão em Linha</button>
-              <button id="dist-bar-btn" onclick="updateDistributionType('bar')">Visão em Histograma</button>
-          </div>
+          <h3>Perfil de conectividade</h3>
           <div class="chart-wrapper">
               <canvas id="chart-distribuicao"></canvas>
           </div>
-          <p>Mapeia a densidade do ecossistema revelando a topologia de escala da rede.</p>
+          <p>Classifica aeroportos ativos por papel na malha: alimentadores, articuladores, hubs e superhubs.</p>
       </div>
 
       <div class="chart-card col-span-2">
-          <h3>Perfil e Análise Multivariada das Regiões</h3>
-          <div class="chart-controls">
-              <span style="font-size:0.65rem; color:var(--muted); align-self:center;">Métrica:</span>
-              <select id="region-var-select" onchange="updateRegionsChart(this.value)">
-                  <option value="count">Volume de Aeroportos (Contagem)</option>
-                  <option value="avg_degree">Grau Médio Regional</option>
-                  <option value="max_degree">Grau Máximo Encontrado</option>
-              </select>
-          </div>
+          <h3>Participação regional</h3>
           <div class="chart-wrapper">
               <canvas id="chart-regioes-multi"></canvas>
           </div>
-          <p>Alternância dinâmica de variáveis estruturais agrupadas por macrorregião geográfica.</p>
+          <p>Compara presença regional na quantidade de aeroportos ativos e no volume de conexões incidentes.</p>
       </div>
 
       <div class="chart-card col-span-3">
-          <h3>Dispersão Interna: Boxplot de Graus</h3>
+          <h3>Maiores trechos da malha</h3>
           <div class="chart-wrapper">
               <canvas id="chart-boxplot"></canvas>
           </div>
-          <p>Análise estatística descritiva (Mín, Q1, Mediana, Q3, Máx) mapeando assimetrias internas.</p>
+          <p>Rotas com maior distância geográfica direta, úteis para entender pontes nacionais de longo alcance.</p>
       </div>
 
       <div class="chart-card col-span-3">
-          <h3>Bolhas Regionais: Volume vs Densidade</h3>
-          <div class="chart-wrapper">
-              <canvas id="chart-bubbles"></canvas>
+          <h3>Fluxo entre macrorregiões</h3>
+          <div class="chart-wrapper" id="chart-bubbles-wrapper" style="display:flex; align-items:center; justify-content:center; padding: 6px;">
+              <canvas id="chart-bubbles" style="display:none"></canvas>
           </div>
-          <p>Tamanho da bolha = Quantidade de Aeroportos. Identifica a eficiência estrutural média por macro-região.</p>
+          <p>Matriz de conexões entre regiões, separando concentração interna e integração nacional.</p>
       </div>
 
       <div class="chart-card col-span-3">
-          <h3>Heatmap: Perfil Regional da Rede Aérea</h3>
+          <h3>Corredores com maior evidência</h3>
           <div class="chart-wrapper" id="chart-heatmap-wrapper" style="display:flex; align-items:center; justify-content:center; padding: 10px;">
               
           </div>
-          <p>Avaliação das métricas da Rede Ego (Ordem, Tamanho e Densidade) agregadas pela mediana de cada macrorregião.</p>
+          <p>Conexões priorizadas pela quantidade de registros na fonte pública e pela relevância dos aeroportos.</p>
       </div>
 
       <div class="chart-card col-span-3">
@@ -768,38 +757,37 @@ function updateHubsChart(limit) {{
     }});
 }}
 
-function updateDistributionType(type) {{
-    document.getElementById('dist-line-btn').classList.toggle('active', type === 'line');
-    document.getElementById('dist-bar-btn').classList.toggle('active', type === 'bar');
-
-    const freq = {{}};
-    Object.values(currentAP).forEach(info => {{
+function updateDistributionType() {{
+    const classes = [
+        {{ label: 'Alimentadores (1-3)', min: 1, max: 3, color: '#8fb98e' }},
+        {{ label: 'Articuladores (4-9)', min: 4, max: 9, color: '#dfb04f' }},
+        {{ label: 'Hubs (10-24)', min: 10, max: 24, color: '#4f8fb8' }},
+        {{ label: 'Superhubs (25+)', min: 25, max: Infinity, color: '#c9767d' }},
+    ];
+    const values = classes.map(cls => Object.values(currentAP).filter(info => {{
         const g = parseInt(info.grau) || 0;
-        freq[g] = (freq[g] || 0) + 1;
-    }});
-    const labels = Object.keys(freq).map(Number).sort((a, b) => a - b);
-    const datasetData = labels.map(l => freq[l]);
+        return g >= cls.min && g <= cls.max;
+    }}).length);
 
     if (chartInstances.dist) chartInstances.dist.destroy();
     const ctx = document.getElementById('chart-distribuicao').getContext('2d');
     chartInstances.dist = new Chart(ctx, {{
-        type: type,
+        type: 'doughnut',
         data: {{
-            labels: labels,
+            labels: classes.map(c => c.label),
             datasets: [{{
-                label: 'Aeroportos',
-                data: datasetData,
-                backgroundColor: 'rgba(92, 159, 121, 0.25)',
-                borderColor: '#5c9f79', borderWidth: 2,
-                fill: type === 'line', tension: 0.3
+                data: values,
+                backgroundColor: classes.map(c => c.color + 'CC'),
+                borderColor: 'rgba(255,249,235,.92)',
+                borderWidth: 3,
+                hoverOffset: 8
             }}]
         }},
         options: {{
-            responsive: true, maintainAspectRatio: false,
-            plugins: {{ legend: {{ display: false }} }},
-            scales: {{
-                y: {{ beginAtZero: true, grid: {{ color: 'rgba(122,98,68,.18)' }}, ticks: {{ color: '#746f5a' }} }},
-                x: {{ grid: {{ color: 'rgba(122,98,68,.18)' }}, ticks: {{ color: '#746f5a' }} }}
+            responsive: true, maintainAspectRatio: false, cutout: '58%',
+            plugins: {{
+                legend: {{ position: 'bottom', labels: {{ color: '#334332', font: {{ family: 'Nunito', size: 11, weight: '700' }}, boxWidth: 12 }} }},
+                tooltip: {{ callbacks: {{ label: (ctx) => `${{ctx.label}}: ${{ctx.raw}} aeroporto(s)` }} }}
             }}
         }}
     }});
@@ -1064,6 +1052,158 @@ function initHeatmap() {{
     }});
     html += '</table>';
     
+    wrapper.innerHTML = html;
+}}
+
+function updateRegionsChart() {{
+    const regiaoDados = {{}};
+    currentRegionsList.forEach(r => regiaoDados[r] = {{ count: 0, incidentEdges: 0 }});
+    Object.values(currentAP).forEach(info => {{
+        const r = info.regiao;
+        if (!regiaoDados[r]) regiaoDados[r] = {{ count: 0, incidentEdges: 0 }};
+        regiaoDados[r].count += 1;
+    }});
+    EDGES.forEach(e => {{
+        const a = AP[e.from], b = AP[e.to];
+        if (a?.regiao) regiaoDados[a.regiao].incidentEdges += 1;
+        if (b?.regiao) regiaoDados[b.regiao].incidentEdges += 1;
+    }});
+
+    const labels = currentRegionsList.filter(r => regiaoDados[r]?.count);
+    const maxCount = Math.max(...labels.map(r => regiaoDados[r].count), 1);
+    const maxEdges = Math.max(...labels.map(r => regiaoDados[r].incidentEdges), 1);
+
+    if (chartInstances.regMulti) chartInstances.regMulti.destroy();
+    const ctx = document.getElementById('chart-regioes-multi').getContext('2d');
+    chartInstances.regMulti = new Chart(ctx, {{
+        type: 'bar',
+        data: {{
+            labels,
+            datasets: [
+                {{
+                    label: 'Aeroportos ativos',
+                    data: labels.map(r => Math.round((regiaoDados[r].count / maxCount) * 100)),
+                    rawValues: labels.map(r => regiaoDados[r].count),
+                    backgroundColor: labels.map(r => R_COLORS[r] + '80'),
+                    borderColor: labels.map(r => R_COLORS[r]),
+                    borderWidth: 2,
+                    borderRadius: 8
+                }},
+                {{
+                    label: 'Conexões incidentes',
+                    data: labels.map(r => Math.round((regiaoDados[r].incidentEdges / maxEdges) * 100)),
+                    rawValues: labels.map(r => regiaoDados[r].incidentEdges),
+                    backgroundColor: '#2f594244',
+                    borderColor: '#2f5942',
+                    borderWidth: 2,
+                    borderRadius: 8
+                }}
+            ]
+        }},
+        options: {{
+            responsive: true, maintainAspectRatio: false,
+            plugins: {{
+                legend: {{ position: 'bottom', labels: {{ color: '#334332', font: {{ family: 'Nunito', size: 11, weight: '700' }} }} }},
+                tooltip: {{ callbacks: {{ label: (ctx) => `${{ctx.dataset.label}}: ${{ctx.dataset.rawValues[ctx.dataIndex]}}` }} }}
+            }},
+            scales: {{
+                y: {{ beginAtZero: true, max: 100, grid: {{ color: 'rgba(122,98,68,.16)' }}, ticks: {{ color: '#746f5a', callback: v => v + '%' }} }},
+                x: {{ grid: {{ display: false }}, ticks: {{ color: '#746f5a' }} }}
+            }}
+        }}
+    }});
+}}
+
+function initBoxplot() {{
+    const topRoutes = [...EDGES]
+        .sort((a, b) => parseFloat(b.peso) - parseFloat(a.peso))
+        .slice(0, 10)
+        .reverse();
+
+    if (chartInstances.boxplot) chartInstances.boxplot.destroy();
+    const ctx = document.getElementById('chart-boxplot').getContext('2d');
+    chartInstances.boxplot = new Chart(ctx, {{
+        type: 'bar',
+        data: {{
+            labels: topRoutes.map(e => `${{e.from}} → ${{e.to}}`),
+            datasets: [{{
+                label: 'Distância estimada (km)',
+                data: topRoutes.map(e => parseFloat(e.peso)),
+                backgroundColor: topRoutes.map(e => AP[e.from]?.color || '#5c9f79'),
+                borderColor: 'rgba(255,249,235,.92)',
+                borderWidth: 1.5,
+                borderRadius: 8
+            }}]
+        }},
+        options: {{
+            indexAxis: 'y',
+            responsive: true, maintainAspectRatio: false,
+            plugins: {{
+                legend: {{ display: false }},
+                tooltip: {{ callbacks: {{ label: (ctx) => `${{ctx.raw.toFixed(1)}} km` }} }}
+            }},
+            scales: {{
+                x: {{ beginAtZero: true, grid: {{ color: 'rgba(122,98,68,.16)' }}, ticks: {{ color: '#746f5a' }} }},
+                y: {{ grid: {{ display: false }}, ticks: {{ color: '#746f5a', font: {{ weight: '700' }} }} }}
+            }},
+            onClick: (event, elements) => {{
+                if (!elements.length) return;
+                const route = topRoutes[elements[0].index];
+                if (route?.from) voltarParaMapaEDestacar(route.from);
+            }}
+        }}
+    }});
+}}
+
+function initBubbleRegions() {{
+    if (chartInstances.bubbles) {{ chartInstances.bubbles.destroy(); chartInstances.bubbles = null; }}
+    const wrapper = document.getElementById('chart-bubbles-wrapper');
+    const regions = currentRegionsList.filter(r => Object.values(currentAP).some(a => a.regiao === r));
+    const matrix = {{}};
+    let maxValue = 1;
+    regions.forEach(a => regions.forEach(b => matrix[`${{a}}|${{b}}`] = 0));
+    EDGES.forEach(e => {{
+        const a = AP[e.from]?.regiao, b = AP[e.to]?.regiao;
+        if (!a || !b) return;
+        const key = [a, b].sort().join('|');
+        matrix[key] = (matrix[key] || 0) + 1;
+        maxValue = Math.max(maxValue, matrix[key]);
+    }});
+
+    let html = '<div style="width:100%; overflow:auto"><table style="width:100%; border-collapse:separate; border-spacing:6px; font-size:.72rem; text-align:center;">';
+    html += '<tr><th></th>' + regions.map(r => `<th style="color:${{R_COLORS[r]}}; padding:4px;">${{r}}</th>`).join('') + '</tr>';
+    regions.forEach(r1 => {{
+        html += `<tr><th style="color:${{R_COLORS[r1]}}; text-align:right; padding-right:6px;">${{r1}}</th>`;
+        regions.forEach(r2 => {{
+            const key = [r1, r2].sort().join('|');
+            const value = matrix[key] || 0;
+            const alpha = value ? 0.16 + (value / maxValue) * 0.72 : 0.04;
+            html += `<td title="${{r1}} × ${{r2}}: ${{value}} conexões" style="background:rgba(92,159,121,${{alpha.toFixed(2)}}); border:1px solid rgba(122,98,68,.16); border-radius:10px; padding:10px 6px; color:#2f5942; font-weight:900;">${{value || ''}}</td>`;
+        }});
+        html += '</tr>';
+    }});
+    html += '</table></div>';
+    wrapper.innerHTML = html;
+}}
+
+function initHeatmap() {{
+    const routes = [...EDGES]
+        .sort((a, b) => ((parseInt(b.freq) || 1) - (parseInt(a.freq) || 1)) || ((parseFloat(b.peso) || 0) - (parseFloat(a.peso) || 0)))
+        .slice(0, 9);
+    const wrapper = document.getElementById('chart-heatmap-wrapper');
+    let html = '<div style="width:100%; display:flex; flex-direction:column; gap:8px;">';
+    routes.forEach((e, idx) => {{
+        const freq = parseInt(e.freq) || 1;
+        const maxFreq = Math.max(...routes.map(r => parseInt(r.freq) || 1), 1);
+        const width = 28 + (freq / maxFreq) * 72;
+        html += `
+          <button onclick="voltarParaMapaEDestacar('${{e.from}}')" style="display:grid; grid-template-columns:28px 1fr auto; gap:10px; align-items:center; border:1px solid rgba(122,98,68,.16); background:rgba(255,255,248,.58); border-radius:12px; padding:9px 10px; cursor:pointer; font-family:inherit; color:#334332; text-align:left;">
+            <b style="color:#746f5a;">${{idx + 1}}</b>
+            <span><b>${{e.from}} → ${{e.to}}</b><small style="display:block; color:#746f5a; margin-top:2px;">${{parseFloat(e.peso).toFixed(0)}} km · ${{freq}} registro(s) na fonte</small><span style="display:block; height:6px; width:${{width}}%; background:${{AP[e.from]?.color || '#5c9f79'}}; border-radius:999px; margin-top:6px;"></span></span>
+            <span style="font-size:.68rem; color:#746f5a;">ver</span>
+          </button>`;
+    }});
+    html += '</div>';
     wrapper.innerHTML = html;
 }}
 
