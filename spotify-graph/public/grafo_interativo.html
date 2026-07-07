@@ -267,17 +267,17 @@ main{display:flex;flex:1;overflow:hidden; width: 100%;}
       </div>
 
       <div class="chart-card col-span-3" style="min-height: auto; border-top: 4px solid #f5a623;">
-          <h3 style="text-align: left; color: #f5a623; margin-bottom: 10px;">2. Modelagem & Leis da Gestalt</h3>
+          <h3 style="text-align: left; color: #a66b00; margin-bottom: 10px;">2. Integração Regional</h3>
           <div id="insight-2" style="font-size: 0.8rem; line-height: 1.6; color: var(--text); text-align: justify;"></div>
       </div>
 
       <div class="chart-card col-span-3" style="min-height: auto; border-top: 4px solid #c9767d;">
-          <h3 style="text-align: left; color: #a64955; margin-bottom: 10px;">3. Discussão Crítica & Limitações</h3>
+          <h3 style="text-align: left; color: #a64955; margin-bottom: 10px;">3. Risco Operacional</h3>
           <div id="insight-3" style="font-size: 0.8rem; line-height: 1.6; color: var(--text); text-align: justify;"></div>
       </div>
 
       <div class="chart-card col-span-3" style="min-height: auto; border-top: 4px solid #5c9f79;">
-          <h3 style="text-align: left; color: #2f5942; margin-bottom: 10px;">4. Conclusão & Insights Acionáveis</h3>
+          <h3 style="text-align: left; color: #2f5942; margin-bottom: 10px;">4. Decisões Recomendadas</h3>
           <div id="insight-4" style="font-size: 0.8rem; line-height: 1.6; color: var(--text); text-align: justify;"></div>
       </div>
 
@@ -439,6 +439,91 @@ function generateInsights() {
     document.getElementById('insight-3').innerHTML = `Apesar da modelagem visual, o modelo topológico fixo atrelado à projeção geográfica possui limitações claras. A métrica de proximidade real induz a uma <b>oclusão visual severa</b> no Sudeste (ex: a tríade CGH-GRU-VCP), onde a superposição geométrica dos nós mascara a verdadeira conectividade estrutural. Adicionalmente, o grafo estático apresenta um <i>"falso viés de eficiência"</i>: ao omitir variáveis temporais (frequência diária), o Dijkstra elege o caminho "mais barato" em peso numérico, ignorando fluxos logísticos da vida real.`;
 
     document.getElementById('insight-4').innerHTML = `<b>Insight Logístico Estratégico:</b> A leitura combinada dos gráficos de distribuição revela uma vulnerabilidade crítica de projeto: a baixa resiliência topológica a falhas em cascata. O excesso de dependência estrutural do vértice <b>${maiorHub}</b> faz com que interrupções climáticas colapsem sub-rotas. A resposta acionável exige a <b>descentralização arquitetural</b> estimulando "Vértices de Corte" secundários no Nordeste e Norte, achatando a curva de centralidade de grau e melhorando a capacidade de recuperação de toda a rede.`;
+}
+
+function generateInsights() {
+    const nodes = Object.entries(currentAP).map(([iata, info]) => ({
+        iata,
+        grau: parseInt(info.grau) || 0,
+        regiao: info.regiao,
+        densidade: parseFloat(info.densidade_ego) || 0,
+    }));
+    const totalNodes = nodes.length;
+    const totalEdges = EDGES.length;
+    const avgDegree = totalNodes ? ((2 * totalEdges) / totalNodes) : 0;
+    const sorted = [...nodes].sort((a, b) => b.grau - a.grau);
+    const topHub = sorted[0] || { iata: '-', grau: 0, regiao: '-' };
+    const topFive = sorted.slice(0, 5);
+    const topFiveShare = totalEdges ? ((topFive.reduce((sum, n) => sum + n.grau, 0) / (2 * totalEdges)) * 100) : 0;
+    const feeders = nodes.filter(n => n.grau <= 3).length;
+    const hubs = nodes.filter(n => n.grau >= 10).length;
+    const superHubs = nodes.filter(n => n.grau >= 25).length;
+
+    const regionStats = {};
+    REGIONS_LIST.forEach(r => regionStats[r] = { nodes: 0, incident: 0, internal: 0, external: 0 });
+    nodes.forEach(n => {
+        if (!regionStats[n.regiao]) regionStats[n.regiao] = { nodes: 0, incident: 0, internal: 0, external: 0 };
+        regionStats[n.regiao].nodes += 1;
+    });
+    EDGES.forEach(e => {
+        const a = AP[e.from]?.regiao;
+        const b = AP[e.to]?.regiao;
+        if (!a || !b) return;
+        if (!regionStats[a]) regionStats[a] = { nodes: 0, incident: 0, internal: 0, external: 0 };
+        if (!regionStats[b]) regionStats[b] = { nodes: 0, incident: 0, internal: 0, external: 0 };
+        regionStats[a].incident += 1;
+        regionStats[b].incident += 1;
+        if (a === b) {
+            regionStats[a].internal += 1;
+        } else {
+            regionStats[a].external += 1;
+            regionStats[b].external += 1;
+        }
+    });
+    const regionalRows = Object.entries(regionStats)
+        .filter(([, s]) => s.nodes > 0)
+        .sort((a, b) => b[1].incident - a[1].incident);
+    const dominantRegion = regionalRows[0] || ['-', { nodes: 0, incident: 0, external: 0 }];
+    const bridgeRegion = [...regionalRows].sort((a, b) => b[1].external - a[1].external)[0] || dominantRegion;
+    const interRegionalEdges = EDGES.filter(e => AP[e.from]?.regiao && AP[e.to]?.regiao && AP[e.from].regiao !== AP[e.to].regiao).length;
+    const interShare = totalEdges ? ((interRegionalEdges / totalEdges) * 100) : 0;
+
+    const longest = [...EDGES].sort((a, b) => parseFloat(b.peso) - parseFloat(a.peso))[0];
+    const strongest = [...EDGES].sort((a, b) => (parseInt(b.freq) || 1) - (parseInt(a.freq) || 1))[0];
+    const recPoa = PATH_RPO?.length ? PATH_RPO.join(' → ') : 'sem caminho encontrado';
+    const sourceNote = 'A leitura usa somente aeroportos da malha ativa: aeroportos cadastrados sem rota pública foram removidos para evitar nós de grau zero.';
+
+    document.getElementById('insight-1').innerHTML = `
+      <p><b>O desenho da rede é concentrado, mas não vazio:</b> o AeroGraph trabalha com <b>${totalNodes} aeroportos ativos</b> e <b>${totalEdges} conexões</b>, com grau médio de <b>${avgDegree.toFixed(1)}</b>. O maior hub é <b>${topHub.iata}</b>, na região <b>${topHub.regiao}</b>, com <b>${topHub.grau}</b> conexões diretas.</p>
+      <ul style="margin:10px 0 0 0; padding-left:18px;">
+        <li>Os <b>5 maiores hubs</b> concentram aproximadamente <b>${topFiveShare.toFixed(1)}%</b> das pontas de conexão da rede.</li>
+        <li>Há <b>${superHubs}</b> superhub(s), <b>${hubs}</b> aeroportos com papel de hub e <b>${feeders}</b> aeroportos alimentadores.</li>
+        <li>Isso indica uma malha de tipo <b>hub-and-spoke</b>: eficiente para concentrar demanda, mas sensível a gargalos nos vértices centrais.</li>
+      </ul>`;
+
+    document.getElementById('insight-2').innerHTML = `
+      <p><b>A integração nacional aparece pelas bordas entre regiões.</b> A região com mais conexões incidentes é <b>${dominantRegion[0]}</b>, com <b>${dominantRegion[1].incident}</b> incidências. Já <b>${bridgeRegion[0]}</b> se destaca como ponte inter-regional, com <b>${bridgeRegion[1].external}</b> conexões para fora da própria macrorregião.</p>
+      <ul style="margin:10px 0 0 0; padding-left:18px;">
+        <li><b>${interRegionalEdges}</b> conexões cruzam macrorregiões, cerca de <b>${interShare.toFixed(1)}%</b> da malha.</li>
+        <li>Esse padrão separa duas funções: rotas regionais alimentam demanda local; rotas inter-regionais sustentam integração econômica e mobilidade nacional.</li>
+        <li>A matriz de fluxos ajuda a identificar onde a rede é mais interna e onde ela depende de corredores nacionais.</li>
+      </ul>`;
+
+    document.getElementById('insight-3').innerHTML = `
+      <p><b>O risco principal não é falta de conexão, é dependência.</b> Quando poucos hubs concentram muitos caminhos, atrasos, fechamento de pista, clima ou excesso de demanda podem se espalhar para várias sub-rotas. A rota demonstrativa <b>REC → POA</b>, por exemplo, resolve como <b>${recPoa}</b>, mostrando que uma viagem longa pode depender de passagem por hub intermediário.</p>
+      <ul style="margin:10px 0 0 0; padding-left:18px;">
+        <li>O maior trecho direto observado é <b>${longest.from} → ${longest.to}</b>, com aproximadamente <b>${parseFloat(longest.peso).toFixed(0)} km</b>.</li>
+        <li>O corredor com maior evidência na fonte é <b>${strongest.from} → ${strongest.to}</b>, com <b>${parseInt(strongest.freq) || 1}</b> registro(s).</li>
+        <li>Como a fonte é pública/histórica, ela representa uma aproximação estrutural da malha, não frequência diária em tempo real.</li>
+      </ul>`;
+
+    document.getElementById('insight-4').innerHTML = `
+      <p><b>Leitura acionável:</b> a rede é boa para visualizar centralidade e caminhos mínimos, mas a gestão prática deveria olhar para redundância, alternativas regionais e dependência de hubs. A decisão mais útil não é apenas “qual aeroporto tem mais conexões”, e sim “quais conexões reduzem dependência dos hubs principais”.</p>
+      <ul style="margin:10px 0 0 0; padding-left:18px;">
+        <li><b>Reforçar redundância:</b> priorizar ligações secundárias entre Norte, Nordeste e Centro-Oeste para reduzir caminhos obrigatórios por poucos hubs.</li>
+        <li><b>Monitorar hubs críticos:</b> aeroportos como <b>${topHub.iata}</b> devem ser tratados como pontos de atenção operacional.</li>
+        <li><b>Comunicar a metodologia:</b> ${sourceNote}</li>
+      </ul>`;
 }
 
 function renderAllCharts() {
