@@ -19,6 +19,7 @@ export default function GraphView({
   trackSearchQuery,
   showLabels,
   graphRef: externalRef,
+  graphExecution = null,
 }) {
   const internalRef = useRef(null)
   const fgRef = externalRef || internalRef
@@ -105,6 +106,10 @@ export default function GraphView({
       }
 
       const radius = isGenre ? getGenreRadius(node) : (isTrack ? getTrackRadius(node) : getArtistRadius(node))
+      const executionActive = graphExecution?.active
+      const executionVisited = executionActive && graphExecution.visitedNodeIds?.has(node.id)
+      const executionPath = executionActive && graphExecution.pathNodeIds?.has(node.id)
+      const executionCurrent = executionActive && graphExecution.currentNodeId === node.id
 
       // Highlight logic
       const isSelected = selectedNode?.id === node.id
@@ -142,34 +147,40 @@ export default function GraphView({
       }
 
       const dimmed =
-        ((hasArtistQuery || hasTrackQuery) && !isSearchMatch) ||
-        (selectedNode && !isSelected && !isRelatedToSelection)
+        executionActive
+          ? !executionVisited && !executionPath
+          : (
+              ((hasArtistQuery || hasTrackQuery) && !isSearchMatch) ||
+              (selectedNode && !isSelected && !isRelatedToSelection)
+            )
 
       ctx.save()
 
       // Glow for selected/matched
-      if (isSelected || isSearchMatch || isRelatedToSelection) {
+      if (executionVisited || executionCurrent || isSelected || isSearchMatch || isRelatedToSelection) {
         ctx.shadowColor = color
-        ctx.shadowBlur = isSelected || isSearchMatch ? 12 : 6
+        ctx.shadowBlur = executionCurrent ? 26 : (executionVisited ? 16 : (isSelected || isSearchMatch ? 12 : 6))
       }
 
       // Draw circle
       ctx.beginPath()
-      ctx.arc(node.x, node.y, radius, 0, 2 * Math.PI)
-      ctx.fillStyle = dimmed ? `${color}33` : color
+      ctx.arc(node.x, node.y, executionCurrent ? radius * 1.65 : (executionVisited ? radius * 1.28 : radius), 0, 2 * Math.PI)
+      ctx.fillStyle = executionActive
+        ? (executionVisited ? color : 'rgba(217,207,173,0.08)')
+        : (dimmed ? `${color}33` : color)
       ctx.fill()
 
       if (isTrack) {
         // Draw the inner dot for vinyl disc look
         ctx.beginPath()
         ctx.arc(node.x, node.y, radius * 0.4, 0, 2 * Math.PI)
-        ctx.fillStyle = dimmed ? 'rgba(239, 230, 200, 0.38)' : '#efe6c8'
+        ctx.fillStyle = dimmed ? 'rgba(239, 230, 200, 0.28)' : '#efe6c8'
         ctx.fill()
       }
 
-      if (isSelected || isSearchMatch || isRelatedToSelection) {
+      if (executionVisited || isSelected || isSearchMatch || isRelatedToSelection) {
         ctx.strokeStyle = '#f7efcf'
-        ctx.lineWidth = (isSelected || isSearchMatch ? 1.5 : 0.8) / globalScale
+        ctx.lineWidth = (executionCurrent ? 2.2 : (isSelected || isSearchMatch ? 1.5 : 0.8)) / globalScale
         ctx.stroke()
       }
 
@@ -178,7 +189,7 @@ export default function GraphView({
       // Labels
       const showLabel = showLabels
         ? isGenre || isSearchMatch || isSelected || (isTrack && globalScale > 2.5)
-        : isSelected || isSearchMatch || (isGenre && globalScale > 1.5)
+        : executionVisited || isSelected || isSearchMatch || (isGenre && globalScale > 1.5 && !executionActive)
 
       if (showLabel) {
         const fontSize = isGenre
@@ -197,12 +208,12 @@ export default function GraphView({
         // Text halo for readability on the dark map-like background
         ctx.fillStyle = 'rgba(10,15,10,0.82)'
         ctx.fillText(displayLabel, node.x + 0.5, node.y + yOffset + 0.5)
-        ctx.fillStyle = isGenre ? '#f7efcf' : '#efe6c8'
+        ctx.fillStyle = executionCurrent ? '#ffffff' : (isGenre ? '#f7efcf' : '#efe6c8')
         ctx.fillText(displayLabel, node.x, node.y + yOffset)
         ctx.restore()
       }
     },
-    [genreColorMap, selectedNode, selectedGraphContext, searchLower, trackSearchLower, showLabels, getArtistRadius, getGenreRadius, getTrackRadius]
+    [genreColorMap, selectedNode, selectedGraphContext, searchLower, trackSearchLower, showLabels, getArtistRadius, getGenreRadius, getTrackRadius, graphExecution]
   )
 
   const nodePointerAreaPaint = useCallback(
@@ -244,6 +255,17 @@ export default function GraphView({
     (link) => {
       const sourceId = getLinkEndpointId(link.source)
       const targetId = getLinkEndpointId(link.target)
+      const executionActive = graphExecution?.active
+      const executionLinkId = `${sourceId}->${targetId}`
+      const executionReverseLinkId = `${targetId}->${sourceId}`
+      const executionLinkActive =
+        executionActive &&
+        (graphExecution.activeLinkIds?.has(executionLinkId) || graphExecution.activeLinkIds?.has(executionReverseLinkId))
+
+      if (executionActive) {
+        return executionLinkActive ? 'rgba(143, 189, 140, 0.92)' : 'rgba(217,207,173,0.025)'
+      }
+
       const isSelectedLink = selectedGraphContext.relatedLinkIds.has(`${sourceId}->${targetId}`)
 
       if (isSelectedLink) {
@@ -261,20 +283,25 @@ export default function GraphView({
       const color = genreColorMap.get(target.label) || '#ffffff'
       return `${color}24`
     },
-    [genreColorMap, selectedNode, selectedGraphContext]
+    [genreColorMap, selectedNode, selectedGraphContext, graphExecution]
   )
 
   const linkWidth = useCallback(
     (link) => {
       const sourceId = getLinkEndpointId(link.source)
       const targetId = getLinkEndpointId(link.target)
+      if (graphExecution?.active) {
+        const linkId = `${sourceId}->${targetId}`
+        const reverseLinkId = `${targetId}->${sourceId}`
+        return graphExecution.activeLinkIds?.has(linkId) || graphExecution.activeLinkIds?.has(reverseLinkId) ? 1.8 : 0.12
+      }
       if (selectedGraphContext.relatedLinkIds.has(`${sourceId}->${targetId}`)) {
         return link.type === 'track-link' ? 1.2 : 0.9
       }
       if (link.type === 'track-link') return 0.2
       return 0.4
     },
-    [selectedGraphContext]
+    [selectedGraphContext, graphExecution]
   )
 
   return (
