@@ -14,59 +14,6 @@ const displayMetricText = (text = '') =>
 
 const displayKpiValue = (value = '') => displayGenreLabel(value)
 
-// YlOrRd color stops (matches Python matplotlib colormap)
-const YL_OR_RD = [
-  [255, 255, 212],
-  [254, 217, 142],
-  [253, 141,  60],
-  [227,  26,  28],
-  [177,   0,  38],
-]
-
-function ylOrRd(t) {
-  const n = YL_OR_RD.length - 1
-  const i = Math.min(n - 1, Math.floor(t * n))
-  const f = t * n - i
-  return YL_OR_RD[i].map((v, k) => Math.round(v + f * (YL_OR_RD[i + 1][k] - v)))
-}
-
-function computeHeatStats(tracks, matrix) {
-  const n = tracks.length
-  let maxDist = 0
-  let minDist = Infinity
-  for (let i = 0; i < n; i++) {
-    for (let j = 0; j < n; j++) {
-      const v = matrix[i][j]
-      if (v > maxDist) maxDist = v
-      if (i !== j && v > 0 && v < minDist) minDist = v
-    }
-  }
-  return { maxDist, minDist: minDist === Infinity ? 0 : minDist }
-}
-
-function buildFilteredCells(tracks, matrix, threshold) {
-  const n = tracks.length
-  // Keep a track index if it has at least one other track within threshold
-  const keep = new Set()
-  for (let i = 0; i < n; i++) {
-    for (let j = 0; j < n; j++) {
-      if (i !== j && matrix[i][j] <= threshold) {
-        keep.add(i)
-        keep.add(j)
-      }
-    }
-  }
-  const idxs = [...keep].sort((a, b) => a - b)
-  const filteredTracks = idxs.map(i => tracks[i])
-  const cells = []
-  for (const i of idxs) {
-    for (const j of idxs) {
-      cells.push({ x: tracks[j], y: tracks[i], v: matrix[i][j] })
-    }
-  }
-  return { cells, filteredTracks }
-}
-
 const C = {
   bg:     '#10170f',
   surf:   'rgba(31, 45, 30, 0.9)',
@@ -92,38 +39,16 @@ export default function ChartsPanel({ onClose }) {
   const distCanvasRef   = useRef(null)
   const radarCanvasRef  = useRef(null)
   const algoCanvasRef   = useRef(null)
-  const heatCanvasRef   = useRef(null)
+  const sonicCanvasRef  = useRef(null)
   const bfsCanvasRef    = useRef(null)
 
   const [selGenres, setSelGenres] = useState(['pop-film', 'k-pop', 'forro'])
   const [hubCount, setHubCount]   = useState(10)
   const [timingData, setTimingData] = useState(null)
-  const [rawHeat, setRawHeat]       = useState(null) // { tracks, matrix, maxDist, minDist }
-  const [distThreshold, setDistThreshold] = useState(null)
   const [fullReport, setFullReport] = useState(null)
 
   const top15 = useMemo(() => [...GENRES].sort((a, b) => b.avg_pop - a.avg_pop).slice(0, 15), [])
   const topN   = useMemo(() => top15.slice(0, hubCount), [top15, hubCount])
-
-  // ── Fetch heatmap track distances from heatmap_data.json ─────────────────
-  useEffect(() => {
-    fetch('/heatmap_data.json')
-      .then(r => r.json())
-      .then(({ tracks, matrix }) => {
-        const { maxDist, minDist } = computeHeatStats(tracks, matrix)
-        setRawHeat({ tracks, matrix, maxDist, minDist })
-        setDistThreshold(maxDist)
-      })
-      .catch(() => console.warn('heatmap_data.json not found'))
-  }, [])
-
-  // ── Filtered heatmap data recomputed when threshold changes ───────────────
-  const heatData = useMemo(() => {
-    if (!rawHeat || distThreshold === null) return null
-    const { tracks, matrix, maxDist, minDist } = rawHeat
-    const { cells, filteredTracks } = buildFilteredCells(tracks, matrix, distThreshold)
-    return { cells, filteredTracks, maxDist, minDist, total: tracks.length }
-  }, [rawHeat, distThreshold])
 
   // ── Fetch timing data from parte2_report.json ─────────────────────────────
   useEffect(() => {
@@ -209,16 +134,6 @@ export default function ChartsPanel({ onClose }) {
     const topPct  = ((POP_DIST[4] / totalTracks) * 100).toFixed(1)
     const lowPct  = (((POP_DIST[0] + POP_DIST[1]) / totalTracks) * 100).toFixed(1)
 
-    // Mapa de calor: par mais próximo e mais distante
-    let mostSimilar = null, mostDistant = null
-    if (heatData) {
-      heatData.cells.forEach(c => {
-        if (c.x === c.y) return
-        if (!mostSimilar || c.v < mostSimilar.v) mostSimilar = c
-        if (!mostDistant  || c.v > mostDistant.v)  mostDistant  = c
-      })
-    }
-
     // Caminhos reais do Dijkstra e Bellman-Ford
     const dijPaths = fullReport?.dijkstra ?? []
     const bonjoviPath = dijPaths.find(p => p.caminho && p.caminho.includes('You Give Love A Bad Name'))
@@ -260,13 +175,12 @@ export default function ChartsPanel({ onClose }) {
       slowest, fastest, dfsBfsRatio, dijT,
       mostPopular, mostEnergetic, mostCheerful, leastDanceable,
       totalTracks, topPct, lowPct,
-      mostSimilar, mostDistant,
       bonjoviPath, bestBfPath, bfCycle,
       minCamadas, maxCamadas,
       obscurePct, viralPct,
       cycleSpeedup,
     }
-  }, [fullReport, timingData, heatData])
+  }, [fullReport, timingData])
 
   // ── Bar chart: top genres ─────────────────────────────────────────────────
   useEffect(() => {
@@ -278,19 +192,22 @@ export default function ChartsPanel({ onClose }) {
         labels: topN.map(g => displayGenreLabel(g.genre)),
         datasets: [{
           data: topN.map(g => g.avg_pop),
-          backgroundColor: topN.map((_, i) => `rgba(108,99,255,${1 - i * 0.055})`),
-          borderRadius: 6, borderSkipped: false,
+          backgroundColor: topN.map((_, i) => i < 3 ? '#8fbd8cdd' : `rgba(242,217,139,${0.82 - i * 0.025})`),
+          borderColor: topN.map((_, i) => i < 3 ? '#8fbd8c' : '#f2d98b'),
+          borderWidth: 1,
+          borderRadius: 999, borderSkipped: false,
         }],
       },
       options: {
+        indexAxis: 'y',
         responsive: true, maintainAspectRatio: false,
         plugins: {
           legend: { display: false },
           tooltip: { callbacks: { label: c => ` ${c.raw} de popularidade média` } },
         },
         scales: {
-          x: { ticks: { color: C.muted, font: { size: 10 } }, grid: { display: false } },
-          y: { ticks: { color: C.muted, font: { size: 10 } }, grid: { color: 'rgba(255,255,255,.04)' }, min: 0 },
+          x: { ticks: { color: C.muted, font: { size: 10 } }, grid: { color: 'rgba(255,255,255,.04)' }, min: 0 },
+          y: { ticks: { color: C.text, font: { size: 10, weight: '700' } }, grid: { display: false } },
         },
       },
     })
@@ -301,14 +218,27 @@ export default function ChartsPanel({ onClose }) {
   useEffect(() => {
     const Chart = window.Chart
     if (!Chart || !distCanvasRef.current) return
-    const chart = new Chart(distCanvasRef.current.getContext('2d'), {
-      type: 'bar',
+    const ctx = distCanvasRef.current.getContext('2d')
+    const gradient = ctx.createLinearGradient(0, 0, 0, 260)
+    gradient.addColorStop(0, 'rgba(143,189,140,0.42)')
+    gradient.addColorStop(0.55, 'rgba(242,217,139,0.16)')
+    gradient.addColorStop(1, 'rgba(16,23,15,0.02)')
+    const chart = new Chart(ctx, {
+      type: 'line',
       data: {
-        labels: ['0–20', '21–40', '41–60', '61–80', '81–100'],
+        labels: ['0-20', '21-40', '41-60', '61-80', '81-100'],
         datasets: [{
           data: POP_DIST,
-          backgroundColor: ['#252535', '#333355', '#6c63ff66', '#6c63ff', '#9d99ff'],
-          borderRadius: 6, borderSkipped: false,
+          fill: true,
+          tension: 0.38,
+          backgroundColor: gradient,
+          borderColor: '#8fbd8c',
+          borderWidth: 2,
+          pointRadius: 5,
+          pointHoverRadius: 7,
+          pointBackgroundColor: ['#f2d98b', '#f2d98b', '#f2d98b', '#c88a9a', '#7fb3d5'],
+          pointBorderColor: '#10170f',
+          pointBorderWidth: 2,
         }],
       },
       options: {
@@ -322,6 +252,7 @@ export default function ChartsPanel({ onClose }) {
           y: {
             ticks: { color: C.muted, font: { size: 10 }, callback: v => v.toLocaleString('pt-BR') },
             grid: { color: 'rgba(255,255,255,.04)' },
+            beginAtZero: true,
           },
         },
       },
@@ -405,34 +336,32 @@ export default function ChartsPanel({ onClose }) {
     return () => chart.destroy()
   }, [timingData])
 
-  // ── Matrix heatmap: track pairwise distances (from heatmap_data.json) ─────
+  // ── Bubble chart: genre sonic positioning ─────────────────────────────────
   useEffect(() => {
     const Chart = window.Chart
-    if (!Chart || !heatCanvasRef.current || !heatData) return
-    const { cells, filteredTracks, maxDist } = heatData
-    if (cells.length === 0) return
-
-    const xLabels = filteredTracks
-    const yLabels = [...filteredTracks].reverse()
-    const n = filteredTracks.length
-
-    const chart = new Chart(heatCanvasRef.current.getContext('2d'), {
-      type: 'matrix',
+    if (!Chart || !sonicCanvasRef.current) return
+    const palette = ['#8fbd8c', '#f2d98b', '#c88a9a', '#7fb3d5', '#d49a67', '#b9a7e8']
+    const chart = new Chart(sonicCanvasRef.current.getContext('2d'), {
+      type: 'bubble',
       data: {
-        datasets: [{
-          label: 'Distância euclidiana',
-          data: cells,
-          backgroundColor(ctx) {
-            const v = ctx.dataset.data[ctx.dataIndex]?.v ?? 0
-            const t = maxDist > 0 ? v / maxDist : 0
-            const [r, g, b] = ylOrRd(t)
-            return `rgba(${r},${g},${b},0.92)`
-          },
-          borderColor: 'transparent',
-          borderWidth: 1,
-          width:  ({ chart }) => (chart.chartArea?.width  ?? 0) / n - 1,
-          height: ({ chart }) => (chart.chartArea?.height ?? 0) / n - 1,
-        }],
+        datasets: GENRES.map((genre, index) => {
+          const color = palette[index % palette.length]
+          return {
+            label: displayGenreLabel(genre.genre),
+            data: [{
+              x: Number((genre.avg_energy * 100).toFixed(1)),
+              y: Number((genre.avg_valence * 100).toFixed(1)),
+              r: Math.max(5, Math.min(17, 4 + genre.avg_pop / 4)),
+              pop: genre.avg_pop,
+              dance: genre.avg_dance,
+              tempo: genre.avg_tempo,
+            }],
+            backgroundColor: `${color}99`,
+            borderColor: color,
+            borderWidth: 1.2,
+            hoverBorderWidth: 2,
+          }
+        }),
       },
       options: {
         responsive: true, maintainAspectRatio: false,
@@ -440,37 +369,37 @@ export default function ChartsPanel({ onClose }) {
           legend: { display: false },
           tooltip: {
             callbacks: {
-              title: () => '',
+              title: items => items[0]?.dataset?.label ?? '',
               label: ctx => {
-                const d = ctx.dataset.data[ctx.dataIndex]
-                return ` ${d.y} × ${d.x}: ${d.v.toFixed(4)}`
+                const d = ctx.raw
+                return [
+                  ` Energia: ${d.x.toFixed(1)}`,
+                  ` Valência: ${d.y.toFixed(1)}`,
+                  ` Popularidade média: ${d.pop.toFixed(1)}`,
+                  ` BPM médio: ${d.tempo.toFixed(1)}`,
+                ]
               },
             },
           },
         },
         scales: {
           x: {
-            type: 'category',
-            labels: xLabels,
-            ticks: {
-              color: C.muted, font: { size: 8 },
-              maxRotation: 50, minRotation: 40,
-            },
-            grid: { display: false },
-            offset: true,
+            min: 10, max: 100,
+            title: { display: true, text: 'Energia média', color: C.muted, font: { size: 11, weight: '700' } },
+            ticks: { color: C.muted, font: { size: 10 }, callback: v => `${v}` },
+            grid: { color: 'rgba(255,255,255,.05)' },
           },
           y: {
-            type: 'category',
-            labels: yLabels,
-            ticks: { color: C.muted, font: { size: 8 } },
-            grid: { display: false },
-            offset: true,
+            min: 0, max: 90,
+            title: { display: true, text: 'Valência média', color: C.muted, font: { size: 11, weight: '700' } },
+            ticks: { color: C.muted, font: { size: 10 }, callback: v => `${v}` },
+            grid: { color: 'rgba(255,255,255,.05)' },
           },
         },
       },
     })
     return () => chart.destroy()
-  }, [heatData])
+  }, [])
 
   // ── Bar chart: BFS nodes per layer ────────────────────────────────────────
   useEffect(() => {
@@ -529,10 +458,10 @@ export default function ChartsPanel({ onClose }) {
             background: 'linear-gradient(90deg,#efe6c8,#8fbd8c)',
             WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent',
           }}>
-            Grafo Spotify de Artistas e Gêneros
+            Spotify
           </div>
           <div style={{ fontSize: '0.65rem', color: C.muted, marginTop: 2 }}>
-            Análise Interativa Parte 2
+            Análise musical interativa
           </div>
         </div>
         <button onClick={onClose} style={{
@@ -641,60 +570,31 @@ export default function ChartsPanel({ onClose }) {
             </p>
           </ChartCard>
 
-          <ChartCard title="Mapa de Calor de Distâncias">
-            {!rawHeat ? (
-              <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', color: C.muted, fontSize: '0.8rem' }}>
-                Carregando…
-              </div>
-            ) : (
-              <>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 6, padding: '0 4px' }}>
-                  <span style={{ fontSize: '0.65rem', color: C.muted, whiteSpace: 'nowrap' }}>Dist. máx:</span>
-                  <input
-                    type="range"
-                    min={rawHeat.minDist}
-                    max={rawHeat.maxDist}
-                    step={0.01}
-                    value={distThreshold ?? rawHeat.maxDist}
-                    onChange={e => setDistThreshold(parseFloat(e.target.value))}
-                    style={{ flex: 1, accentColor: C.teal, cursor: 'pointer' }}
-                  />
-                  <span style={{
-                    fontSize: '0.7rem', color: C.teal,
-                    fontFamily: "'DM Mono', monospace", minWidth: 40, textAlign: 'right',
-                  }}>
-                    {(distThreshold ?? rawHeat.maxDist).toFixed(2)}
-                  </span>
-                  <button
-                    onClick={() => setDistThreshold(rawHeat.maxDist)}
-                    title="Mostrar todas"
-                    style={{
-                      background: 'none', border: `1px solid ${C.border}`, color: C.muted,
-                      fontFamily: 'inherit', fontSize: '0.6rem', padding: '2px 6px',
-                      borderRadius: 4, cursor: 'pointer',
-                    }}
-                  >
-                    reiniciar
-                  </button>
+          <ChartCard title="Mapa Sonoro: Energia × Valência">
+            <div style={{
+              display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 6,
+              marginBottom: 8, fontSize: '0.58rem', color: C.muted,
+            }}>
+              {[
+                ['calmo', 'baixa energia'],
+                ['intenso', 'alta energia'],
+                ['melancólico', 'baixa valência'],
+                ['luminoso', 'alta valência'],
+              ].map(([label, sub]) => (
+                <div key={label} style={{
+                  border: `1px solid ${C.border}`, borderRadius: 8,
+                  padding: '6px 7px', background: 'rgba(16, 23, 15, 0.42)',
+                }}>
+                  <b style={{ color: C.text, display: 'block', textTransform: 'uppercase', letterSpacing: 0.7 }}>{label}</b>
+                  {sub}
                 </div>
-                <div style={{ fontSize: '0.62rem', color: C.muted, textAlign: 'center', marginBottom: 6 }}>
-                  {heatData && heatData.cells.length > 0
-                    ? <><span style={{ color: C.teal }}>{heatData.filteredTracks.length}</span> / {rawHeat.total} músicas visíveis</>
-                    : <span style={{ color: '#FF6B6B' }}>nenhuma música no intervalo — aumente o limiar</span>
-                  }
-                </div>
-                <div style={{ position: 'relative', flex: 1, minHeight: 300, marginTop: 4 }}>
-                  {heatData && heatData.cells.length > 0
-                    ? <canvas ref={heatCanvasRef} />
-                    : <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', color: C.muted, fontSize: '0.8rem' }}>
-                        Sem dados para exibir
-                      </div>
-                  }
-                </div>
-              </>
-            )}
+              ))}
+            </div>
+            <div style={{ position: 'relative', flex: 1, minHeight: 300, marginTop: 10 }}>
+              <canvas ref={sonicCanvasRef} />
+            </div>
             <p style={{ fontSize: '0.72rem', color: C.muted, marginTop: 12, textAlign: 'center' }}>
-              Distância euclidiana (9 atributos de áudio). Diminua o limiar para focar nas músicas mais próximas — a matriz encolhe e as células ficam maiores.
+              Cada bolha representa um gênero: energia no eixo horizontal, valência no vertical e tamanho proporcional à popularidade média.
             </p>
           </ChartCard>
 
@@ -712,88 +612,120 @@ export default function ChartsPanel({ onClose }) {
 
         </div>
 
-        {/* ── Narrativa Analítica e Leituras ── */}
-        <div style={{ marginTop: 50, borderBottom: `1px solid ${C.border}`, paddingBottom: 15, marginBottom: 28 }}>
-          <h2 style={{ fontFamily: "'Syne', sans-serif", color: C.text, fontSize: '1.4rem' }}>
-            Narrativa Analítica e Leituras
-          </h2>
-          <p style={{ color: C.muted, fontSize: '0.8rem', marginTop: 6 }}>
-            O que os algoritmos de grafos revelam sobre o espaço musical — análise crítica com evidências dos dados reais.
-          </p>
-        </div>
+        {/* ── Insights do grafo ── */}
+        <section style={{
+          marginTop: 52,
+          background: 'linear-gradient(135deg, rgba(143,189,140,0.14), rgba(242,217,139,0.08) 48%, rgba(127,179,213,0.10))',
+          border: `1px solid ${C.border}`,
+          borderRadius: 18,
+          padding: 28,
+          boxShadow: '0 26px 70px rgba(0,0,0,0.28)',
+        }}>
+          <div style={{ maxWidth: 1080, marginBottom: 22 }}>
+            <div style={{
+              color: C.accent, fontSize: '0.68rem', fontWeight: 900,
+              letterSpacing: 2, textTransform: 'uppercase', marginBottom: 10,
+            }}>
+              Leitura interpretativa da rede
+            </div>
+            <h2 style={{
+              fontFamily: "'Syne', sans-serif", color: C.text,
+              fontSize: '1.65rem', lineHeight: 1.2, marginBottom: 10,
+            }}>
+              Insights do Grafo Spotify
+            </h2>
+            <p style={{ color: C.muted, fontSize: '0.88rem', lineHeight: 1.8, margin: 0 }}>
+              O que aparece quando tratamos músicas, artistas e gêneros como uma rede. A leitura combina atributos de áudio, popularidade e caminhos do grafo para explicar
+              como a descoberta musical acontece: onde a atenção se concentra, quais gêneros funcionam
+              como paisagens sonoras e como os algoritmos constroem pontes entre músicas aparentemente distantes.
+            </p>
+          </div>
 
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 25, marginBottom: 25 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 14, marginBottom: 28 }}>
+            <InsightMetric label="faixas analisadas" value={insights.totalTracks.toLocaleString('pt-BR')} />
+            <InsightMetric label="nós da amostra" value={insights.totalNos.toLocaleString('pt-BR')} />
+            <InsightMetric label="conexões" value={insights.totalArestas.toLocaleString('pt-BR')} />
+            <InsightMetric label="alcance BFS" value={`${insights.minCamadas}-${insights.maxCamadas} camadas`} />
+          </div>
 
-          <InsightCard color="#6c63ff" title="1. O Iceberg da Popularidade">
-            De <b>{insights.totalTracks.toLocaleString('pt-BR')}</b> faixas na base,{' '}
-            <b>{insights.obscurePct}%</b> vivem abaixo de 60 de popularidade, nunca chegando ao
-            circuito principal. A distribuição é quase plana até esse ponto: cada faixa de 20 pontos
-            concentra cerca de 30 mil músicas. Depois, o precipício: apenas{' '}
-            <b>{POP_DIST[3].toLocaleString('pt-BR')} faixas (11.9%)</b> entram no intervalo 61–80,
-            e míseras <b>{POP_DIST[4].toLocaleString('pt-BR')} ({insights.viralPct}%)</b> alcançam a
-            elite 81–100. Cruzar 60 de popularidade não é evolução gradual, é um{' '}
-            <b>salto de classe</b>. O gênero campeão, <b>{displayGenreLabel(insights.mostPopular.genre)}</b> (média{' '}
-            {insights.mostPopular.avg_pop}), ainda fica abaixo desse limiar: nem o gênero de topo
-            escapa do "iceberg". A maior parte de suas faixas permanece invisível ao algoritmo
-            de descoberta do Spotify.
-          </InsightCard>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 25, marginBottom: 25 }}>
 
-          <InsightCard color="#f5a623" title="2. DNA Sonoro: Tensão entre Energia e Alegria">
-            O radar revela uma <b>tensão universal</b>: energia e valência raramente coexistem em
-            valores extremos. <b>{displayGenreLabel(insights.mostEnergetic.genre)}</b> domina energia ({' '}
-            <b>{insights.mostEnergetic.avg_energy}</b>) mas tem valência de apenas{' '}
-            <b>{insights.mostEnergetic.avg_valence}</b>, adrenalina sem euforia, o perfil clássico
-            do metal extremo. A exceção que quebra a regra:{' '}
-            <b>{displayGenreLabel(insights.mostCheerful.genre)}</b> (valência <b>{insights.mostCheerful.avg_valence}</b>,
-            energia <b>{insights.mostCheerful.avg_energy}</b>), único gênero que combina intensidade
-            e alegria ao mesmo tempo. O insight mais revelador:{' '}
-            <b>{displayGenreLabel(insights.mostPopular.genre)}</b> (gênero mais popular) não vence em nenhum eixo do
-            radar. Traça um hexágono perfeitamente mediano.{' '}
-            <b>Popularidade é ausência de extremos</b>: trilha sonora de filmes funciona exatamente
-            porque não intimida nem provoca ninguém.
-          </InsightCard>
+            <InsightCard color="#8fbd8c" title="1. Mercado de Atenção">
+              <p style={{ margin: 0 }}>
+                A base revela uma dinâmica de cauda longa: de <b>{insights.totalTracks.toLocaleString('pt-BR')}</b>{' '}
+                faixas, só <b>{POP_DIST[4].toLocaleString('pt-BR')} ({insights.viralPct}%)</b> chegam
+                ao intervalo 81-100 de popularidade. A maior parte do catálogo fica abaixo da zona de hit,
+                mesmo quando pertence a gêneros fortes.
+              </p>
+              <InsightList items={[
+                <>O gênero mais popular é <b>{displayGenreLabel(insights.mostPopular.genre)}</b>, com média <b>{insights.mostPopular.avg_pop}</b>, ainda abaixo de 60.</>,
+                <>Isso sugere que popularidade não é distribuída de forma suave: ela se concentra em poucos títulos.</>,
+                <>Para recomendação, explorar nichos é essencial para não prender o usuário sempre no repertório mais óbvio.</>,
+              ]} />
+              <InsightRead color="#8fbd8c">
+                Leitura principal: o grafo ajuda a revelar repertório invisível, não apenas confirmar hits.
+              </InsightRead>
+            </InsightCard>
 
-          <InsightCard color="#ff7070" title="3. Seis Graus de Similaridade — Dijkstra no Espaço Sonoro">
-            Dijkstra prova que qualquer música está a apenas <b>{insights.avgSaltos} saltos</b> de
-            qualquer outra via atributos de áudio. O caminho mais revelador (
-            {insights.bonjoviPath?.saltos ?? 4} saltos, custo{' '}
-            {typeof insights.bonjoviPath?.custo === 'number'
-              ? insights.bonjoviPath.custo.toFixed(3) : '0.861'}):
-            <PathTrail
-              caminho={insights.bonjoviPath?.caminho ?? 'Two Generals → Song #3 → Whiskey In The Jar → Biermelodie → You Give Love A Bad Name'}
-              accent="#ff7070"
-            />
-            Indie/progressivo → rock → folk irlandês → canção alemã → Bon Jovi.
-            Cada salto maximiza sobreposição de atributos de áudio, nenhum "impõe" gênero.
-            Um segundo caminho (6 saltos) conecta <b>"Naranjo en Flor"</b> (tango argentino) a{' '}
-            <b>"Tumhare Siva"</b> (música indiana) passando por{' '}
-            "Riders on the Storm" (The Doors) e "Blue Moon of Kentucky" (country).
-            Conclusão: <b>o espaço sonoro não tem fronteiras de gênero, apenas gradientes
-            contínuos de distância euclidiana.</b>
-          </InsightCard>
+            <InsightCard color="#f2d98b" title="2. Paisagem Sonora">
+              <p style={{ margin: 0 }}>
+                Energia e valência contam histórias diferentes. <b>{displayGenreLabel(insights.mostEnergetic.genre)}</b>{' '}
+                lidera em energia (<b>{insights.mostEnergetic.avg_energy}</b>), mas não em sensação positiva
+                (<b>{insights.mostEnergetic.avg_valence}</b>). Já <b>{displayGenreLabel(insights.mostCheerful.genre)}</b>{' '}
+                aparece como o gênero mais alegre, com valência <b>{insights.mostCheerful.avg_valence}</b>.
+              </p>
+              <InsightList items={[
+                <>Uma faixa pode ser intensa sem ser leve, e alegre sem ser necessariamente agressiva.</>,
+                <>O mapa sonoro permite escolher músicas por clima, não só por nome de gênero.</>,
+                <>Esse tipo de leitura serve para playlists de humor, trilhas, eventos e curadoria editorial.</>,
+              ]} />
+              <InsightRead color="#f2d98b">
+                Leitura principal: gênero é rótulo; energia, valência e ritmo descrevem a experiência.
+              </InsightRead>
+            </InsightCard>
 
-          <InsightCard color="#00c2a8" title="4. Mundo Pequeno Musical e o Corredor Sonoro Ótimo">
-            <b>BFS confirma uma rede de mundo pequeno</b>: de qualquer origem, TODAS as{' '}
-            {insights.totalNos.toLocaleString('pt-BR')} músicas são alcançadas em apenas{' '}
-            {insights.minCamadas}–{insights.maxCamadas} camadas. Camada 1: exatamente 30 nós
-            (= K do KNN). Pico na Camada 4 com 649 nós. O sino assimétrico
-            1→30→130→550→649→… é a assinatura de mundo pequeno: crescimento exponencial
-            até saturar, depois retração. O <b>Bellman-Ford com pesos negativos</b> revela o
-            "corredor ótimo" onde cada salto é acima da média de similaridade. Melhor caminho
-            encontrado ({insights.bestBfPath?.saltos ?? 9} saltos, custo{' '}
-            {typeof insights.bestBfPath?.custo === 'number'
-              ? insights.bestBfPath.custo.toFixed(3) : '−2.129'}):
-            <PathTrail
-              caminho={insights.bestBfPath?.caminho ?? 'Too Much Heaven → More Than Gravity → Please Don\'t Say You Love Me → SAVE YOURSELF → Oxyrhynchus → Ain\'t No Grave (Sparse) → Go Solo → Thank You for Asking - Acoustic → Hush Little Baby → The Boo Boo Song'}
-              accent="#00c2a8"
-            />
-            Quando há ciclo negativo, BF encerra em{' '}
-            <b>{insights.bfCycle ? (insights.bfCycle.tempo_s * 1000).toFixed(2) : '0.12'} ms</b> —
-            {insights.cycleSpeedup}× mais rápido que o BFS.{' '}
-            <b>Provar a impossibilidade é mais rápido que encontrar a resposta.</b>
-          </InsightCard>
+            <InsightCard color="#c88a9a" title="3. Pontes de Descoberta">
+              <p style={{ margin: 0 }}>
+                O Dijkstra mostra que músicas distantes no senso comum podem ser conectadas por uma sequência
+                curta de similaridades. A média observada é de <b>{insights.avgSaltos} saltos</b>, o que indica
+                que o espaço musical é navegável por transições graduais.
+              </p>
+              <PathTrail
+                caminho={insights.bonjoviPath?.caminho ?? 'Two Generals → Song #3 → Whiskey In The Jar → Biermelodie → You Give Love A Bad Name'}
+                accent="#c88a9a"
+              />
+              <InsightList items={[
+                <>Cada música no caminho funciona como uma ponte entre textura, energia, timbre e ritmo.</>,
+                <>Isso explica por que playlists automáticas podem sair de um estilo para outro sem parecer aleatórias.</>,
+                <>A recomendação fica mais convincente quando respeita continuidade sonora, não apenas popularidade.</>,
+              ]} />
+              <InsightRead color="#c88a9a">
+                Leitura principal: boas recomendações são rotas, não saltos bruscos.
+              </InsightRead>
+            </InsightCard>
 
-        </div>
+            <InsightCard color="#7fb3d5" title="4. Resiliência da Rede">
+              <p style={{ margin: 0 }}>
+                O BFS indica uma rede de mundo pequeno: os <b>{insights.totalNos.toLocaleString('pt-BR')}</b>{' '}
+                nós da amostra são alcançados em <b>{insights.minCamadas}-{insights.maxCamadas}</b> camadas.
+                O pico ocorre na camada <b>{insights.peakLayer}</b>, com <b>{insights.peakNos}</b> nós.
+              </p>
+              <PathTrail
+                caminho={insights.bestBfPath?.caminho ?? 'Too Much Heaven → More Than Gravity → Please Don\'t Say You Love Me → SAVE YOURSELF → Oxyrhynchus → Ain\'t No Grave (Sparse) → Go Solo → Thank You for Asking - Acoustic → Hush Little Baby → The Boo Boo Song'}
+                accent="#7fb3d5"
+              />
+              <InsightList items={[
+                <>A rede cresce rápido, satura e depois reduz, comportamento típico de mundo pequeno.</>,
+                <>Bellman-Ford ajuda a localizar corredores de alta similaridade para playlists mais coerentes.</>,
+                <>DFS aponta redundância estrutural: há rotas alternativas quando uma conexão deixa de ser ideal.</>,
+              ]} />
+              <InsightRead color="#7fb3d5">
+                Leitura principal: o grafo transforma descoberta musical em navegação com caminhos alternativos.
+              </InsightRead>
+            </InsightCard>
+
+          </div>
+        </section>
 
         {/* Synthesis card */}
         <div style={{
@@ -804,7 +736,7 @@ export default function ChartsPanel({ onClose }) {
             color: C.text, fontSize: '0.85rem', marginBottom: 18,
             textTransform: 'uppercase', letterSpacing: 1,
           }}>
-             Síntese: O que o Grafo Revela sobre o Espaço Musical
+             Síntese Executiva: O que o Grafo Revela
           </h3>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 24 }}>
             <div>
@@ -812,11 +744,11 @@ export default function ChartsPanel({ onClose }) {
                 Estrutura do Grafo
               </div>
               <p style={{ fontSize: '0.77rem', color: C.muted, lineHeight: 1.75, margin: 0 }}>
-                KNN com K=30 cria um grafo <b style={{ color: C.text }}>fortemente conectado</b>.
-                O DFS revela que ~{insights.dfsBackEdgePct}% das {insights.totalArestas.toLocaleString('pt-BR')} arestas
-                são "back edges", a simetria acústica domina sobre a direção.
-                Na prática, se A soa parecido com B, B também soa parecido com A:
-                o grafo se comporta como não-dirigido pela geometria euclidiana.
+                O KNN com K=30 cria uma rede densa o bastante para conectar repertórios muito diferentes.
+                O DFS aponta cerca de {insights.dfsBackEdgePct}% de arestas de retorno entre as{' '}
+                {insights.totalArestas.toLocaleString('pt-BR')} conexões, sinal de forte redundância.
+                Isso é positivo para descoberta: se um caminho falha, existem rotas alternativas
+                para chegar a regiões parecidas do espaço musical.
               </p>
             </div>
             <div>
@@ -824,11 +756,10 @@ export default function ChartsPanel({ onClose }) {
                 Descoberta Central
               </div>
               <p style={{ fontSize: '0.77rem', color: C.muted, lineHeight: 1.75, margin: 0 }}>
-                <b style={{ color: C.text }}>Gênero é uma convenção social, não uma fronteira
-                acústica.</b> Dijkstra atravessa de indie a Bon Jovi, de tango argentino a música
-                indiana, sempre por atributos de áudio contínuos, nunca por saltos bruscos.
-                O espaço sonoro é um contínuo: fronteiras de gênero são rótulos humanos
-                impostos sobre uma geometria sem paredes.
+                <b style={{ color: C.text }}>Gêneros ajudam a organizar, mas não explicam tudo.</b>{' '}
+                O mapa sonoro mostra que energia, valência, dança, tempo e popularidade contam histórias
+                diferentes. Por isso, artistas de gêneros distintos podem ficar próximos no grafo quando
+                compartilham textura sonora, ritmo ou intensidade emocional.
               </p>
             </div>
             <div>
@@ -836,11 +767,11 @@ export default function ChartsPanel({ onClose }) {
                 Implicação Prática
               </div>
               <p style={{ fontSize: '0.77rem', color: C.muted, lineHeight: 1.75, margin: 0 }}>
-                Um sistema de recomendação baseado em{' '}
-                <b style={{ color: C.text }}>distância euclidiana sobre atributos de áudio</b> replicaria
-                a percepção de "músicas parecidas" sem nenhum dado de gênero, só geometria sonora.
-                Qualquer música é descoberta em ≤{insights.maxCamadas} saltos. O BF com pesos
-                negativos seria o algoritmo ideal para o "corredor sonoro ótimo" de playlists.
+                Um recomendador baseado em{' '}
+                <b style={{ color: C.text }}>distância entre atributos de áudio</b> consegue ir além
+                da popularidade bruta. Ele pode montar playlists com transições suaves, revelar músicas
+                menos conhecidas e preservar coerência sonora. A leitura principal é simples:
+                o grafo transforma descoberta musical em problema de navegação.
               </p>
             </div>
           </div>
@@ -894,6 +825,70 @@ function ChartCard({ title, children }) {
   )
 }
 
+function InsightMetric({ label, value }) {
+  return (
+    <div style={{
+      background: 'rgba(16, 23, 15, 0.56)',
+      border: `1px solid ${C.border}`,
+      borderRadius: 12,
+      padding: '14px 16px',
+    }}>
+      <div style={{
+        color: C.muted, fontSize: '0.62rem', letterSpacing: 1.4,
+        textTransform: 'uppercase', marginBottom: 7, fontWeight: 800,
+      }}>
+        {label}
+      </div>
+      <div style={{
+        color: C.text, fontSize: '1.2rem', fontWeight: 900,
+        fontFamily: "'Syne', sans-serif", lineHeight: 1.1,
+      }}>
+        {value}
+      </div>
+    </div>
+  )
+}
+
+function InsightList({ items }) {
+  return (
+    <ul style={{
+      margin: '14px 0 0', padding: 0, listStyle: 'none',
+      display: 'grid', gap: 8,
+    }}>
+      {items.map((item, index) => (
+        <li key={index} style={{
+          display: 'grid', gridTemplateColumns: '10px 1fr', gap: 9,
+          alignItems: 'start', color: C.text, fontSize: '0.78rem', lineHeight: 1.65,
+        }}>
+          <span style={{
+            width: 6, height: 6, borderRadius: 999, background: C.accent,
+            marginTop: 9, boxShadow: '0 0 0 3px rgba(143,189,140,0.14)',
+          }} />
+          <span>{item}</span>
+        </li>
+      ))}
+    </ul>
+  )
+}
+
+function InsightRead({ color, children }) {
+  return (
+    <div style={{
+      marginTop: 16,
+      background: `${color}18`,
+      border: `1px solid ${color}44`,
+      borderRadius: 10,
+      padding: '10px 12px',
+      color: C.text,
+      fontSize: '0.78rem',
+      lineHeight: 1.55,
+      fontWeight: 800,
+    }}>
+      {children}
+    </div>
+  )
+}
+
 function InsightCard({ color, title, children }) {
   return (
     <div style={{
@@ -904,9 +899,9 @@ function InsightCard({ color, title, children }) {
       <h3 style={{ color, fontSize: '0.82rem', marginBottom: 14, textTransform: 'uppercase', letterSpacing: 1 }}>
         {title}
       </h3>
-      <p style={{ fontSize: '0.8rem', lineHeight: 1.75, color: C.text, textAlign: 'justify' }}>
+      <div style={{ fontSize: '0.8rem', lineHeight: 1.75, color: C.text, textAlign: 'left' }}>
         {children}
-      </p>
+      </div>
     </div>
   )
 }
